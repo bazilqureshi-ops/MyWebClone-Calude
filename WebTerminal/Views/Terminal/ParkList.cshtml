@@ -1,0 +1,60 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    List<qmTicket> ParkedList = ViewBag.ParkedList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmTicketHistory> ParkHistory = ViewBag.ParkHistory;
+    List<qmCustomer> Customers = ViewBag.Customers;
+}
+<script>
+    $("#TotalParkedBadge").html("@(ParkedList.Count())");
+</script>
+<table width="100%" height="100%" border="0" cellpadding="10" cellspacing="5">
+    <tr style="border-bottom:solid 1px #CCC; font-weight:bold;">
+        <td>@(Localization.Translate(LanguageCode,"Ticket"))</td>
+        <td>@(Localization.Translate(LanguageCode,"CustomerInformation"))</td>
+        <td>@(Localization.Translate(LanguageCode,"HealthCardID"))</td>
+        <td>@(Localization.Translate(LanguageCode,"Service"))</td>
+        <td>@(Localization.Translate(LanguageCode,"PrintTime"))</td>
+        <td>@(Localization.Translate(LanguageCode,"WaitingTime"))</td>
+        <td>@(Localization.Translate(LanguageCode,"Call"))</td>
+        <td>@(Localization.Translate(LanguageCode,"Transfer"))</td>
+    </tr>
+    @{
+        foreach (qmTicket ticket in ParkedList.OrderBy(x => x.TicketPrefix).ThenBy(x => x.TicketNumber))
+        {
+            qmTicketHistory history = ParkHistory.Where(x => x.TicketID == ticket.TicketID).FirstOrDefault();
+            qmCustomer customer = new qmCustomer();
+            if (ticket.CustomerID != null)
+            {
+                customer = Customers.Where(x => x.CustomerID == ticket.CustomerID).FirstOrDefault();
+            }
+            else
+            {
+                customer.Name = "Patient";
+                customer.HCID = "n/a";
+            }
+            long NowTick = DateTime.Now.Ticks;
+            long PrintTick = ticket.PrintTime.Ticks;
+            long DifferenceTick = NowTick - PrintTick;
+            TimeSpan Difference = TimeSpan.FromTicks(DifferenceTick);
+
+            <tr>
+                <td style="font-weight:bold;">@(ticket.TicketPrefix)@(ticket.TicketNumber)</td>
+                <td>@(customer.Name)  @(customer.Surname)</td>
+                <td>@(customer.HCID)</td>
+                <td>@(ServiceList.Where(x=>x.ServiceID == ticket.ServiceID).FirstOrDefault().ServiceName)</td>
+                <td>@(ticket.PrintTime.Hour):@(ticket.PrintTime.Minute):@(ticket.PrintTime.Second)</td>
+                <td>@(Difference.Hours):@(Difference.Minutes):@(Difference.Seconds)</td>
+                <td><button class="btn btn-warning" onclick="CallFromPark(@(history.TicketHistoryID));"><i class="fa fa-bell"></i></button></td>
+                <td><button class="btn btn-warning" onclick="ServiceTransferList(true, @(ticket.TicketID));" data-bs-toggle="modal" data-bs-target="#ServiceTransferModal"><i class="fa fa-directions"></i></button></td>
+            </tr>
+        }
+    }
+</table>

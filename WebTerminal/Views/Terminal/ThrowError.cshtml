@@ -1,0 +1,52 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string ErrorCode = ViewBag.ErrorCode;
+}
+<style>
+    body {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background: linear-gradient(to top, #FFFFFF, #6CDAE7) no-repeat;
+        background-size: cover;
+    }
+</style>
+
+<div class="container justify-content-center d-flex">
+    @{
+        switch (ErrorCode)
+        {
+            case "NO_GEN_RULE":
+                <div class="card">
+                    <div class="card-body">
+                        <center>
+                            <i class="fa fa-circle-info" style="font-size:64px;"></i>
+                            <h1>No Rule Detected</h1>
+                            <p>This terminal has no ticket generation rule. Please assign a rule from QMagic Studio and try to login again.</p>
+                            <p style="font-size:10px;"><i>@Html.Raw(ErrorCode)</i></p>
+                            <a href="~/Home/Logout" class="btn btn-primary">OK</a>
+                        </center>
+                    </div>
+                </div>
+                break;
+            default:
+                <div class="card">
+                    <div class="card-body">
+                        <center>
+                            <i class="fa fa-circle-info" style="font-size:64px;"></i>
+                            <h1>You are disconnected.</h1>
+                            <p>You are disconnected from server. Please sign-in again to continue.</p>
+                            <p style="font-size:10px;"><i>@Html.Raw(ErrorCode)</i></p>
+                            <a href="~/Home/Logout" class="btn btn-primary">OK</a>
+                        </center>
+                    </div>
+                </div>
+                break;
+        }
+    }
+
+</div>
+

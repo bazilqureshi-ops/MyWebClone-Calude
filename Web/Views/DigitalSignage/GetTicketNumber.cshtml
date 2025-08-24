@@ -1,0 +1,10 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmTicket ticket = ViewBag.ticket;
+
+    if (ticket != null)
+    {
+        @(ticket.TicketPrefix) @(ticket.TicketNumber)
+    }
+}

@@ -1,0 +1,312 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmService> Services = ViewBag.Service;
+    List<qmSegment> Segments = ViewBag.Segment;
+    List<qmTerminal> Terminals = ViewBag.Terminal;
+    List<qmUser> Users = ViewBag.User;
+    List<qmBranch> Branches = ViewBag.Branches;
+}
+
+<link href="~/assets/css/designer.css" rel="stylesheet" />
+<style>
+    .ekselect {
+        border: solid 1px #CCCC;
+        padding: 12px;
+    }
+</style>
+@section scripts{
+    <script src="~/Scripts/jquery.signalR-2.4.2.js"></script>
+    <script src="~/SignalR/Hubs"></script>
+
+    <script>
+        var connectionID = "";
+        var signalRHub;
+
+        $(document).ready(function () {
+            $("#Service").on('change', function () {
+                var ServiceID = $("#Service").val();
+
+                $(".SegmentItem").hide();
+                $(".SegmentItem").each(function () {
+                    if ($(this).attr("ServiceID") == ServiceID) {
+                        $(this).show();
+
+                        $("#Segment").removeClass("select2");
+                    }
+                });
+            });
+
+            setInterval(function () {
+                var saniye = $("#GenerateTimer").html();
+                saniye = saniye.replace(" seconds...", "");
+                saniye = saniye * 1;
+                if (saniye > 0) {
+                    saniye--;
+                    $("#GenerateTimer").html(saniye + " seconds...");
+                }
+
+
+                saniye = $("#CallTimer").html();
+                saniye = saniye.replace(" seconds...", "");
+                saniye = saniye * 1;
+                if (saniye > 0) {
+                    saniye--;
+                    $("#CallTimer").html(saniye + " seconds...");
+                }
+
+            }, 1000);
+        });
+
+
+        $(function () {
+            signalRHub = $.connection.comHub;
+            signalRHub.client.SendMessage = function (command) {
+
+            }
+
+            $.connection.hub.start().done(function () {
+                connectionID = $.connection.hub.id;
+
+                signalRHub.server.send("");
+            });
+        });
+
+
+
+
+
+
+        var GenerateTimer;
+        function StartGenerating() {
+            var sServiceID = $("#Service").val();
+            var sSegmentID = $("#Segment").val();
+            var sBranchID = $("#Branch").val();
+
+            var StartTime = $("#StartNumber").val();
+            var EndTime = $("#EndNumber").val();
+
+            var Saniye = Math.floor((Math.random() * EndTime) + StartTime);
+
+            $("#GenerateTimer").html(Saniye + " seconds...");
+
+            Saniye = Saniye * 1000;
+
+            GenerateTimer = setTimeout(function () {
+                $.get("Diagnose/RequestGenerateTicket", { ServiceID: sServiceID, SegmentID: sSegmentID, BranchID: sBranchID }, function (data) {
+                    $("#GenerateResult").html(data);
+                });
+
+                StartGenerating();
+            }, Saniye);
+
+            $("#btnStart1").val("Stop");
+            $("#btnStart1").attr("onclick", "StopGenerating();");
+        }
+
+        function StopGenerating() {
+            clearTimeout(GenerateTimer);
+
+            $("#btnStart1").val("Start");
+            $("#btnStart1").attr("onclick", "StartGenerating();");
+        }
+
+
+
+        var CallTimer;
+        function StartCalling() {
+            var sTerminalID = $("#Terminal").val();
+            var sUserID = $("#User").val();
+
+            var StartTime = $("#StartNumber2").val();
+            var EndTime = $("#EndNumber2").val();
+
+            var Saniye = Math.floor((Math.random() * EndTime) + StartTime);
+
+            $("#CallTimer").html(Saniye + " seconds...");
+
+            Saniye = Saniye * 1000;
+
+            CallTimer = setTimeout(function () {
+                $.get("Diagnose/RequestCallTicket", { TerminalID: sTerminalID, UserID: sUserID }, function (data) {
+                    $("#CallResult").html(data);
+                });
+
+                StartCalling();
+            }, Saniye);
+
+            $("#btnStart2").val("Stop");
+            $("#btnStart2").attr("onclick", "StopCalling();");
+        }
+
+        function StopCalling() {
+            clearTimeout(CallTimer);
+
+            $("#btnStart2").val("Start");
+            $("#btnStart2").attr("onclick", "StartCalling();");
+        }
+
+        function ResetButton() {
+            var sResetTime = $("#txtResetDate").val();
+            $.get("Diagnose/ResetTickets", { ResetTime: sResetTime }, function (data) {
+                $("#ResetResult").html(data);
+            });
+        }
+
+        function Reset2Button() {
+            var sResetTime = $("#txtResetDate").val();
+            $.post("Diagnose/ResetPostTickets", { ResetTime: sResetTime }, function (data) {
+                $("#ResetResult").html(data);
+            });
+        }
+    </script>
+
+}
+
+    <div class="row">
+        <div class="col-xs-10 col-xs-offset-1">
+            <div class="card">
+                <div class="card-header">
+                    Diagnostic Tools
+                </div>
+                <div class="card-body">
+
+
+                    <div class="row" style="border:solid 1px #CCC;">
+                        <div class="col-xs-12" style="padding:10px; border-bottom:solid 1px #CCC; margin-bottom:10px;">
+                            <h4>Generate Ticket</h4>
+                        </div>
+                        <div class="col-xs-3">
+                            <select name="Branch" id="Branch" class="designer-select ekselect">
+                                @{
+                                    foreach (qmBranch item in Branches)
+                                    {
+                                        <option value="@(item.BranchID)">@(item.BranchName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-5">
+                            <select name="Service" id="Service" class="designer-select ekselect">
+                                @{
+                                    foreach (qmService item in Services)
+                                    {
+                                        <option value="@(item.ServiceID)">@(item.ServiceName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-4">
+                            <select name="Segment" id="Segment" class="designer-select ekselect">
+                                @{
+                                    foreach (qmSegment item in Segments)
+                                    {
+                                        <option value="@(item.SegmentID)" ServiceID="@(item.ServiceID)" class="SegmentItem">@(item.SegmentName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="col-xs-6">
+                                <input type="number" id="StartNumber" name="StartNumber" class="form-control" />
+                            </div>
+                            <div class="col-xs-6">
+                                <input type="number" id="EndNumber" name="EndNumber" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-xs-6 text-right">
+                            <input type="button" class="btn btn-primary" value="Start" id="btnStart1" onclick="StartGenerating();" />
+                        </div>
+
+                        <div class="col-xs-12 text-center" style="background-color:#F5F5F5; padding:10px;">
+                            <div class="col-xs-2" id="GenerateTimer">
+                                0 seconds...
+                            </div>
+                            <div class="col-xs-10" id="GenerateResult">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+                    <div class="row" style="border:solid 1px #CCC; margin-top:20px;">
+                        <div class="col-xs-12" style="padding:10px; border-bottom:solid 1px #CCC; margin-bottom:10px;">
+                            <h4>Calling Ticket</h4>
+                        </div>
+                        <div class="col-xs-3">
+                            <select name="Terminal" id="Terminal" class="designer-select ekselect">
+                                @{
+                                    foreach (qmTerminal item in Terminals)
+                                    {
+                                        <option value="@(item.TerminalID)">@(item.TerminalName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-3">
+                            <select name="User" id="User" class="designer-select ekselect">
+                                @{
+                                    foreach (qmUser item in Users)
+                                    {
+                                        <option value="@(item.UserID)">@(item.Username)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-4">
+                            <div class="col-xs-6">
+                                <input type="number" id="StartNumber2" name="StartNumber2" class="form-control" />
+                            </div>
+                            <div class="col-xs-6">
+                                <input type="number" id="EndNumber2" name="EndNumber2" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-xs-2 text-right">
+                            <input type="button" class="btn btn-primary" value="Start" onclick="StartCalling();" id="btnStart2" />
+                        </div>
+
+                        <div class="col-xs-12 text-center" style="background-color:#F5F5F5; padding:10px;">
+                            <div class="col-xs-2" id="CallTimer">
+                                0 seconds...
+                            </div>
+                            <div class="col-xs-10" id="CallResult">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row" style="border:solid 1px #CCC; margin-top:20px;">
+                        <div class="col-xs-12" style="padding:10px; border-bottom:solid 1px #CCC; margin-bottom:10px;">
+                            <h4>Reset Tickets</h4>
+                        </div>
+                        <div class="col-xs-10">
+                            <input type="datetime" class="form-control" id="txtResetDate" name="txtResetDate" placeholder="23:59:59 like time here" />
+                        </div>
+                        <div class="col-xs-2 text-right">
+                            <input type="button" class="btn btn-primary" value="Get Reset" onclick="ResetButton();" id="btnStart2" />
+                            <input type="button" class="btn btn-primary" value="Post Reset" onclick="Reset2Button();" id="btnStart2" />
+                        </div>
+
+                        <div class="col-xs-12 text-center" style="background-color:#F5F5F5; padding:10px;">
+                            <div class="col-xs-10" id="ResetResult">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>

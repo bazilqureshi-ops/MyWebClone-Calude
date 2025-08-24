@@ -1,0 +1,68 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmAppointment> Appointments = ViewBag.Appointments;
+    List<qmLimitRule> LimitRules = ViewBag.LimitRules;
+    List<qmSegment> Segments =  ViewBag.Segments;
+    List<qmATR> ATRs = ViewBag.ATRs;
+    List<qmTicket> Tickets = ViewBag.Tickets;
+    qmService Service = ViewBag.Service;
+}
+
+<p><b>This service has these entities. If you delete this service most of that entities will be deleted.</b></p>
+
+<div style="max-height:200px; height:200px; overflow-y:scroll; border:solid 1px #CCC; border-radius:5px; padding:5px;">
+
+    <p><i>This appointmennt schedules will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmAppointment item in Appointments)
+            {
+                <li>@(item.ApointmentName)</li>
+            }
+        }
+    </ul>
+    <p><i>This limits will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmLimitRule item in LimitRules)
+            {
+                <li>@(item.LimitNumber)</li>
+            }
+        }
+    </ul>
+
+    <p><i>This segments will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmSegment item in Segments)
+            {
+                <li>@(item.SegmentName)</li>
+            }
+        }
+    </ul>
+
+    <p>@(ATRs.Count()) step will be deleted.</p>
+    <p>Total @(Tickets.Count()) ticket will be deleted.</p>
+
+</div>
+
+<p><b>For the security reasons please enter randomly generated numbers below : </b></p>
+
+<p style="font-size:20px; text-decoration:line-through; font-family:'Segoe Script'; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;" unselectable="on">
+    <u>
+        <i>
+            @{
+                Random rnd = new Random();
+                int securu = rnd.Next(10000, 99999);
+                @(securu)
+            }
+        </i>
+    </u>
+</p>
+
+<form action="../Service/DeleteService" method="post" id="PostDelete" name="PostDelete">
+    <input type="hidden" value="@(Service.ServiceID)" id="txtServiceID" name="txtServiceID" />
+    <input type="hidden" value="@(securu)" id="txtSecuru" name="txtSecuru" />
+    <input type="text" class="form-control" name="txtNumber" id="txtNumber" />
+</form>

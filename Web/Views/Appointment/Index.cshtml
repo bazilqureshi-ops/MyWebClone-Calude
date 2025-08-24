@@ -1,0 +1,360 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	List<qmAppointment> Schedule = ViewBag.Schedule;
+	List<qmTicket> Ticket = ViewBag.Tickets;
+	List<qmBranch> Branches = ViewBag.Branches;
+	List<qmCustomer> Customers = ViewBag.Customers;
+	DateTime Tarih = ViewBag.SelectedDay;
+	qmBranch SelectedBranch = ViewBag.SelectedBranch;
+	qmAppointment SelectedApp = ViewBag.SelectedAppointment;
+
+	string Secili = "";
+	if (Tarih != null)
+	{
+		Secili = $"{Tarih.Year}-{Tarih.Month}-{Tarih.Day}";
+	}
+	else
+	{
+		Secili = DateTime.Now.ToString("YYYY,MM,DDD");
+		Tarih = DateTime.Now;
+	}
+
+	if (SelectedBranch == null)
+	{
+		SelectedBranch = Branches[0];
+	}
+
+}
+
+<style>
+	.r90 {
+		-webkit-transform: rotate(-90deg);
+		-moz-transform: rotate(-90deg);
+		transform: rotate(-90deg);
+		filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+		margin: 0px;
+		padding: 0px;
+	}
+</style>
+
+<script>
+	function OpenCreateModal(Date, Time, Branch, Appointment) {
+		$("#CreateFrame").css("height", "460px");
+		$("#CreateSave").show();
+		$("#CreateCancel").show();
+
+		var thelink = "Appointment/CreateAppointment?Date=" + Date + "&Time=" + Time + "&BranchID=" + Branch + "&AppointmentID=" + Appointment;
+		$("#CreateFrame").attr("src", thelink);
+		$("#CreateAppointmentModal").modal("show");
+	}
+
+	function PostSave() {
+		$('#CreateFrame').contents().find('form')[0].submit();
+
+		$("#CreateSave").fadeOut("slow");
+		$("#CreateCancel").fadeOut("slow");
+
+		$("#CreateFrame").animate({ "height": "200px" }, "slow", function () {
+
+		});
+	}
+
+	function CancelAppointment(ticketID) {
+		var ret = confirm("Do you really want to cancel this appointment? This process cannot take back. Be careful when you're doing this.");
+
+		if (ret) {
+			$.get("Appointment/CancelAppointment", { TicketID: ticketID }, function (data) {
+				if (data.indexOf("OK++") > 0) {
+					alert("Appointment cancelled. Ticket will be seen like not showed.");
+				}
+				else {
+					alert(data);
+				}
+			});
+		}
+	}
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="CreateAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="CreateAppointmentModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="row">
+					<div class="col-md-10">
+						<h5 class="modal-title" id="exampleModalLongTitle" style="font-size:18px;">Create Appointment</h5>
+					</div>
+					<div class="col-md-2">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="modal-body">
+				<iframe src="~/Appointment/" frameborder="0" height="460" width="100%" id="CreateFrame" name="CreateFrame" scrolling="no"></iframe>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="CreateCancel" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" id="CreateSave" class="btn btn-primary" onclick="PostSave();">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-xs-10 col-xs-offset-1">
+		<div class="card">
+			<div class="card-header">
+				Appointments
+			</div>
+			<div class="card-body">
+
+				<div class="row">
+					<div class="col-md-12">
+						<form name="form1" id="form1" action="" method="post">
+							<div class="col-md-3">
+								<input type="date" class="form-control" value="@(Secili)" id="Selected" name="Selected" />
+							</div>
+							<div class="col-md-4" style="padding-top:3px;">
+								<select name="Branch" id="Branch" class="select2" style="margin-top:20px;">
+									@{
+
+										bool isfirst = true;
+										foreach (qmBranch item in Branches)
+										{
+											if (isfirst)
+											{
+												<option value="@(item.BranchID)" selected="selected">@(item.BranchName)</option>
+												isfirst = false;
+											}
+											else
+											{
+												<option value="@(item.BranchID)">@(item.BranchName)</option>
+											}
+										}
+									}
+								</select>
+							</div>
+							<div class="col-md-3">
+								<select name="Appointment" id="Appointment" style="margin-top:20px;" class="select2">
+									@{
+										bool isfirstt = true;
+										foreach (qmAppointment item in Schedule)
+										{
+											if (isfirstt)
+											{
+												<option value="@(item.AppointmentID)" selected="selected">@(item.ApointmentName)</option>
+												isfirstt = false;
+											}
+											else
+											{
+												<option value="@(item.AppointmentID)">@(item.ApointmentName)</option>
+											}
+										}
+									}
+								</select>
+							</div>
+							<div class="col-md-2">
+								<input type="submit" value="List Schedule" class="btn btn-primary" style="margin-top:7px;" />
+							</div>
+						</form>
+					</div>
+					<div class="col-md-12 text-right" style="padding-top:14px;">
+						<span>Schedule for <b>@(SelectedBranch.BranchName)</b> and <b>@(Secili)</b></span>
+					</div>
+
+					<div class="col-md-12">
+						@{
+							if (SelectedApp != null)
+							{
+								TimeSpan StartTime = SelectedApp.StartDate.TimeOfDay;
+								TimeSpan EndTime = SelectedApp.EndDate.TimeOfDay;
+								TimeSpan PointerTime = StartTime;
+								int Periyod = Convert.ToInt32(60 / SelectedApp.AppointmentPerHour);
+								int CountOfAppointment = 0;
+
+
+								for (int i = 0; i < 1440; i++)
+								{
+									if (PointerTime != EndTime)
+									{
+										if (Periyod < 10)
+										{
+											PointerTime += TimeSpan.Parse("00:0" + Periyod + ":00");
+										}
+										else
+										{
+											if (Periyod == 60)
+											{
+												PointerTime += TimeSpan.Parse("01:00:00");
+											}
+											else
+											{
+												PointerTime += TimeSpan.Parse("00:" + Periyod + ":00");
+											}
+										}
+									}
+									else
+									{
+										CountOfAppointment = i;
+										PointerTime = StartTime;
+										break;
+									}
+								}
+
+
+
+								<table width="100%" id="appointmentTable" class="table table-bordered color-box-white">
+									<tr id="appointmentTableTitle">
+										<td rowspan="@(CountOfAppointment+1)" width="35" style="padding-left:0px; padding-right:0px; writing-mode:vertical-lr; vertical-align:middle; text-align:center; background-color:#F5F5F5; font-size:18px; font-weight:bold;">@(SelectedApp.ApointmentName)</td>
+										<td>Time</td>
+										<td>Ticket</td>
+										<td>Customer</td>
+										<td>Notes</td>
+										<td>ATR</td>
+										<td>Printed</td>
+										<td>Called</td>
+										<td width="50">Actions</td>
+									</tr>
+									@{
+										bool breakTime = false;
+										var breakTimeStart = SelectedApp.BreakStart;
+										var breakTimeEnd = SelectedApp.BreakEnd;
+
+										for (int i = 0; i <= CountOfAppointment; i++)
+										{
+											if (PointerTime != EndTime)
+											{
+												qmTicket bilet = Ticket.Where(x => x.PrintTime.TimeOfDay == PointerTime).Where(x => x.AppointmentID == SelectedApp.AppointmentID).FirstOrDefault();
+												string PointString = "";
+
+												if (bilet != null)
+												{
+													qmCustomer musteri = Customers.Where(x => x.CustomerID == bilet.CustomerID).FirstOrDefault();
+													<tr style="background-color:#FF232B; color:#FFF;">
+														<td>@(PointerTime.Hours < 10 ? "0" + PointerTime.Hours : "" + PointerTime.Hours):@(PointerTime.Minutes < 10 ? "0" + PointerTime.Minutes : "" + PointerTime.Minutes)</td>
+														<td>@(bilet.TicketPrefix) @(bilet.TicketNumber)</td>
+														<td>@(musteri.Name) @(musteri.Surname)</td>
+														<td>@(bilet.TicketNote)</td>
+														<td width="30" align="center" style="padding:2px;">
+															@{
+																if (bilet.AutoTransferRuleID != null)
+																{
+																	<span class='fa fa-check'></span>
+																}
+																else
+																{
+																	<span class='fa fa-remove'></span>
+																}
+															}
+														</td>
+														<td width="30" align="center" style="padding:2px;">
+															@{
+																if (bilet.IsPrinted == true)
+																{
+																	<span class='fa fa-check'></span>
+																}
+																else
+																{
+																	<span class='fa fa-remove'></span>
+																}
+															}
+														</td>
+														<td width="30" align="center" style="padding:2px;">
+															@{
+																if (bilet.CalledTerminalID != null)
+																{
+																	<span class='fa fa-check'></span>
+																}
+																else
+																{
+																	<span class='fa fa-remove'></span>
+																}
+															}
+														</td>
+														<td align="center" style="padding:2px;"><a href="javascript:CancelAppointment(@(bilet.TicketID));" class="btn btn-danger" style="padding:6px;"><span class="fa fa-remove"></span> Cancel</a></td>
+													</tr>
+												}
+												else if (PointerTime >= breakTimeStart && PointerTime <= breakTimeEnd && !breakTime)
+												{
+													breakTime = true;
+													<tr class="appointment-break">
+														<td>
+															@(PointerTime.Hours < 10 ? "0" + breakTimeStart.Hours : "" + breakTimeStart.Hours):@(PointerTime.Minutes < 10 ? "0" + breakTimeStart.Minutes : "" + breakTimeStart.Minutes) - @(PointerTime.Hours < 10 ? "0" + breakTimeEnd.Hours : "" + breakTimeEnd.Hours):@(PointerTime.Minutes < 10 ? "0" + breakTimeEnd.Minutes : "" + breakTimeEnd.Minutes)
+														</td>
+														<td>&nbsp;</td>
+														<td>&nbsp;</td>
+														<td>Break Time</td>
+														<td>&nbsp;</td>
+														<td>&nbsp;</td>
+														<td>&nbsp;</td>
+														<td>&nbsp;</td>
+
+													</tr>
+												}
+												else if (PointerTime >= breakTimeStart && PointerTime <= breakTimeEnd && breakTime)
+												{
+
+												}
+												else
+												{
+
+													<tr style="background-color:#158F6A;">
+
+														<td style="padding:2px; vertical-align: middle !important;">@(PointerTime.Hours < 10 ? "0" + PointerTime.Hours : "" + PointerTime.Hours):@(PointerTime.Minutes < 10 ? "0" + PointerTime.Minutes : "" + PointerTime.Minutes)</td>
+
+														<td>&nbsp;</td>
+
+														<td>&nbsp;</td>
+
+														<td>&nbsp;</td>
+
+														<td>&nbsp;</td>
+
+														<td>&nbsp;</td>
+
+														<td>&nbsp;</td>
+
+														<td align="center" style="padding:2px;"><a href="javascript:OpenCreateModal('@(Secili)','@(PointerTime)','@(SelectedBranch.BranchID)','@(SelectedApp.AppointmentID)');" class="btn btn-success" style="padding:6px;"><span class="fa fa-plus"></span> Create</a></td>
+													</tr>
+												}
+
+												if (Periyod < 10)
+												{
+													PointerTime += TimeSpan.Parse("00:0" + Periyod + ":00");
+												}
+												else
+												{
+													if (Periyod == 60)
+													{
+														PointerTime += TimeSpan.Parse("01:00:00");
+													}
+													else
+													{
+														PointerTime += TimeSpan.Parse("00:" + Periyod + ":00");
+													}
+												}
+											}
+											else
+											{
+												break;
+											}
+										}
+									}
+								</table>
+							}
+							else
+							{
+								<center><h4>Please select appointment details to show.</h4></center>
+							}
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

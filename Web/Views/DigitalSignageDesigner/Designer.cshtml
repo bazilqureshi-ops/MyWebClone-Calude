@@ -1,0 +1,574 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Digital Signage Screen Designer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmTerminal> terminals = ViewBag.terminals;
+}
+
+<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+<style>
+    .uiElement {
+        position: absolute;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        var widd = $("#DesignArea").width();
+        var heigg = widd / 1.7;
+        $("#DesignArea").css("height", heigg + "px");
+
+        if (!jQuery.ui) {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.async = true;
+            script.src = "//ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js";
+            var oScripts = document.getElementsByTagName("script");
+            var s = oScripts[0];
+            s.parentNode.insertBefore(script, s);
+        }
+    });
+
+    var ElementCount = 1;
+
+    function SetPageProperties() {
+        $("#DesignArea").css("background-image", 'url(' + $("#txtPageBGImage").val() + ')');
+    }
+
+    function GetProperties(tElement) {
+        $("#txtName").val(tElement.attr("name"));
+        $("#txtPosX").val((tElement.position().left / tElement.parent().width() * 100).toFixed(2));
+        $("#txtPosY").val((tElement.position().top / tElement.parent().height() * 100).toFixed(2));
+
+        if (tElement.is("div")) {
+            $("#txtText").val("Element not contain text attribute.");
+        }
+        else {
+            $("#txtText").val(tElement.text());
+        }
+
+        $("#txtWidth").val((100 * parseFloat(tElement.css('width')) / parseFloat(tElement.parent().css('width'))).toFixed(0));
+        $("#txtHeight").val((100 * parseFloat(tElement.css('height')) / parseFloat(tElement.parent().css('height'))).toFixed(0));
+
+        if (tElement.is("div")) {
+            var bgimg = tElement.children("video").children("source").attr("src");
+            if (bgimg != "none") {
+                $("#txtBGImage").val(bgimg);
+            }
+        }
+
+        if (tElement.is("label")) {
+            $("#txtBGImage").val("Element not contain background image or URL attribute.");
+        }
+        
+
+
+        $("#tElementID").html(tElement.attr("id"));
+
+        var cmbitem = tElement.attr("action");
+
+        $("#cmbAction").val(cmbitem);
+
+        if (cmbitem == "Counter") {
+            $(".param").hide();
+            $("#GoToScreenParameters").show();
+            $("#cmbGoToScreenParameter").val(tElement.attr("parameter")).change();
+        }
+        if (cmbitem == "Ticket") {
+            $(".param").hide();
+            $("#PrintTicketParameters").show();
+            $("#cmbPrintTicketParameter").val(tElement.attr("parameter")).change();
+        }
+
+        if (cmbitem == null) {
+            $(".param").hide();
+            $("#NoActionParameter").show();
+            $("#cmbAction").val("No Action").change();
+        }
+
+        //$("#txtActionParameter").val(tElement.attr("parameter"));
+    }
+
+    function SetProperties() {
+        var theid = $("#tElementID").html();
+
+        $("#" + theid).attr("name",$("#txtName").val());
+        $("#" + theid).css("left", $("#txtPosX").val() + "%");
+        $("#" + theid).css("top", $("#txtPosY").val() + "%");
+        if ($("#" + theid).is("label")) {
+
+            $("#" + theid).text($("#txtText").val());
+
+            $("#" + theid).resizable('destroy');
+
+            $("#" + theid).draggable({ containment: "#DesignArea" });
+            $("#" + theid).resizable({
+                containment: "#DesignArea",
+                alsoResize: $(this).find('label')
+            });
+        }
+        $("#" + theid).css("width", $("#txtWidth").val()+"%");
+        $("#" + theid).css("height", $("#txtHeight").val() + "%");
+        if ($("#" + theid).is("div")) {
+            var videourl = $("#" + theid).children("video").children("source").attr("src", $("#txtBGImage").val());
+        }
+
+        var itemaction = $("#cmbAction").val();
+        $("#" + theid).attr("action", itemaction);
+
+        if (itemaction == "Counter") {
+            $("#" + theid).attr("parameter", $("#cmbCounterParameter").val());
+        }
+        else if (itemaction == "Ticket") {
+            $("#" + theid).attr("parameter", $("#cmbTicketParameter").val());
+        }
+        else if (itemaction == "NoAction") {
+            $("#" + theid).attr("parameter", "");
+        }
+    }
+
+    function SetStyle() {
+        var theid = $("#tElementID").html();
+
+        $("#" + theid).css("font-family", $("#cmbFont").val());
+        $("#" + theid).css("font-size", $("#cmbFontSize").val() + "px");
+        $("#" + theid).css("color", $("#cmbColor").val());
+    }
+
+    function DeleteElement() {
+        var theid = $("#tElementID").html();
+        if (document.getElementById(theid).tagName == "DIV" || document.getElementById(theid).tagName == "LABEL") {
+            $("#" + theid).remove();
+        }
+        else {
+            $("#" + theid).closest(".uiElement").remove();
+        }
+    }
+
+    function CreateElement(elementtype) {
+        if (elementtype == "Label") {
+            var r = $('<label class="uiElement" style="border:dotted 2px #CCC; cursor:pointer;" onClick="GetProperties($(this));" id="' + ElementCount +'">Label Item</label>');
+            $("#DesignArea").append(r);
+            $(".uiElement").draggable({ containment: "#DesignArea" });
+            $(".uiElement").resizable({
+                containment: "#DesignArea"
+            });
+        }
+        if (elementtype == "ScrollText") {
+            var r = $('<label class="uiElement" style="border:dotted 2px #CCC; cursor:pointer;" onClick="GetProperties($(this));" type="ScrollText" id="' + ElementCount + '">Scroll Message</label>');
+            $("#DesignArea").append(r);
+            $(".uiElement").draggable({ containment: "#DesignArea" });
+            $(".uiElement").resizable({
+                containment: "#DesignArea"
+            });
+        }
+        /*if (elementtype == "Picturebox") {
+            var r = $('<span class="uiElement" id="' + ElementCount +'"><img src="#" style="border:dotted 3px #CCC; width:100px; height:100px; cursor:pointer;" class="resizable ui-state-active" onClick="GetProperties($(this).parent());" /></div>');
+            $("#DesignArea").append(r);
+            $(".uiElement").draggable({ containment: "#DesignArea" });
+            $(".resizable").resizable({
+                containment: "#DesignArea",
+                alsoResize: $(this).find('img')
+            });
+        }*/
+        if (elementtype == "WMV") {
+            var r = $('<div class="uiElement" id="' + ElementCount +'" style="width:350px; height:200px;"><video style= "width:100%; height:100%; border:dotted 2px #CCC; cursor:pointer;" onClick="GetProperties($(this).parent());" controls> <source src= "#" type= "video/mp4" > <source src="#" type="video/ogg" ></video></div>');
+            $("#DesignArea").append(r);
+            $(".uiElement").draggable({ containment: "#DesignArea" });
+            $(".uiElement").resizable({
+                containment: "#DesignArea"
+            });
+        }
+
+        ElementCount++;
+    }
+
+    function ConvertToCode() {
+        var PageName = $("#txtPageName").val();
+        var PageBackgroundImage = $("#txtPageBGImage").val();
+
+        var TheCode = "<Design>\n";
+
+
+        TheCode = TheCode + '<Page type="DigitalSignagePage" name="' + PageName + '" BackgroundImage="' + "http://" + window.location.hostname + PageBackgroundImage + '">\n';
+
+        $("#DesignArea").children().each(function () {
+            var tElement = $(this);
+
+
+            var ItemName = tElement.attr("name");
+            var ItemPositionX = (tElement.position().left / tElement.parent().width() * 100).toFixed(2);
+            var ItemPositionY = (tElement.position().top / tElement.parent().height() * 100).toFixed(2);
+
+            //alert(ItemPositionX + "     --     " + ItemPositionY);
+
+            var ItemText = "";
+            if (!tElement.is("div")) {
+                ItemText = tElement.text();
+            }
+
+            var ItemWidth = (100 * parseFloat(tElement.css('width')) / parseFloat(tElement.parent().css('width'))).toFixed(0);
+            var ItemHeight = (100 * parseFloat(tElement.css('height')) / parseFloat(tElement.parent().css('height'))).toFixed(0);
+
+            var ItemBG = "";
+            if (tElement.is("div")) {
+                var bgimg = tElement.children("video").children("source").attr("src");
+                if (bgimg != "none") {
+                    ItemBG = bgimg;
+                }
+            }
+
+            var ItemID = tElement.attr("id");
+            var ItemAction = tElement.attr("action");
+            var ItemParameter = "";
+
+
+            var cmbitem = tElement.attr("action");
+
+            $("#cmbAction").val(cmbitem);
+            if (cmbitem == "Counter") {
+                $(".param").hide();
+                $("#GoToScreenParameters").show();
+                ItemParameter = tElement.attr("parameter");
+            }
+            if (cmbitem == "Ticket") {
+                $(".param").hide();
+                $("#PrintTicketParameters").show();
+                ItemParameter = tElement.attr("parameter");
+            }
+
+            if ($(this).is("label")) {
+
+                var ItemFont = tElement.css("font-family");
+                var ItemFontSize = tElement.css("font-size");
+                var ItemColor = tElement.css("color");
+
+                if ($(this).attr("type") == "ScrollText") {
+                    TheCode = TheCode + '<Control type="Label">\n';
+                    TheCode = TheCode + '<Identifier>' + ItemID + '</Identifier>\n';
+                    TheCode = TheCode + '<Name>' + ItemName + '</Name>\n';
+                    TheCode = TheCode + '<Text>' + ItemText + '</Text>\n';
+                    TheCode = TheCode + '<PositionX>' + ItemPositionX + '</PositionX>\n';
+                    TheCode = TheCode + '<PositionY>' + ItemPositionY + '</PositionY>\n';
+                    TheCode = TheCode + '<Width>' + ItemWidth + '</Width>\n';
+                    TheCode = TheCode + '<Height>' + ItemHeight + '</Height>\n';
+                    TheCode = TheCode + '<Action>' + ItemAction + '</Action>\n';
+                    TheCode = TheCode + '<Parameter>' + ItemParameter + '</Parameter>\n';
+                    TheCode = TheCode + '<Font>' + ItemFont + '</Font>\n';
+                    TheCode = TheCode + '<Size>' + ItemFontSize + '</Size>\n';
+                    TheCode = TheCode + '<Color>' + ItemColor + '</Color>\n';
+                    /*
+                    <RightToLeft>True</RightToLeft>
+			<TickRate>10</TickRate>
+			<TickPercentage>5</TickPercentage>
+                    */
+                    TheCode = TheCode + '</Control>\n';
+                }
+                else {
+                    TheCode = TheCode + '<Control type="Label">\n';
+                    TheCode = TheCode + '<Identifier>' + ItemID + '</Identifier>\n';
+                    TheCode = TheCode + '<Name>' + ItemName + '</Name>\n';
+                    TheCode = TheCode + '<Text>' + ItemText + '</Text>\n';
+                    TheCode = TheCode + '<PositionX>' + ItemPositionX + '</PositionX>\n';
+                    TheCode = TheCode + '<PositionY>' + ItemPositionY + '</PositionY>\n';
+                    TheCode = TheCode + '<Width>' + ItemWidth + '</Width>\n';
+                    TheCode = TheCode + '<Height>' + ItemHeight + '</Height>\n';
+                    TheCode = TheCode + '<Action>' + ItemAction + '</Action>\n';
+                    TheCode = TheCode + '<Parameter>' + ItemParameter + '</Parameter>\n';
+                    TheCode = TheCode + '<Font>' + ItemFont + '</Font>\n';
+                    TheCode = TheCode + '<Size>' + ItemFontSize + '</Size>\n';
+                    TheCode = TheCode + '<Color>' + ItemColor + '</Color>\n';
+                    TheCode = TheCode + '</Control>\n';
+                }
+            }
+
+            if ($(this).is("div")) {
+                TheCode = TheCode + '<Control type="MediaElement">\n';
+                TheCode = TheCode + '<Identifier>' + ItemID + '</Identifier>\n';
+                TheCode = TheCode + '<Name>' + ItemName + '</Name>\n';
+                TheCode = TheCode + "<BackgroundImage>'" + ItemBG + "'</BackgroundImage>\n";
+                TheCode = TheCode + '<Text>' + ItemText + '</Text>\n';
+                TheCode = TheCode + '<PositionX>' + ItemPositionX + '</PositionX>\n';
+                TheCode = TheCode + '<PositionY>' + ItemPositionY + '</PositionY>\n';
+                TheCode = TheCode + '<Width>' + ItemWidth + '</Width>\n';
+                TheCode = TheCode + '<Height>' + ItemHeight + '</Height>\n';
+                TheCode = TheCode + '</Control>\n';
+            }
+        });
+
+        TheCode = TheCode + '</Page>\n</Design>';
+
+        $("#txtSourceCode").val(TheCode);
+    }
+
+
+    function SaveScreen() {
+        ConvertToCode();
+        $("form").submit();
+    }
+
+    function GoDesigner() {
+        $("#DesignTab").show();
+        $("#CodeTab").hide();
+
+        $("#btnGoSourceCode").removeClass("active");
+        $("#btnGoDesigner").addClass("active");
+
+    }
+
+    function GoSourceCode() {
+        $("#DesignTab").hide();
+        $("#CodeTab").show();
+
+        ConvertToCode();
+
+        $("#btnGoSourceCode").addClass("active");
+        $("#btnGoDesigner").removeClass("active");
+    }
+
+    function ActionChanged() {
+        var cmbitem = $("#cmbAction").val();
+        if (cmbitem == "Counter") {
+            $(".param").hide();
+            $("#GoToScreenParameters").show();
+        }
+        else if (cmbitem == "Ticket") {
+            $(".param").hide();
+            $("#PrintTicketParameters").show();
+        }
+        else if (cmbitem == "NoAction") {
+            $(".param").hide();
+            $("#NoActionParameter").show();
+        }
+    }
+</script>
+
+
+@using (Html.BeginForm())
+{
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <span class="fa fa-th-large"></span> ToolBox
+            </div>
+            <div class="panel-body">
+                <!--<a href="javascript:CreateElement('Picturebox');" class="btn btn-default btn-lg"><span class="fa fa-picture-o"></span> PictureBox</a>-->
+                <a href="javascript:CreateElement('Label');" class="btn btn-default btn-lg"><span class="fa fa-font"></span> Label</a>
+                <a href="javascript:CreateElement('WMV');" class="btn btn-default btn-lg"><span class="fa fa-video-camera"></span> Windows Media Video</a>
+                <a href="javascript:CreateElement('ScrollText');" class="btn btn-default btn-lg"><span class="fa fa-file-text"></span> Scroll Text</a>
+                <a href="javascript:CreateElement('RSSFeed');" class="btn btn-default btn-lg"><span class="fa fa-rss"></span> RSS Feed</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="active" id="btnGoDesigner"><a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a></li>
+                    <li role="presentation" id="btnGoSourceCode"><a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a></li>
+                </ul>
+            </div>
+            <div class="col-md-12" id="DesignTab">
+                <div class="panel panel-default">
+                    <div class="panel-body" id="DesignArea" style="border:solid 1px #000000; background-size:cover; padding:0px;">
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" id="CodeTab" style="display:none;">
+                <div class="panel panel-default">
+                    <div class="panel-body" id="SourceDiv">
+                        <textarea name="txtSourceCode" id="txtSourceCode" class="form-control" style="width:100%; height:100%; min-height:500px;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="fa fa-cogs"></span> Page Properties
+                </div>
+                <div class="panel-body">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td>Name </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtPageName" name="txtPageName" /></td>
+                        </tr>
+                        <tr>
+                            <td>Background Image </td>
+                            <td><input type="text" class="form-control" id="txtPageBGImage" /></td>
+                            <td><input type="button" value="..." class="btn btn-default" style="margin-top:-10px;" onclick="window.open('/KioskDesigner/ImageBrowser?ref=txtPageBGImage', 'Browser', 'width=1100,height=750');" /></td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2">
+                                <input type="button" class="btn btn-primary" value="Apply" onclick="SetPageProperties();" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="fa fa-cogs"></span> Element Properties
+                </div>
+                <div class="panel-body">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td colspan="3"><label id="tElementID"></label></td>
+                        </tr>
+                        <tr>
+                            <td>Name </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtName" /></td>
+                        </tr>
+                        <tr>
+                            <td>Background Image </td>
+                            <td><input type="text" class="form-control" id="txtBGImage" /></td>
+                            <td><input type="button" value="..." class="btn btn-default" style="margin-top:-10px;" id="ImgVideoBrowse" onclick="window.open('/DigitalSignageDesigner/VideoBrowser?ref=txtBGImage', 'Browser', 'width=1100,height=750');" /></td>
+                        </tr>
+                        <tr>
+                            <td>Text </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtText" /></td>
+                        </tr>
+                        <tr>
+                            <td>Position X</td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtPosX" /></td>
+                        </tr>
+                        <tr>
+                            <td>Position Y </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtPosY" /></td>
+                        </tr>
+                        <tr>
+                            <td>Width </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtWidth" /></td>
+                        </tr>
+                        <tr>
+                            <td>Height </td>
+                            <td colspan="2"><input type="text" class="form-control" id="txtHeight" /></td>
+                        </tr>
+                        <tr>
+                            <td>Action </td>
+                            <td colspan="2">
+                                <select name="cmbAction" id="cmbAction" class="select2" onchange="ActionChanged();">
+                                    <option value="NoAction">No Action</option>
+                                    <option value="Counter">Counter Number</option>
+                                    <option value="Ticket">Ticket Number</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Parameter </td>
+                            <td colspan="2" id="ParameterDiv">
+                                <div style="display:none;" id="GoToScreenParameters" class="param">
+                                    <select name="cmbCounterParameter" id="cmbCounterParameter" class="select2" style="width:100%;">
+                                        <option value="1">Counter 1</option>
+                                        <option value="2">Counter 2</option>
+                                        <option value="3">Counter 3</option>
+                                        <option value="4">Counter 4</option>
+                                    </select>
+                                </div>
+                                <div style="display:none;" id="PrintTicketParameters" class="param">
+                                    <select name="cmbTicketParameter" id="cmbTicketParameter" class="select2" style="width:100%;">
+                                        <option value="1">Ticket Number 1</option>
+                                        <option value="2">Ticket Number 2</option>
+                                        <option value="3">Ticket Number 3</option>
+                                        <option value="4">Ticket Number 4</option>
+                                    </select>
+                                </div>
+
+                                <div style="display:none;" id="NoActionParameter" class="param">
+                                    &nbsp;
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <input type="button" class="btn btn-danger" value="Delete Control" onclick="DeleteElement();" />
+                    <input type="button" class="btn btn-primary" value="Apply" onclick="SetProperties();" />
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="fa fa-cogs"></span> Style Properties
+                </div>
+                <div class="panel-body">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td colspan="3"><label id="tElementID"></label></td>
+                        </tr>
+                        <tr>
+                            <td>Font </td>
+                            <td colspan="2">
+                                <select name="cmbFont" id="cmbFont" class="select2">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Segoe UI">Segoe UI</option>
+                                    <option value="Comic Sans">Comic Sans</option>
+                                    <option value="Tahoma">Tahoma</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Size </td>
+                            <td colspan="2">
+                                <select name="cmbFontSize" id="cmbFontSize" class="select2">
+                                    <option value="8">8</option>
+                                    <option value="10">10</option>
+                                    <option value="12">12</option>
+                                    <option value="16">16</option>
+                                    <option value="18">18</option>
+                                    <option value="20">20</option>
+                                    <option value="21">21</option>
+                                    <option value="23">23</option>
+                                    <option value="26">26</option>
+                                    <option value="27">27</option>
+                                    <option value="30">30</option>
+                                    <option value="32">32</option>
+                                    <option value="36">36</option>
+                                    <option value="42">42</option>
+                                    <option value="46">46</option>
+                                    <option value="50">50</option>
+                                    <option value="55">55</option>
+                                    <option value="60">60</option>
+                                    <option value="66">66</option>
+                                    <option value="72">72</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Color </td>
+                            <td colspan="2">
+                                <select name="cmbColor" id="cmbColor" class="select2">
+                                    <option value="#000000">Black</option>
+                                    <option value="#FFFFFF">White</option>
+                                    <option value="#C00">Red</option>
+                                    <option value="#285F9F">Blue</option>
+                                    <option value="#008000">Green</option>
+                                    <option value="#FFFF00">Yellow</option>
+                                    <option value="#333333">Gray</option>
+                                    <option value="#800080">Purple</option>
+                                    <option value="#FFA500">Orange</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <input type="button" class="btn btn-primary" value="Apply Style" onclick="SetStyle();" />
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body text-right">
+                    <input type="button" class="btn btn-default" value="Cancel" />
+                    <input type="button" class="btn btn-primary" value="Save Screen" onclick="SaveScreen();" />
+                </div>
+            </div>
+        </div>
+    </div>
+}

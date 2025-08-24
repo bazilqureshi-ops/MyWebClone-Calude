@@ -1,0 +1,208 @@
+﻿<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+
+<link type="text/css" href="~/assets/css/hand-terminal.css" rel="stylesheet" />
+<link rel="icon" href="~/assets/qmagic.ico">
+<script src="~/Scripts/jquery-3.3.1.js"></script>
+@{
+    ViewBag.Title = "Error Occurred";
+    Layout = null;
+    int ErrorCode = ViewBag.ErrorCode;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+    string ipp = ViewBag.IP;
+}
+<img src='~/assets/images/disconnected1600.png' width="348" style="position:absolute; bottom:50px; left:50px; opacity:0.3;" />
+@{
+    if (ErrorCode == 1)
+    {
+
+		<div class="row" style="margin-top:30px;">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-default">
+					<div class="panel-body" id="MainArea">
+						<center id="error-container">
+							<p><img src='~/assets/images/wand-magic.png' /></p>
+                            <h3>
+                                Invalid Terminal !
+                            </h3>
+                            <p style="margin-left:50px; margin-right:50px;">
+                                Please get a static I.P. address/FQDN and assign this device as a terminal using QMagic Management Studio. <br /><br />
+                                <b>Your terminal details : @(Request.QueryString["IP"])</b><br />
+                            </p>
+
+							<script>
+								if (window.outerWidth <= 1300) {
+									setTimeout(() => { window.location = '/Session/Logout' }, 10000);
+									let redirectMessage = document.createElement('p');
+                                    redirectMessage.innerHTML = 'You will be redirected to the dashboard within 10 seconds.';
+									document.getElementById('error-container').appendChild(redirectMessage);
+								}
+								else {
+									setTimeout(() => { window.location = '/Home' }, 10000);
+									let redirectMessage = document.createElement('p');
+                                    redirectMessage.innerHTML = 'You will be redirected to the home within 10 seconds.';
+									document.getElementById('error-container').appendChild(redirectMessage);
+								}
+							</script>
+						</center>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	}
+	if (ErrorCode == 2)
+	{
+		<div class="row" style="position:absolute; top:15%; left:2.5%;">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-default">
+					<div class="panel-body" id="MainArea">
+                        <center>
+                            <p>
+                                <img src="~/assets/images/disconnected.gif" width="20%" />
+                            </p>
+                            <h3>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Label("قطع اتصال")
+                                            break;
+                                        case "TR":
+                                            @Html.Label("Sunucuyla bağlantı kesildi !")
+                                            break;
+                                        case "FR":
+                                            @Html.Label("Déconnecté")
+                                            break;
+                                        case "PK":
+                                            @Html.Label("منقطع")
+                                            break;
+                                        case "IN":
+                                            @Html.Label("डिस्कनेक्ट")
+                                            break;
+                                        case "PH":
+                                            @Html.Label("Nadiskonek")
+                                            break;
+                                        default:
+                                            @Html.Label("Disconnected from server!")
+                                            break;
+                                    }
+                                }
+                            </h3><br />
+                                 <p style="margin-left:50px; margin-right:50px;">Disconnected from server. Please select an action to continue. You can continue to the dashboard, try to establish a new connection or you can go directly to the login page. If you are seeing this message all the time, please contact your local QMagic partner.</p>
+                            <p>&nbsp;</p>
+                            <div class="col-md-4 text-left">
+                                <p class="text-left">
+                                    <a href="~/Home" class="btn btn-primary">
+                                        <i class="fa fa-home"></i>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("مرساه")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Ana Sayfa")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Ancre")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("لنگر")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("लंगर")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("angkla")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Anchor")
+                                                    break;
+                                            }
+                                        }
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-center" id="retry-button">
+                                <p class="text-center">
+                                    <a href="~/WebTerminal" class="btn btn-default">
+                                        <i class="fa fa-refresh"></i>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("اعاده المحاوله")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Tekrar Dene")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Réessayer")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("پھر کوشش کریں")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("पुनर्प्रयास")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Mag-ulit")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Retry")
+                                                    break;
+                                            }
+                                        }
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-right">
+                                    <a href="~/Session/Logout" class="btn btn-default">
+                                        <i class="fa fa-lock"></i>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("الخروج")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Çıkış Yap")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Déconnexion")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("لاگ آؤٹ")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("लॉगआउट")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Mag-logout")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Logout")
+                                                    break;
+                                            }
+                                        }
+                                    </a>
+                                </p>
+                            </div>
+                        </center>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+
+
+<script type="text/javascript" src="~/assets/js/vendor.js"></script>
+<script type="text/javascript" src="~/assets/js/app.js"></script>

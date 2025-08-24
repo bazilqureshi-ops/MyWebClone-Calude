@@ -1,0 +1,42 @@
+﻿@using Emse.QMagic.Web.Models;
+@using System.Xml.Linq;
+@using System.Text;
+@{
+    Layout = null;
+
+    string ItemDataSource = ViewBag.ItemDataSource;
+    string ItemRowMap = ViewBag.ItemRowMap;
+    int ItemRowCount = Convert.ToInt32(ViewBag.ItemRowCount);
+    string ItemRowName = ViewBag.ItemRowName;
+
+    string[] milenstone = ItemRowMap.Split('>');
+}
+
+
+<marquee direction="up" behavior="scroll" scrolldelay="30" scrollamount="1" style="width:100%; height:100%;">
+    @{
+        WebClient wclient = new WebClient();
+        wclient.Encoding = Encoding.GetEncoding("UTF-8");
+        string RSSData = wclient.DownloadString(ItemDataSource);
+
+        List<XElement> level2Element = XElement.Parse(RSSData).Elements().ToList();
+        List<XElement> downElements = new List<XElement>();
+
+        foreach (string mile in milenstone)
+        {
+            downElements.AddRange(level2Element.Elements(mile).ToList());
+        }
+        int izint = 0;
+        foreach (XElement item in downElements)
+        {
+            if (izint <= ItemRowCount)
+            {
+                string TheData = item.Element(ItemRowName).Value;
+
+                <p style="margin-bottom:20px; border-bottom:dotted 1px #FFF;">@(TheData)</p>
+
+                izint++;
+            }
+        }
+    }
+</marquee>

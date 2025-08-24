@@ -1,0 +1,982 @@
+﻿@using Emse.QMagic.Web.Models;
+@using System.Text.RegularExpressions;
+@model Emse.QMagic.Web.Models.qmTrigger
+@{
+    ViewBag.Title = "Triggers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmTrigger> triggers = ViewBag.Triggers;
+    List<qmBranch> branches = ViewBag.Branches;
+    List<qmSegment> segments = ViewBag.Segments;
+    List<qmService> services = ViewBag.Services;
+    List<qmCustomer> customers = ViewBag.Customers;
+    List<qmStatus> statuses = ViewBag.Statuses;
+    List<qmTerminal> terminals = ViewBag.Terminals;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+<script src="~/assets/ckeditor/ckeditor.js"></script>
+
+
+<script>
+    var editor1;
+    var editor2;
+
+    $(document).ready(function () {
+        editor1 = CKEDITOR.replace('editor');
+        editor2 = CKEDITOR.replace("edtr");
+    });
+
+    function OpenTrigger(tTriggerID) {
+        $("#TriggerArea").html("<center><img src='../../../../assets/images/loading2.gif' /><br/><h2>Please wait while loading information...</h2></center>");
+        $.post("Notifications/OpenTrigger", { TriggerID: tTriggerID }, function (data) {
+            $("#TriggerArea").html(data);
+            CKEDITOR.replace('editor');
+        });
+    }
+
+    function OpenCorresponds(tTriggerID) {
+        $.get("Notifications/Corresponds", { TriggerID: tTriggerID }, function (data) {
+            $("#CorrespondBody").html(data);
+            $("#btnSaveCorrespond").attr("onclick", "SaveCorresponds(" + tTriggerID + ");");
+            $("#TriggerCorresponds").fadeIn("fast");
+        });
+    }
+
+    function CloseModal2() {
+        $("#TriggerCorresponds").fadeOut("fast");
+    }
+
+    function SaveCorresponds(tTriggerID) {
+        var formcollection = $("#corresform").serialize();
+        $.post("Notifications/SaveCorresponds", { formcollection, TriggerID: tTriggerID }, function (data) {
+            $("#CorrespondBody").html(data);
+        });
+    }
+
+    function ShowCreateTrigger() {
+        $("#TriggerCreator").fadeIn("fast");
+    }
+
+    function CloseModal() {
+        $("#TriggerCreator").fadeOut("fast");
+    }
+
+    var Method = "";
+
+    function MethodSelect(tMethod) {
+        Method = tMethod;
+        NextStep(2);
+    }
+
+    function NextStep(StepNumber) {
+        if (StepNumber == 2) {
+            $("#CTStep1").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                $("#CTStep1").hide();
+                $("#CTStep2").css("margin-left", "-20px");
+                $("#CTStep2").css("opacity", "0");
+                $("#CTStep2").show();
+                $("#CTStep2").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                    //Done
+                });
+            });
+        }
+        else if (StepNumber == 3) {
+            if (Method == "HigherLower") {
+                $("#CTStep2").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#CTStep2").hide();
+                    $("#HLStep3").css("margin-left", "-20px");
+                    $("#HLStep3").css("opacity", "0");
+                    $("#HLStep3").show();
+                    $("#HLStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method === "DateTime") {
+                $("#CTStep2").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#CTStep2").hide();
+                    $("#DTStep3").css("margin-left", "-20px");
+                    $("#DTStep3").css("opacity", "0");
+                    $("#DTStep3").show();
+                    $("#DTStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method === "TrueFalse") {
+                $("#CTStep2").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#CTStep2").hide();
+                    $("#TFStep3").css("margin-left", "-20px");
+                    $("#TFStep3").css("opacity", "0");
+                    $("#TFStep3").show();
+                    $("#TFStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method === "IsOffline") {
+                $("#CTStep2").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#CTStep2").hide();
+                    $("#IOStep3").css("margin-left", "-20px");
+                    $("#IOStep3").css("opacity", "0");
+                    $("#IOStep3").show();
+                    $("#IOStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+        }
+        else if (StepNumber == 4) {
+            if (Method == "HigherLower") {
+                $("#HLStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#HLStep3").hide();
+                    $("#CTStep4").css("margin-left", "-20px");
+                    $("#CTStep4").css("opacity", "0");
+                    $("#CTStep4").show();
+                    $("#CTStep4").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "DateTime") {
+                $("#DTStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#DTStep3").hide();
+                    $("#CTStep4").css("margin-left", "-20px");
+                    $("#CTStep4").css("opacity", "0");
+                    $("#CTStep4").show();
+                    $("#CTStep4").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "TrueFalse") {
+                $("#TFStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#TFStep3").hide();
+                    $("#CTStep4").css("margin-left", "-20px");
+                    $("#CTStep4").css("opacity", "0");
+                    $("#CTStep4").show();
+                    $("#CTStep4").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "IsOffline") {
+                $("#IOStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#IOStep3").hide();
+                    $("#CTStep4").css("margin-left", "-20px");
+                    $("#CTStep4").css("opacity", "0");
+                    $("#CTStep4").show();
+                    $("#CTStep4").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+        }
+    }
+
+    function PreviousStep(StepNumber) {
+        if (StepNumber == 2) {
+            if (Method == "HigherLower") {
+                $("#HLStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#HLStep3").hide();
+                    $("#CTStep2").css("margin-left", "-20px");
+                    $("#CTStep2").css("opacity", "0");
+                    $("#CTStep2").show();
+                    $("#CTStep2").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "DateTime") {
+                $("#DTStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#DTStep3").hide();
+                    $("#CTStep2").css("margin-left", "-20px");
+                    $("#CTStep2").css("opacity", "0");
+                    $("#CTStep2").show();
+                    $("#CTStep2").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "TrueFalse") {
+                $("#TFStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#TFStep3").hide();
+                    $("#CTStep2").css("margin-left", "-20px");
+                    $("#CTStep2").css("opacity", "0");
+                    $("#CTStep2").show();
+                    $("#CTStep2").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+            else if (Method == "TrueFalse") {
+                $("#IOStep3").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                    $("#IOStep3").hide();
+                    $("#CTStep2").css("margin-left", "-20px");
+                    $("#CTStep2").css("opacity", "0");
+                    $("#CTStep2").show();
+                    $("#CTStep2").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                        //Done
+                    });
+                });
+            }
+        }
+        else if (StepNumber == 1) {
+            $("#CTStep2").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                $("#CTStep2").hide();
+                $("#CTStep1").css("margin-left", "-20px");
+                $("#CTStep1").css("opacity", "0");
+                $("#CTStep1").show();
+                $("#CTStep1").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                    //Done
+                });
+            });
+        }
+        else if (StepNumber == 3) {
+            var branch = $("#BranchList").val();
+
+            if (branch != undefined && branch != null && branch != "") {
+                if (Method == "HigherLower") {
+                    $("#CTStep4").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                        $("#CTStep4").hide();
+                        $("#HLStep3").css("margin-left", "-20px");
+                        $("#HLStep3").css("opacity", "0");
+                        $("#HLStep3").show();
+                        $("#HLStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                            //Done
+                        });
+                    });
+                }
+                else if (Method == "DateTime") {
+                    $("#CTStep4").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                        $("#CTStep4").hide();
+                        $("#DTStep3").css("margin-left", "-20px");
+                        $("#DTStep3").css("opacity", "0");
+                        $("#DTStep3").show();
+                        $("#DTStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                            //Done
+                        });
+                    });
+                }
+                else if (Method == "TrueFalse") {
+                    $("#CTStep4").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                        $("#CTStep4").hide();
+                        $("#TFStep3").css("margin-left", "-20px");
+                        $("#TFStep3").css("opacity", "0");
+                        $("#TFStep3").show();
+                        $("#TFStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                            //Done
+                        });
+                    });
+                }
+                else if (Method == "TrueFalse") {
+                    $("#CTStep4").animate({ marginLeft: "-20px", opacity: 0 }, 500, function () {
+                        $("#CTStep4").hide();
+                        $("#IOStep3").css("margin-left", "-20px");
+                        $("#IOStep3").css("opacity", "0");
+                        $("#IOStep3").show();
+                        $("#IOStep3").animate({ marginLeft: "0px", opacity: 1 }, 500, function () {
+                            //Done
+                        });
+                    });
+                }
+            }
+            else {
+                alert("Please select branch first.");
+            }
+        }
+    }
+
+    function Finish() {
+        if (Method == "HigherLower") {
+            var trigger_source = "<Notification><trigger>";
+            var comparer = $("#HLCondition").val();
+            trigger_source += "<comparer>" + comparer + "</comparer>";
+            var criteria = $("#HLCriteria").val();
+            trigger_source += "<criteria>" + criteria + "</criteria>";
+            var than = $("#HLThan").val();
+            trigger_source += "<than>" + than + "</than>";
+            var argument = $("#HLArgument").val();
+            trigger_source += "<argument>" + argument + "</argument>";
+            var branch = $("#BranchList").val();
+            trigger_source += "<branch>" + branch + "</branch>";
+            var timeout = $("#HLTimeout").val();
+            trigger_source += "<timeout>" + timeout + "</timeout>";
+            trigger_source += "</trigger></Notification>";
+
+            var aTitle = $("#txtTitle").val();
+            var aContent = editor2.getData();
+
+            $.post("Notifications/CreateTrigger", { Title: aTitle, Src: trigger_source, Msg: aContent }, function (data) {
+                $("#TriggerCreator").fadeOut("fast");
+                swal({
+                    title: "Trigger successfully created.",
+                    icon: "success"
+                }).then((willDelete) => {
+                    location.reload();
+                });
+            });
+        }
+        else if (Method == "DateTime") {
+            var trigger_source = "<Notification><trigger>";
+            var comparer = $("#DTCondition").val();
+            trigger_source += "<comparer>" + comparer + "</comparer>";
+            var criteria = $("#DTCriteria").val();
+            trigger_source += "<criteria>" + criteria + "</criteria>";
+            var than = $("#DTThan").val();
+            trigger_source += "<than>" + than + "</than>";
+            var argument = $("#DTArgument").val();
+            trigger_source += "<argument>" + argument + "</argument>";
+            var branch = $("#BranchList").val();
+            trigger_source += "<branch>" + branch + "</branch>";
+            var timeout = $("#DTTimeout").val();
+            trigger_source += "<timeout>" + timeout + "</timeout>";
+            trigger_source += "</trigger></Notification>";
+
+            var aTitle = $("#txtTitle").val();
+            var aContent = editor2.getData();
+
+            $.post("Notifications/CreateTrigger", { Title: aTitle, Src: trigger_source, Msg: aContent }, function (data) {
+                $("#TriggerCreator").fadeOut("fast");
+                swal({
+                    title: "Trigger successfully created.",
+                    icon: "success"
+                }).then((willDelete) => {
+                    location.reload();
+                });
+            });
+        }
+        else if (Method == "TrueFalse") {
+            var trigger_source = "<Notification><trigger>";
+            var comparer = $("#TFCondition").val();
+            trigger_source += "<comparer>" + comparer + "</comparer>";
+            var criteria = $("#TFCriteria").val();
+            trigger_source += "<criteria>" + criteria + "</criteria>";
+            var than = $("#TFThan").val();
+            trigger_source += "<than>" + than + "</than>";
+            trigger_source += "<argument></argument>";
+            var branch = $("#BranchList").val();
+            trigger_source += "<branch>" + branch + "</branch>";
+            var timeout = $("#TFTimeout").val();
+            trigger_source += "<timeout>" + timeout + "</timeout>";
+            trigger_source += "</trigger></Notification>";
+
+            var aTitle = $("#txtTitle").val();
+            var aContent = editor2.getData();
+
+            $.post("Notifications/CreateTrigger", { Title: aTitle, Src: trigger_source, Msg: aContent }, function (data) {
+                $("#TriggerCreator").fadeOut("fast");
+                swal({
+                    title: "Trigger successfully created.",
+                    icon: "success"
+                }).then((willDelete) => {
+                    location.reload();
+                });
+            });
+        }
+        else if (Method == "IsOffline") {
+            var trigger_source = "<Notification><trigger>";
+            var comparer = $("#IOCondition").val();
+            trigger_source += "<comparer>" + comparer + "</comparer>";
+            var criteria = $("#IOCriteria").val();
+            trigger_source += "<criteria>" + criteria + "</criteria>";
+            var than = $("#IOThan").val();
+            trigger_source += "<than>" + than + "</than>";
+            trigger_source += "<argument></argument>";
+            var branch = $("#BranchList").val();
+            trigger_source += "<branch>" + branch + "</branch>";
+            var timeout = $("#IOTimeout").val();
+            trigger_source += "<timeout>" + timeout + "</timeout>";
+            trigger_source += "</trigger></Notification>";
+
+            var aTitle = $("#txtTitle").val();
+            var aContent = editor2.getData();
+
+            $.post("Notifications/CreateTrigger", { Title: aTitle, Src: trigger_source, Msg: aContent }, function (data) {
+                $("#TriggerCreator").fadeOut("fast");
+                swal({
+                    title: "Trigger successfully created.",
+                    icon: "success"
+                }).then((willDelete) => {
+                    location.reload();
+                });
+            });
+        }
+    }
+
+    function DeleteTrigger() {
+        var link = $("#DelTrig").attr("golink");
+        if (link != "") {
+            swal({
+                title: "Are you sure want to delete this record?",
+                text: "This trigger will be deleted permanently.",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+                content: "This trigger will be deleted permanently."
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        window.location.href = link;
+                    } else {
+                        swal({
+                            title: "Nothing changed",
+                            icon: "success"
+                        });
+                    }
+                });
+        }
+    }
+    
+    function UpdateTrigger() {
+        var aTitle = $("#txtTriggerTitle").val();
+        var aContent = CKEDITOR.instances.editor.getData();
+        var aTriggerID = $("#UpTrig").attr("golink");
+
+        $.post("Notifications/EditTrigger", { Title: aTitle, Content: aContent, TriggerID: aTriggerID }, function (data) {
+            if (data.includes("OK++")) {
+                swal({
+                    title: "Trigger successfully updated.",
+                    icon: "success"
+                });
+            }
+            else {
+                swal({
+                    title: "Trigger could not be updated.",
+                    icon: "error"
+                });
+            }
+        });
+    }
+
+    function CriteriaChanged() {
+        var Criteria = $("#TFCriteria").val();
+
+        if (Criteria === "Customer") {
+            $("#TFStatus").hide();
+            $("#TFSegment").hide();
+            $("#TFCustomer").show();
+        }
+        else if (Criteria === "CustomerWithSegment") {
+            $("#TFStatus").hide();
+            $("#TFSegment").show();
+            $("#TFCustomer").hide();
+        }
+        else if (Criteria === "TerminalStatus") {
+            $("#TFStatus").show();
+            $("#TFSegment").hide();
+            $("#TFCustomer").hide();
+        }
+    }
+</script>
+
+<style>
+    .BlurBG{
+        background-image:url(../../assets/images/blur.png);
+        background-size:cover;
+        z-index:999999;
+        vertical-align:middle;
+        align-content:center;
+        position:fixed;
+        left:0px;
+        top:0px;
+        width:100%;
+        height:100%;
+        display:none;
+    }
+    .ModalGeneral{
+        background-color:#FFF;
+        border:solid 5px #000;
+        border-radius:5px;
+        margin-top:150px;
+    }
+</style>
+
+<div class="BlurBG" id="TriggerCreator">
+    <div class="ModalGeneral col-md-6 col-md-offset-3">
+        <div class="row">
+            <div class="col-md-10" style="padding-top:7px; padding-bottom:5px; background-color:#000; color:#FFF;">
+                <i class="fa fa-magic"></i> Notification Trigger Creation Wizard
+            </div>
+            <div class="col-md-2 text-right" style=" background-color:#000; color:#FFF;">
+                <i class="fa fa-remove" style="font-size:32px; cursor:pointer;" onclick="CloseModal();"></i>
+            </div>
+        </div>
+        <div class="row" style="padding-left:20px;padding-right:20px;padding-bottom:10px;">
+            <div class="col-md-12" id="CTStep1">
+
+                <h2>1. Welcome</h2>
+                <p>Please select a comparer method first.</p>
+
+                <div class="row">
+                    <div class="col-md-3 text-center" style="cursor:pointer;" onclick="MethodSelect('HigherLower');">
+                        <h3>
+                            <i class="fa fa-compress" style="font-size:64px;"></i><br />
+                            Higher / Lower Comparer
+                        </h3>
+                    </div>
+
+                    <div class="col-md-3 text-center" style="cursor:pointer;" onclick="MethodSelect('DateTime');">
+                        <h3>
+                            <i class="fa fa-clock-o" style="font-size:64px;"></i><br />
+                            Date / Time Comparer
+                        </h3>
+                    </div>
+
+                    <div class="col-md-3 text-center" style="cursor:pointer;" onclick="MethodSelect('TrueFalse');">
+                        <h3>
+                            <i class="fa fa-check" style="font-size:64px;"></i><br />
+                            True / False Comparer
+                        </h3>
+                    </div>
+
+                    <div class="col-md-3 text-center" style="cursor:pointer;" onclick="MethodSelect('IsOffline');">
+                        <h3>
+                            <i class="fa fa-power-off" style="font-size:64px;"></i><br />
+                            Online / Offline Comparer
+                        </h3>
+                    </div>
+                </div>
+
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+            </div>
+
+            <div class="col-md-12" id="CTStep2" style="display:none;">
+
+                <h2>2. Branch Selection</h2>
+                <p>Please select branch(es) for setting up trigger on it.</p>
+
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <select name="BranchList" id="BranchList" class="form-control" multiple="multiple" size="7">
+                            @{
+                                foreach (qmBranch branch in branches)
+                                {
+                                    <option value="@(branch.BranchID)">@(branch.BranchName)</option>
+                                }
+                            }
+                        </select>
+                        <p>&nbsp;</p>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(1);" />
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <input type="button" class="btn btn-primary" value="Next >" onclick="NextStep(3);" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12" id="TFStep3" style="display:none;">
+
+                <h2>3. Details</h2>
+                <p>Please select criteria, condition and count informations.</p>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>Criteria : </td>
+                                <td>
+                                    <select name="TFCriteria" id="TFCriteria" class="form-control" onclick="CriteriaChanged();">
+                                        <option value="Customer">Specific Customer</option>
+                                        <option value="CustomerWithSegment">Customer With Specific Segment</option>
+                                        <option value="TerminalStatus">Terminal Status</option>
+                                    </select>
+                                </td>
+                                <td>Than : </td>
+                                <td>
+                                    <div id="TFCustomer" style="min-width:200px;">
+                                        <select name="TFCustomerList" id="TFCustomerList" class="select2 form-control" style="width:100%;">
+                                            @{
+                                                foreach (qmCustomer customer in customers)
+                                                {
+                                                    <option value="@(customer.CustomerID)">@(customer.Name) @(customer.Surname) [@(customer.UniqueID)]</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div id="TFSegment" style="display:none;">
+                                        <select name="TFSegmentList" id="TFSegmentList" class="form-control">
+                                            @{
+                                                foreach (qmSegment segment in segments)
+                                                {
+                                                    qmService service = services.Where(x => x.ServiceID == segment.ServiceID).FirstOrDefault();
+
+                                                    <option value="@(segment.SegmentID)">@(service.ServiceName) / @(segment.SegmentName)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div id="TFStatus" style="display:none;">
+                                        <select name="TFStatusList" id="TFStatusList" class="form-control">
+                                            @{
+                                                foreach (qmStatus status in statuses)
+                                                {
+                                                    <option value="@(status.StatusID)">@(status.StatusName)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Condition : </td>
+                                <td>
+                                    <select name="TFCondition" id="TFCondition" class="form-control">
+                                        <option value="IsTrue">Is True</option>
+                                        <option value="IsFalse">Is False</option>
+                                    </select>
+                                </td>
+                                <td>Timeout (min) : </td>
+                                <td>
+                                    <input type="number" min="1" max="480" class="form-control" value="1" name="TFTimeout" id="TFTimeout" style="max-width:100px;" />
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(2);" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Next >" onclick="NextStep(4);" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-12" id="IOStep3" style="display:none;">
+
+                <h2>3. Details</h2>
+                <p>Please select criteria, condition and count informations.</p>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>Criteria : </td>
+                                <td>
+                                    <select name="IOCriteria" id="IOCriteria" class="form-control">
+                                        <option value="Terminal">Terminal</option>
+                                    </select>
+                                </td>
+                                <td>Than : </td>
+                                <td>
+                                    <select name="IOThan" id="IOThan" class="select2" style="width:100%;">
+                                        @{
+                                            foreach (qmTerminal terminal in terminals)
+                                            {
+                                                <option value="@(terminal.TerminalID)">@(terminal.TerminalName)</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Condition : </td>
+                                <td>
+                                    <select name="IOCondition" id="IOCondition" class="form-control">
+                                        <option value="IsOffline">Is Offline</option>
+                                    </select>
+                                </td>
+                                <td>Timeout (min) : </td>
+                                <td>
+                                    <input type="number" min="1" max="480" class="form-control" value="1" name="IOTimeout" id="IOTimeout" style="max-width:100px;" />
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(2);" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Next >" onclick="NextStep(4);" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="col-md-12" id="DTStep3" style="display:none;">
+
+                <h2>3. Details</h2>
+                <p>Please select criteria, condition and count informations.</p>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>Criteria : </td>
+                                <td>
+                                    <select name="DTCriteria" id="DTCriteria" class="form-control">
+                                        <option value="ProcessTime">Process Time</option>
+                                        <option value="WaitingTime">Waiting Time</option>
+                                    </select>
+                                </td>
+                                <td>Than : </td>
+                                <td>
+                                    <input type="time" min="1" max="999999" class="form-control -only-timepicker-" name="DTThan" id="DTThan" style="max-width:100px;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Service : </td>
+                                <td>
+                                    <select name="DTArgument" id="DTArgument" class="form-control">
+                                        @{
+                                            foreach (qmSegment segment in segments)
+                                            {
+                                                qmService service = services.Where(x => x.ServiceID == segment.ServiceID).FirstOrDefault();
+
+                                                <option value="@(segment.SegmentID)">@(service.ServiceName) / @(segment.SegmentName)</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                                <td>Condition : </td>
+                                <td>
+                                    <select name="DTCondition" id="DTCondition" class="form-control">
+                                        <option value="Exceeded">Exceeded</option>
+                                        <option value="Less">Less</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Timeout (min) : </td>
+                                <td>
+                                    <input type="number" min="1" max="480" class="form-control" value="1" name="DTTimeout" id="DTTimeout" style="max-width:100px;" />
+                                </td>
+                                <td>&nbsp;</td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(2);" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Next >" onclick="NextStep(4);" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-12" id="HLStep3" style="display:none;">
+
+                <h2>3. Details</h2>
+                <p>Please select criteria, condition and count informations.</p>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>Criteria : </td>
+                                <td>
+                                    <select name="HLCriteria" id="HLCriteria" class="form-control">
+                                        <option value="WaitingCount">Waiting Count</option>
+                                        <option value="CustomerCount">Customer Count</option>
+                                        <option value="AppointmentCount">Appointment Count</option>
+                                    </select>
+                                </td>
+                                <td>Than : </td>
+                                <td>
+                                    <input type="number" min="1" max="999999" class="form-control" value="1" name="HLThan" id="HLThan" style="max-width:100px;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Service : </td>
+                                <td>
+                                    <select name="HLArgument" id="HLArgument" class="form-control">
+                                        @{
+                                            foreach (qmSegment segment in segments)
+                                            {
+                                                qmService service = services.Where(x => x.ServiceID == segment.ServiceID).FirstOrDefault();
+
+                                                <option value="@(segment.SegmentID)">@(service.ServiceName) / @(segment.SegmentName)</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                                <td>Condition : </td>
+                                <td>
+                                    <select name="HLCondition" id="HLCondition" class="form-control">
+                                        <option value="Higher">Higher</option>
+                                        <option value="Lower">Lower</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Timeout (min) : </td>
+                                <td>
+                                    <input type="number" min="1" max="480" class="form-control" value="1" name="HLTimeout" id="HLTimeout" style="max-width:100px;" />
+                                </td>
+                                <td>&nbsp;</td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(2);" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Next >" onclick="NextStep(4);" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-12" id="CTStep4" style="display:none;">
+                <h2>4. Content</h2>
+                <p>Please give a name of that notification and enter body.</p>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" placeholder="Notification Title" />
+                    </div>
+                    <div class="col-md-12">
+                        <div class="row">
+                            <textarea name="edtr" id="edtr"></textarea>
+                        </div>
+                        <p>&nbsp;</p>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="button" class="btn btn-default" value="< Back" onclick="PreviousStep(3);" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Finish" onclick="Finish();" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="BlurBG" id="TriggerCorresponds">
+    <div class="ModalGeneral col-md-6 col-md-offset-3">
+        <div class="row">
+            <div class="col-md-10" style="padding-top:7px; padding-bottom:5px; background-color:#000; color:#FFF;">
+                <i class="fa fa-user"></i> Trigger Corresponds
+            </div>
+            <div class="col-md-2 text-right" style=" background-color:#000; color:#FFF;">
+                <i class="fa fa-remove" style="font-size:32px; cursor:pointer;" onclick="CloseModal2();"></i>
+            </div>
+        </div>
+
+        <div class="row" style="padding-left:20px;padding-right:20px;padding-bottom:10px; margin-top:20px;" id="CorrespondBody" name="CorrespondBody">
+
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-4 col-md-offset-1">
+        <div class="card">
+            <div class="card-header" style="padding:10px;">
+                <div class="col-md-12">
+                    <div class="col-md-6" style="margin-top:18px;">
+                        <span class="fa fa-gear"></span> Triggers
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <a class="btn btn-primary" href="javascript:ShowCreateTrigger();" style="margin-top:7px;"><i class="fa fa-plus"></i> Create</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="padding:0px; padding-top:20px;">
+                @{
+                    foreach (qmTrigger trigger in triggers)
+                    {
+                        trigger.TriggerMessage = Regex.Replace(trigger.TriggerMessage, "<(.|\n)*?>", String.Empty);
+
+                        <div class="row" style="margin:0px;">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body" style="padding:5px;">
+                                        <div class="row">
+                                            <div class="col-md-9">
+                                                <h4><a href="javascript:OpenTrigger(@(trigger.TriggerID));">@(trigger.TriggerName)</a></h4>
+                                                <p>@(trigger.TriggerMessage.Length > 100 ? trigger.TriggerMessage.Substring(0, 100) : trigger.TriggerMessage)</p>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <br /><br />
+                                                <a href="javascript:OpenCorresponds(@(trigger.TriggerID));" class="btn btn-default"><i class="fa fa-user"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><br />
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <span class="fa fa-pagelines"></span> Trigger Content
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12" id="TriggerArea">
+                        <input type="text" class="form-control" placeholder="Trigger Name" />
+                        <textarea id="editor" name="editor"></textarea>
+                    </div>
+                    <div class="col-md-12" style="margin-top:20px;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="javascript:DeleteTrigger();" class="btn btn-danger" style="margin-top:10px; margin-left:10px; margin-bottom:20px;" golink="" id="DelTrig" name="DelTrig"><i class="fa fa-remove"></i> Delete Trigger</a>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <input type="button" class="btn btn-primary" value="Update" id="UpTrig" name="UpTrig" golink="" onclick="UpdateTrigger();" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

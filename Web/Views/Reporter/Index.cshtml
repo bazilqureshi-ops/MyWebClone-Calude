@@ -1,0 +1,205 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Reporter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<qmBranch> branches = ViewBag.Branch;
+    List<qmCustomer> customers = ViewBag.Customer;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+
+    $(document).ready(function () {
+        var branchcount = @(branches.Count());
+
+        if (branchcount < 1) {
+            var str = "<p>You cannot take any report with this user. </p>";
+
+            swal({
+                title: "Hmm.. Consider This",
+                text: str,
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+                content: str
+            });
+
+            $(".swal-text").html(str);
+        }
+    });
+</script>
+
+<script>
+    function NextStep(stepid) {
+        var reporttype = $("#lstReport").val();
+        if (reporttype == "CustomerBased") {
+            $("#CustomerSelector").show();
+        }
+        else {
+            $("#CustomerSelector").hide();
+        }
+
+        var oldstepid = stepid - 1;
+        $("#Step" + oldstepid).fadeOut(function () {
+            $("#Step" + stepid).fadeIn();
+        });
+    }
+    function PreviousStep(stepid) {
+        var oldstepid = stepid + 1;
+        $("#Step" + oldstepid).fadeOut(function () {
+            $("#Step" + stepid).fadeIn();
+        });
+    }
+
+    function Finish() {
+        var Branches = $("#lstBranch").val();
+        var startDate = $("#startDate").val();
+        var endDate = $("#endDate").val();
+
+        if (Branches.length != 0 && startDate != "" && endDate != "") {
+            $("#Loading").fadeIn("fast");
+            $("#form1").attr("action", "Reporter/GenerateReport");
+            $("#form1").submit();
+        }
+        else {
+            swal({
+                title: "Please fill all required fields.",
+                icon: "error"
+            });
+        }
+    }
+</script>
+
+<style>
+    .LoadingLD {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        z-index: 1453;
+        background-color: #FFFFFF;
+        vertical-align: middle;
+        text-align: center;
+        display: none;
+    }
+</style>
+
+<div class="text-center LoadingLD" id="Loading">
+    <h1>&nbsp;</h1><h1>&nbsp;</h1><h1>&nbsp;</h1>
+    <img src="~/assets/images/loading3.gif" />
+    <h2>Generating Report...</h2>
+    <p>This can take a minute or two. May vary depending on the size of the data. Please do not close this tab during process.</p>
+</div>
+
+<form action="" method="post" id="form1" name="form1">
+    <div class="row">
+        <div class="col-xs-6 col-xs-offset-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div id="Step1">
+                            <h3>1. Select Branch</h3>
+                            <p>Please select branch(es) for performing report.</p>
+                            <div class="row">
+                                <div class="col-md-6 col-md-offset-3">
+                                    <select name="lstBranch" id="lstBranch" class="select2" multiple="multiple" size="5">
+                                        @{
+                                            foreach (qmBranch branch in branches)
+                                            {
+                                                <option value="@(branch.BranchID)">@(branch.BranchName)</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-12 text-right">
+                                    <a href="#" class="btn btn-primary" onclick="NextStep(2);">Next ></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="Step2" style="display:none;">
+                            <h3>2. Select Report Base</h3>
+                            <p>What is this report based on. Also you must select the report type.</p>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <select name="lstReport" id="lstReport" class="select2" style="width:100%;" size="10">
+                                        <option value="DetailedTicket" selected="selected">Detailed Ticket Report</option>
+                                        <option value="ServiceBased">Service Based Report</option>
+                                        <option value="SegmentBased">Segment Based Report</option>
+                                        <option value="UserBased">User Based Report</option>
+                                        <option value="TerminalBased">Terminal Based Report</option>
+                                        <option value="BranchBased">Branch Based Report</option>
+                                        <option value="CustomerBased">Customer Based Report</option>
+                                        <option value="AppointmentReport">Appointment Report</option>
+                                        <option value="DetailedTicketJourney">Detailed Ticket Journey Report</option>
+                                        <option value="VotebookReport">Votebook Report</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="lstFormat" id="lstFormat" class="select2" style="width:100%;">
+                                        <option value="PDF" selected="selected">PDF File</option>
+                                        <option value="Excel">Excel Document</option>
+                                        <option value="Word">Word Document</option>
+                                        <option value="Image">Image File</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <a class="btn btn-default" href="#" onclick="PreviousStep(1);">< Previous</a>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <a class="btn btn-primary" href="#" onclick="NextStep(3);">Next ></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="Step3" style="display:none;">
+                            <h3>3. Date Range</h3>
+                            <p>Please select the date range and get your report.</p>
+                            <div class="row">
+                                <div class="col-md-8 col-md-offset-2">
+                                    <div class="col-md-12" id="CustomerSelector" style="display:none;">
+                                        <select name="lstCustomer" id="lstCustomer" class="select2" style="width:100%;">
+                                            @{
+                                                foreach (qmCustomer customer in customers)
+                                                {
+                                                    <option value="@(customer.CustomerID)">@(customer.Name) @(customer.Surname)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="date" name="startDate" id="startDate" class="form-control" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="date" name="endDate" id="endDate" class="form-control" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="signUser" id="signUser" class="form-control" placeholder="Who will sign this report?" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="signDescription" id="signDescription" class="form-control" placeholder="What is the title of this sign authority?" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <a class="btn btn-default" href="#" onclick="PreviousStep(2);">< Previous</a>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <a href="#" class="btn btn-primary" onclick="Finish();">Generate</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

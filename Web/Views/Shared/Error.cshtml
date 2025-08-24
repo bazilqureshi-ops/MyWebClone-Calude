@@ -1,0 +1,64 @@
+﻿<style>
+    .card-header {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    #error-left {
+        position: relative;
+        float: left;
+        width: 60%;
+        padding-left: 3%;
+        text-align: center;
+    }
+
+    #error-right {
+        position: relative;
+        float: right;
+        width: 40%;
+    }
+
+    #oops {
+        margin-bottom: unset;
+        font-size: 128px;
+    }
+
+    #error-message, span {
+    }
+</style>
+
+<div class="row col-xs-12 col-md-12" style="margin-left: 2px;">
+    <div class="card d-flex">
+        <div class="card-header">
+
+            <div id="error-left">
+                <h1 id="oops">Oops.</h1>
+                <h3 id="error-message">An error occurred while processing your request.</h3>
+
+                <span>
+                    @(ViewData["ErrorException"])
+                </span>
+
+                <!-- TODO: Show Exception Detail
+                    <br />
+                <span>
+                    To see detail of error, click here
+                </span>
+                    -->
+
+                <span style="display:none;">
+                    @(ViewBag.ErrorExceptionDetail)
+                </span>
+
+            </div>
+
+            <div id="error-right">
+                <img src="/assets/images/qmagic.png" alt="QMagic Queue Management System" />
+            </div>
+
+
+
+        </div>
+    </div>
+
+</div>

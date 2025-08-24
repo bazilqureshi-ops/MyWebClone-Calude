@@ -1,0 +1,13 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmTrigger trigger = ViewBag.trigger;
+}
+
+<input type="text" class="form-control" placeholder="Trigger Name" id="txtTriggerTitle" name="txtTriggerTitle" value="@(trigger.TriggerName)" />
+<textarea id="editor" name="editor">@(trigger.TriggerMessage)</textarea>
+
+<script>
+    $("#DelTrig").attr("golink", "../../../Notifications/DeleteTrigger?TriggerID=" +@(trigger.TriggerID));
+    $("#UpTrig").attr("golink","@(trigger.TriggerID)");
+</script>

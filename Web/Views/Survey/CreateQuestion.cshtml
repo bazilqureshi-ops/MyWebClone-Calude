@@ -1,0 +1,47 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+}
+
+<script>
+    $(document).ready(function () {
+        $("#QuestionRenderType").change(function () {
+            var RenderType = $("#QuestionRenderType").val();
+            if (RenderType == 0) {
+                $("#ImageOption").show();
+                $("#QuestionText").hide();
+            }
+            else {
+                $("#QuestionText").show();
+                $("#ImageOption").hide();
+            }
+        });
+    });
+</script>
+
+<form action="../Survey/DoCreateQuestion" method="post" id="PostQuestion" name="PostQuestion">
+    <div class="row">
+        <input type="hidden" id="SurveyID" name="SurveyID" value="@(ViewBag.SurveyID)" />
+        <div class="col-md-12" id="TextOption">
+            <input type="text" id="QuestionText" name="QuestionText" placeholder="Answer Text" class="form-control" />
+        </div>
+        <div class="col-md-12" id="ImageOption" style="display:none;">
+            <div class="col-md-10">
+                <input type="text" id="ImageURL" name="ImageURL" placeholder="URL Here" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <input type="button" value="..." class="btn btn-default" onclick="window.open('/KioskDesigner/ImageBrowser?reff=ImageURL', 'Browser', 'width=1100,height=750');" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <input type="number" min="1" max="10" class="form-control" id="OrderNumber" name="OrderNumber" placeholder="Answer Order" />
+        </div>
+        <div class="col-md-6">
+            <select id="QuestionRenderType" name="QuestionRenderType" class="form-control">
+                <option value="0">Image</option>
+                <option value="1">Commentary</option>
+                <option value="2">Text</option>
+            </select>
+        </div>
+    </div>
+</form>

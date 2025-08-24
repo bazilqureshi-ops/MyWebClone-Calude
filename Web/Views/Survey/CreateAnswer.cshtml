@@ -1,0 +1,69 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List <qmSurveyQuestion > questions = ViewBag.Questions;
+}
+
+<script>
+    $(document).ready(function () {
+        $("#AnswerRenderType").change(function () {
+            var RenderType = $("#AnswerRenderType").val();
+            if (RenderType != 2) {
+                $("#AnswerText").show();
+            }
+            else {
+                $("#AnswerText").hide();
+            }
+
+            if (RenderType == 2 || RenderType == 3) {
+                $("#ImageOption").show();
+            }
+            else {
+                $("#ImageOption").hide();
+            }
+
+        });
+    });
+</script>
+
+<form action="../Survey/DoCreateAnswer" method="post" id="PostAnswer" name="PostAnswer">
+    <div class="row">
+        <input type="hidden" id="QuestionID" name="QuestionID" value="@(ViewBag.QuestionID)" />
+        <div class="col-md-12" id="TextOption">
+            <input type="text" id="AnswerText" name="AnswerText" placeholder="Answer Text" class="form-control" />
+        </div>
+        <div class="col-md-12" id="ImageOption" style="display:none;">
+            <input type="text" id="ImageURL" name="ImageURL" placeholder="URL Here" class="form-control" />
+            <input type="button" value="..." class="btn btn-default" onclick="window.open('/KioskDesigner/ImageBrowser?reff=ImageURL', 'Browser', 'width=1100,height=750');" />
+        </div>
+        <div class="col-md-6">
+            <input type="number" min="1" max="10" class="form-control" id="OrderNumber" name="OrderNumber" placeholder="Answer Order" />
+        </div>
+        <div class="col-md-6">
+            <input type="number" min="0" max="100" class="form-control" id="Point" name="Point" placeholder="Point" />
+        </div>
+        <div class="col-md-6">
+            <select id="AnswerRenderType" name="AnswerRenderType" class="form-control">
+                <option value="0">Text Next</option>
+                <option value="1">Text List</option>
+                <option value="2">Image</option>
+                <option value="3">Text + Image</option>
+                <option value="4">Slider</option>
+                <option value="5">Checkbox</option>
+                <option value="6">Textbox</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <select id="GoToQuestion" name="GoToQuestion" class="form-control">
+                <option value="0">None</option>
+                @{
+                    foreach (qmSurveyQuestion question in questions)
+                    {
+                        <option value="@question.SurveyQuestionID">@(question.Question)</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+</form>

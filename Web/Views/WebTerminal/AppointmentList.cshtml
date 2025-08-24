@@ -1,0 +1,316 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmAppointment> Appointments = ViewBag.Appointments;
+    List<qmTicket> Ticket = ViewBag.Tickets;
+    List<qmCustomer> Customers = ViewBag.Customers;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+}
+
+<div>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        @{
+            int indis = 0;
+            foreach (qmAppointment item in Appointments)
+            {
+                if (indis == 0)
+                {
+                    <li role="presentation" class="active"><a href="#Tab@(indis)" aria-controls="Tab@(indis)" role="tab" data-toggle="tab">@(item.ApointmentName)</a></li>
+                }
+                else
+                {
+                    <li role="presentation"><a href="#Tab@(indis)" aria-controls="Tab@(indis)" role="tab" data-toggle="tab">@(item.ApointmentName)</a></li>
+                }
+
+                indis++;
+            }
+        }
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        @{
+            indis = 0;
+            foreach (qmAppointment SelectedApp in Appointments)
+            {
+                string ekcss = "";
+                if (indis == 0)
+                {
+                    ekcss = "active";
+                }
+                else
+                {
+                    ekcss = "";
+                }
+
+
+
+
+                <div role="tabpanel" class="tab-pane @(ekcss)" id="Tab@(indis)">
+                    @{
+                        if (SelectedApp != null)
+                        {
+                            TimeSpan StartTime = SelectedApp.StartDate.Value.TimeOfDay;
+                            TimeSpan EndTime = SelectedApp.EndDate.Value.TimeOfDay;
+                            TimeSpan PointerTime = StartTime;
+                            int Periyod = Convert.ToInt32(60 / SelectedApp.AppointmentPerHour);
+                            int CountOfAppointment = 0;
+
+
+                            for (int i = 0; i < 1440; i++)
+                            {
+                                if (PointerTime != EndTime)
+                                {
+                                    if (Periyod < 10)
+                                    {
+                                        PointerTime += TimeSpan.Parse("00:0" + Periyod + ":00");
+                                    }
+                                    else
+                                    {
+                                        if (Periyod == 60)
+                                        {
+                                            PointerTime += TimeSpan.Parse("01:00:00");
+                                        }
+                                        else
+                                        {
+                                            PointerTime += TimeSpan.Parse("00:" + Periyod + ":00");
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    CountOfAppointment = i;
+                                    PointerTime = StartTime;
+                                    break;
+                                }
+                            }
+
+
+
+                            <table width="100%" class="table table-bordered">
+                                <tr>
+                                    <td>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("الوقت")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Saat")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Heure")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("وقت")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("समय")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Oras")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Time")
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("تذكره")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Bilet")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Billet")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("ٹکٹ")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("टिकट")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Tiket")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Ticket")
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("العملاء")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Müşteri")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Client")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("کسٹمر")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("ख़रीदार")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Customer")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Customer")
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("تلاحظ")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("Notlar")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Notes")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("نوٹ")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("नोट्स")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Mga Tala")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Notes")
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td width="50">
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Label("العمل")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Label("İşlem")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Label("Action")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Label("عمل")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Label("मुक़दमा")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Label("Aksyon")
+                                                    break;
+                                                default:
+                                                    @Html.Label("Action")
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                                @{
+                                    for (int i = 0; i <= CountOfAppointment; i++)
+                                    {
+                                        if (PointerTime != EndTime)
+                                        {
+                                            qmTicket bilet = Ticket.Where(x => x.PrintTime.Value.TimeOfDay == PointerTime).Where(x => x.AppointmentID == SelectedApp.AppointmentID).FirstOrDefault();
+
+                                            if (bilet != null)
+                                            {
+                                                if (bilet.IsPrinted == true)
+                                                {
+                                                    qmCustomer musteri = Customers.Where(x => x.CustomerID == bilet.CustomerID).FirstOrDefault();
+                                                    <tr style="background-color:#158F6A;">
+                                                        <td style="padding:2px;" valign="middle">@(PointerTime.Hours < 10 ? "0" + PointerTime.Hours : "" + PointerTime.Hours):@(PointerTime.Minutes < 10 ? "0" + PointerTime.Minutes : "" + PointerTime.Minutes)</td>
+                                                        <td style="padding:2px;" valign="middle">@(bilet.TicketPrefix) @(bilet.TicketNumber)</td>
+                                                        <td style="padding:2px;" valign="middle">@(musteri.Name) @(musteri.Surname)</td>
+                                                        <td style="padding:2px;" valign="middle">@(bilet.TicketNote)</td>
+                                                        <td align="center" valign="middle" style="padding:2px;"><a href="javascript:ManualCall(@(bilet.TicketID));" class="btn btn-success" style="padding:6px;"><span class="fa fa-bell"></span></a></td>
+                                                    </tr>
+                                                }
+                                                else
+                                                {
+                                                    qmCustomer musteri = Customers.Where(x => x.CustomerID == bilet.CustomerID).FirstOrDefault();
+                                                    <tr style="background-color:#b6ff00;">
+                                                        <td style="padding:2px;" valign="middle">@(PointerTime.Hours < 10 ? "0" + PointerTime.Hours : "" + PointerTime.Hours):@(PointerTime.Minutes < 10 ? "0" + PointerTime.Minutes : "" + PointerTime.Minutes)</td>
+                                                        <td style="padding:2px;" valign="middle">@(bilet.TicketPrefix) @(bilet.TicketNumber)</td>
+                                                        <td style="padding:2px;" valign="middle">@(musteri.Name) @(musteri.Surname)</td>
+                                                        <td style="padding:2px;" valign="middle">@(bilet.TicketNote)</td>
+                                                        <td align="center" valign="middle" style="padding:2px;">Awaiting Check-in</td>
+                                                    </tr>
+                                                }
+                                                
+                                            }
+                                            else
+                                            {
+                                                <tr style="background-color:#FF232B; color:#FFF;">
+                                                    <td style="padding:2px;" valign="middle">@(PointerTime.Hours < 10 ? "0" + PointerTime.Hours : "" + PointerTime.Hours):@(PointerTime.Minutes < 10 ? "0" + PointerTime.Minutes : "" + PointerTime.Minutes)</td>
+                                                    <td style="padding:2px;" valign="middle">&nbsp;</td>
+                                                    <td style="padding:2px;" valign="middle">&nbsp;</td>
+                                                    <td style="padding:2px;" valign="middle">&nbsp;</td>
+                                                    <td align="center" valign="middle" style="padding:2px;">&nbsp;</td>
+                                                </tr>
+                                            }
+
+                                            if (Periyod < 10)
+                                            {
+                                                PointerTime += TimeSpan.Parse("00:0" + Periyod + ":00");
+                                            }
+                                            else
+                                            {
+                                                if (Periyod == 60)
+                                                {
+                                                    PointerTime += TimeSpan.Parse("01:00:00");
+                                                }
+                                                else
+                                                {
+                                                    PointerTime += TimeSpan.Parse("00:" + Periyod + ":00");
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            </table>
+                        }
+                    }
+                </div>
+
+
+                indis++;
+            }
+        }
+    </div>
+
+</div>

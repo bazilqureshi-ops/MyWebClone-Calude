@@ -1,0 +1,370 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    qmTerminal LoginTerminal = ViewBag.LoginTerminal;
+    List<qmBranch> BranchList = ViewBag.BranchList;
+    qmUser LoginUser = ViewBag.LoginUser;
+    List<qmTransferRule> ServiceTransferList = ViewBag.ServiceTransferList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+    List<qmGenerateTicketRule> Rules = ViewBag.Rules;
+    List<qmGenerateTicketItem> GenItems = ViewBag.GenItems;
+    string Segments = ViewBag.Segments;
+
+    qmTicket autofillticket = null;
+    if (ViewBag.AutoFillTicket != null)
+    {
+        autofillticket = ViewBag.AutoFillTicket;
+    }
+}
+<script src="http://localhost/SignalR/Hubs"></script>
+<script src="~/Scripts/Terminal.js"></script>
+
+<script>
+    loginTerminalID = "@(LoginTerminal.TerminalID)";
+    loginUserID = "@(LoginUser.UserID)";
+    var commasegment = "@(Segments)";
+    var SegmentList = commasegment.split(",");
+</script>
+
+@{
+    if (autofillticket != null)
+    {
+        <script>
+        var bckp = "@(autofillticket.TicketID)";
+        if (bckp != null) {
+            BackupCall = bckp;
+        }
+        </script>
+    }
+
+    <script>
+        ExitStatusID = @(LoginTerminal.ExitStatusID);
+        ReadyStatusID = @(LoginTerminal.ReadyStatusID);
+    </script>
+}
+
+<link href="~/Content/Site.css" rel="stylesheet" />
+<img src="~/assets/qlogo.png" style="position:absolute; right:10px; bottom:10px; opacity:0.3;" />
+
+<div id="TerminalLoadingMain">
+    &nbsp;
+</div>
+
+<a href="#" class="btn btn-danger btn-sm" style="position:absolute; right:50px; top:20px;" onclick="LogoutRequest();"><b><i class="fa fa-sign-out"></i> @(Localization.Translate(LanguageCode,"Logout"))</b></a>
+<img src="~/assets/client.png" height="150" style="position:absolute; left:50px; bottom:50px;" />
+
+<div class="container-fluid" style="margin:20px;">
+    <div class="row">
+        <div class="col-3 col-sm-12 col-md-6 col-lg-3 col-xl-3">
+            <div class="card">
+                <div class="card-header">
+                    <center><b>@(LoginTerminal.TerminalName) <span class="badge bg-secondary">@(LoginTerminal.TerminalNumber)</span></b></center>
+                </div>
+                <div class="card-body" style="padding:0px;">
+                    <div class="row" style="margin-bottom:10px; margin-top:10px;">
+                        <div class="card">
+                            <div class="card-body idcard">
+                                <div class="row">
+                                    <div class="col-4 justify-content-center">
+                                        <img src="@(LoginUser.ProfilePicture)" width="100%" style="border:solid 1px #000;" />
+                                    </div>
+                                    <div class="col-8">
+                                        @(LoginUser.FullName)<br />
+                                        @(LoginUser.CorporateNumber)<br />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="javascript:NextCall();" id="btnNextCall" class="list-group-item list-group-item-action ctrlbutton active"><i class="fa fa-bell" style="margin-right:16px;"></i> <b>@(Localization.Translate(LanguageCode,"Next"))</b></a>
+                        <a href="javascript:Recall();" id="btnRecall" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-refresh" style="margin-right:14px;"></i> @(Localization.Translate(LanguageCode,"Recall"))</a>
+                        <a href="javascript:Park();" id="btnPark" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-pause" style="margin-right:20px;"></i> @(Localization.Translate(LanguageCode,"Hold"))</a>
+                        <a href="javascript:ServiceTransferList(false);" onclick="ServiceTransferList(false);" data-bs-toggle="modal" data-bs-target="#ServiceTransferModal" id="btnServiceTransfer" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-right-left" style="margin-right:12px;"></i> @(Localization.Translate(LanguageCode,"Transfer"))</a>
+                        <a href="javascript:NoShowTicket();" id="btnNoShow" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-user-minus" style="margin-right:10px;"></i> @(Localization.Translate(LanguageCode,"NoShow"))</a>
+                        <a href="javascript:CloseTicket();" id="btnClose" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-remove" style="margin-right:19px;"></i> @(Localization.Translate(LanguageCode,"Close"))</a>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <center>@(BranchList.Where(x=>x.BranchID == LoginTerminal.BranchID).FirstOrDefault().BranchName)</center>
+                </div>
+            </div>
+        </div>
+        <div class="col-9 col-sm-12 col-md-6 col-lg-9 col-xl-9">
+            <div class="card text-center">
+                <div class="card-body" id="InfoBox" style="height:300px; min-height:300px; max-height:300px;">
+                    <div class="row" style="padding-left:12px;">
+                        <div class="col-3 ticketnumber">
+                            <h1 style="font-weight:bold; vertical-align:central; margin-top:25px;">n/a</h1>
+                        </div>
+                        <div class="col-9">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr>
+                                    <td align="right" style="font-weight:bold; padding-right:10px;">Service </td>
+                                    <td align="left">n/a</td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Print Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                                <tr>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Segment </td>
+                                    <td align="left">n/a</td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Waiting Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button></td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Transaction Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr>
+                                    <td><b>Ticket Note</b></td>
+                                    <td><input type="text" class="form-control" placeholder="Ticket Note" /></td>
+                                    <td><button class="btn btn-primary"><i class="fa fa-check"></i> Save Note</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr style="border-bottom:solid 1px #000; font-weight:bold;">
+                                    <td>Patient Name</td>
+                                    <td>QID Number</td>
+                                    <td>HC Number</td>
+                                    <td>Phone Number</td>
+                                    <td>Nationality</td>
+                                    <td>Birth Date</td>
+                                </tr>
+                                <tr>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card text-center" style="margin-top:20px;">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link cTabs active" aria-current="true" id="MyQueueContentTab" href="javascript:SwitchTab('MyQueueContent');" onclick="WaitingList();"><i class="fa fa-clock"></i> @(Localization.Translate(LanguageCode,"WaitingList")) <span class="badge bg-secondary" id="TotalWaitingBadge">-</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link cTabs" href="javascript:SwitchTab('MyParkedContent');" id="MyParkedContentTab" onclick="ParkList();"><i class="fa fa-pause"></i> @(Localization.Translate(LanguageCode,"HoldTickets")) <span class="badge bg-secondary" id="TotalParkedBadge">-</span></a>
+                        </li>
+                        @{
+                            if (Rules != null && Rules.Count > 0)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link cTabs" href="javascript:SwitchTab('GenerateTicketContent');" id="GenerateTicketContentTab" onclick="GenerateTicketInfo();"><i class="fa fa-ticket"></i> @(Rules.FirstOrDefault().RuleName)</a>
+                                </li>
+                            }
+                        }
+
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="row AllTabContents" id="MyQueueContent">
+                        &nbsp;
+                    </div>
+                    <div class="row AllTabContents" id="MyParkedContent" style="display:none;">
+                        &nbsp;
+                    </div>
+                    <div class="row AllTabContents" id="GenerateTicketContent" style="display:none;">
+                        <div class="col-6">
+                            <div class="accordion accordion-flush" id="myGenerateListAccordion">
+                                @{
+                                    if (Rules != null && Rules.Count > 0)
+                                    {
+                                        List<qmGenerateTicketItem> Headers = GenItems.Where(x => x.IsHeader == true).ToList();
+                                        foreach (qmGenerateTicketItem header in Headers)
+                                        {
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse_@(header.GenerateTicketItemID)" aria-expanded="false" aria-controls="flush-collapse_@(header.GenerateTicketItemID)">
+                                                        <i class="fa fa-circle-check" style="margin-right:10px;"></i> <span>@(header.HeaderText)</span>
+                                                    </button>
+                                                </h2>
+                                                @{
+                                                    <div id="flush-collapse_@(header.GenerateTicketItemID)" class="accordion-collapse collapse" data-bs-parent="#myGenerateListAccordion">
+                                                        <div class="accordion-body" style="max-height:400px; overflow-y:scroll;">
+                                                            <table width="100%" height="100%" border="0" cellpadding="10" cellspacing="5">
+                                                                <tr style="border-bottom:solid 1px #CCC; font-weight:bold;">
+                                                                    <td>@(Localization.Translate(LanguageCode,"Service"))</td>
+                                                                    <td>@(Localization.Translate(LanguageCode,"Segment"))</td>
+                                                                    <td>@(Localization.Translate(LanguageCode,"Generate"))</td>
+                                                                </tr>
+                                                                @{
+                                                                    int ThisHeaderIndex = Headers.FindIndex(x => x.GenerateTicketItemID == header.GenerateTicketItemID);
+                                                                    qmGenerateTicketItem next_header = Headers.Skip(ThisHeaderIndex + 1).FirstOrDefault();
+                                                                    if (next_header != null)
+                                                                    {
+                                                                        for (int i = header.OrderNumber + 1; i < next_header.OrderNumber; i++)
+                                                                        {
+                                                                            qmGenerateTicketItem print_item = GenItems.Where(x => x.OrderNumber == i).FirstOrDefault();
+                                                                            qmSegment print_segment = SegmentList.Where(x => x.SegmentID == print_item.SegmentID).FirstOrDefault();
+                                                                            qmService print_service = ServiceList.Where(x => x.ServiceID == print_segment.ServiceID).FirstOrDefault();
+                                                                            <tr>
+                                                                                <td>@(print_service.ServiceName)</td>
+                                                                                <td>@(print_segment.SegmentName)</td>
+                                                                                <td><button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#GenerateTicketModal" onclick="GenerateTicket(@(print_segment.SegmentID));"><i class="fa fa-print"></i> @(Localization.Translate(LanguageCode,"Generate"))</button></td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        int last_row_id = GenItems.Last().OrderNumber;
+                                                                        for (int i = header.OrderNumber + 1; i <= last_row_id; i++)
+                                                                        {
+                                                                            qmGenerateTicketItem print_item = GenItems.Where(x => x.OrderNumber == i).FirstOrDefault();
+                                                                            qmSegment print_segment = SegmentList.Where(x => x.SegmentID == print_item.SegmentID).FirstOrDefault();
+                                                                            qmService print_service = ServiceList.Where(x => x.ServiceID == print_segment.ServiceID).FirstOrDefault();
+                                                                            <tr>
+                                                                                <td>@(print_service.ServiceName)</td>
+                                                                                <td>@(print_segment.SegmentName)</td>
+                                                                                <td><button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#GenerateTicketModal" onclick="GenerateTicket(@(print_segment.SegmentID));"><i class="fa fa-print"></i> @(Localization.Translate(LanguageCode,"Generate"))</button></td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="col-6" style="padding-right:-5px;">
+                            <div class="card">
+                                <div class="card-body" id="InfoGenerateTicket">
+                                    <table width="100%" border="0" cellpadding="5" cellspacing="0">
+                                        <tr style="border-bottom:solid 1px #000;">
+                                            <td>Name</td>
+                                            <td>Waiting</td>
+                                            <td>Served</td>
+                                            <td>User</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="ServiceTransferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"Transfer"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ServiceTransferListBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="MoreInformationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketInformation"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="MoreInformationModalBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="GenerateTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketPreview"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="GenerateTicketModalBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="ChangeCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketPreview"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ChangeCustomerModalBody">
+                <div class="row">
+                    <div class="col-11">
+                        <input type="text" id="txtSearchCustomer" class="form-control" placeholder="Search by Qatar ID, HC ID, Name, Surname or Phone" />
+                    </div>
+                    <div class="col-1">
+                        <button class="btn btn-primary" onclick="SearchCustomer();"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="row" id="SearchResult">
+                    &nbsp;
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>

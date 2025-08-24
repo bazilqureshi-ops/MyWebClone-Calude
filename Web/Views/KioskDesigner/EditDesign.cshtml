@@ -1,0 +1,1057 @@
+﻿@using Emse.QMagic.Web.Models
+@using System.Xml.Linq
+@using System.Globalization
+@{
+	ViewBag.Title = "MainDesigner";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	List<qmTerminal> TerminalList = ViewBag.TerminalList;
+	List<qmService> services = ViewBag.services;
+	List<qmSegment> segments = ViewBag.segments;
+	List<qmScreenDesign> designs = ViewBag.designs;
+
+	int DesignID = ViewBag.DesignID;
+	qmScreenDesign Design = ViewBag.Design;
+	var atrs = (List<qmAutoTransferRule>)ViewBag.Atrs;
+	string PageBG = "";
+	int ControlCount = 1;
+	int ResetTime = 0;
+	int NotServing = 0;
+}
+
+<link href="~/assets/jquery-ui/jquery-ui.css" rel="stylesheet" />
+<script src="~/assets/js/jquery.js"></script>
+<script src="~/assets/jquery-ui/jquery-ui.js"></script>
+<link href="~/assets/css/designer.css" rel="stylesheet" />
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<style>
+	#MainLegend {
+		padding: 0px;
+		overflow-y: hidden;
+		overflow-x: hidden;
+		max-height: 300px;
+	}
+
+	.uiElement {
+		position: absolute;
+	}
+
+	.btn btn-default active {
+		border: solid 3px #CCC;
+		background-color: #000;
+		color: #FFF;
+	}
+
+	.rw {
+		margin: 0px auto;
+		display: flex;
+		vertical-align: center;
+		text-align: center;
+		align-items: center;
+		align-content: center;
+		border: dotted 2px #CCC;
+		cursor: move;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+	}
+
+	.cntr {
+		text-align: center;
+		vertical-align: middle;
+		width: 100%;
+		font-size: 32px;
+	}
+
+	.select2 {
+	}
+</style>
+
+<script>
+	function ConvertToPx(Percentage, Orient) {
+
+		var area_width = $("#DesignArea").width();
+		var area_height = (area_width * 16) / 9;
+
+		var Result = 0;
+		if (Orient == "Vertical") {
+			Result = area_height * (Percentage / 100);
+		}
+		else {
+			Result = area_width * (Percentage / 100);
+		}
+
+		return Result;
+	}
+</script>
+
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-default">
+			<div class="panel-body" id="MainLegend" style="min-height:1000px;">
+
+				<!-- Design Elements -->
+				<div class="col-md-2" style="padding:5px; padding-right:10px;">
+					<center><h3>ToolBox</h3></center>
+                    <div class="list-group">
+                        <!-- Label -->
+                        <a href="javascript:createElement('Label');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-text-width"></span> Label</h4>
+                            <p class="list-group-item-text">You can show any static (not-moving) text in wherever you want in digital signage. You can also set this label as Counter ID or Ticket Number functions.</p>
+                        </a>
+
+                        <!-- Button -->
+                        <a href="javascript:createElement('Button');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-square"></span> Button</h4>
+                            <p class="list-group-item-text">You can show button in screen and select what will do the kiosk.</p>
+                        </a>
+
+                        <!-- Media Element -->
+                        <a href="javascript:createElement('WMV');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-file-video-o"></span> Media Element</h4>
+                            <p class="list-group-item-text">You can show videos in your digital signage. You can create a playlist for playing automatically ordered videos.</p>
+                        </a>
+
+                        <!-- Text Box -->
+                        <a href="javascript:createElement('TextBox');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-text-width"></span> TextBox</h4>
+                            <p class="list-group-item-text">You can show text field in screen for getting any type of data from the kiosk user.</p>
+                        </a>
+
+                        <!-- Num Pad -->
+                        <a href="javascript:createElement('NumPad');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-keyboard-o"></span> Num Pad</h4>
+                            <p class="list-group-item-text">You can show virtual num pad in screen for enter number to specified text field.</p>
+                        </a>
+
+                        <!-- Data Integrator -->
+                        <a href="javascript:createElement('DataIntegrator');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-server"></span> Data Integrator</h4>
+                            <p class="list-group-item-text">You can specifiy automatic integrator object and manage it helper components.</p>
+                        </a>
+
+                        <!-- Return Trigger -->
+                        <a href="javascript:createElement('ReturnTrigger');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-refresh"></span> Return Trigger</h4>
+                            <p class="list-group-item-text">You can manage Data Integrator object with this component.</p>
+                        </a>
+
+                        <!-- Appointment List -->
+                        <a href="javascript:createElement('AppointmentList');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-calendar-check-o"></span> Appointment List</h4>
+                            <p class="list-group-item-text">You can get List of Appointments with this component.</p>
+                        </a>
+
+                        <!-- QR Code -->
+                        <a href="javascript:createElement('QRCode');" class="list-group-item">
+                            <h4 class="list-group-item-heading"><span class="fa fa-barcode"></span> QR Code</h4>
+                            <p class="list-group-item-text">You can generate a QR code with this element. QR Code contains a link to get customers to the virtual kiosk.</p>
+                        </a>
+                    </div>
+				</div>
+
+				<!-- Design Area -->
+				<div class="col-md-7" style="padding:5px;">
+					<div class="col-md-12">
+						@using (Html.BeginForm())
+						{
+							<div class="input-group">
+								<span class="input-group-addon" id="basic-addon3">Page Name</span>
+								<input type="text" class="form-control" id="txtPageName" name="txtPageName" aria-describedby="basic-addon3" value="@(Design.DesignName)">
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" onclick="SaveScreen();" class="btn btn-primary" value="Save Design" style="margin:0px;" /></span>
+							</div>
+
+							<div class="col-md-12" style="padding:0px;">
+								<ul class="nav nav-tabs">
+									<li role="presentation" class="active" id="btnGoDesigner"><a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a></li>
+									<li role="presentation" id="btnGoSourceCode"><a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a></li>
+								</ul>
+							</div>
+
+							<div class="col-md-12" id="DesignTab" style="padding:0px;">
+								<div class="panel panel-default">
+                                    <div class="panel-body" id="DesignArea" style="border:solid 1px #000000; background-size:100% 100%; padding:0px; font-family:Arial; font-size:8px; color:#000;">
+                                        @{
+
+                                            <!-- Close Side Arrows -->
+                                            <div id="x-arrow"></div>
+
+                                            <div id="y-arrow"></div>
+
+                                            <!-- Side Arrows -->
+                                            <div class="side-arrows" id="upper-left"></div>
+
+                                            <div class="side-arrows" id="upper-right"></div>
+
+                                            <div class="side-arrows" id="bottom-left"></div>
+
+                                            <div class="side-arrows" id="bottom-right"></div>
+
+                                            PageBG = XElement.Parse(Design.DesignSource).Element("Page").Attribute("BackgroundImage").Value;
+                                            ResetTime = Convert.ToInt32(XElement.Parse(Design.DesignSource).Element("Page").Attribute("ResetTime").Value);
+                                            NotServing = Convert.ToInt32(XElement.Parse(Design.DesignSource).Element("Page").Attribute("PauseScreen").Value);
+
+                                            <script>
+                                                    $(document).ready(function () {
+                                                        $("#DesignArea").css("background-image", "url(@(PageBG))");
+                                                    });
+                                            </script>
+
+                                            foreach (XElement level1Element in XElement.Parse(Design.DesignSource).Elements("Page").Elements("Control"))
+                                            {
+                                                NumberFormatInfo provider = new NumberFormatInfo();
+                                                provider.NumberDecimalSeparator = ",";
+                                                provider.NumberGroupSeparator = ".";
+                                                provider.NumberGroupSizes = new int[] { 3 };
+
+                                                ControlCount++;
+                                                string element_type = level1Element.Attribute("type").Value;
+                                                int element_id = Convert.ToInt32(level1Element.Element("Identifier").Value);
+                                                string element_name = level1Element.Element("Name").Value;
+
+                                                string posx = level1Element.Element("PositionX").Value;
+                                                string posy = level1Element.Element("PositionY").Value;
+                                                double sizex = Convert.ToDouble(level1Element.Element("Width").Value);
+                                                double sizey = Convert.ToDouble(level1Element.Element("Height").Value);
+
+                                                /*double element_positionx = Convert.ToDouble(posx.Replace(".",","));
+                                                double element_positiony = Convert.ToDouble(posy.Replace(".", ","));
+                                                double element_sizex = Convert.ToDouble(sizex);
+                                                double element_sizey = Convert.ToDouble(sizey);*/
+
+                                                double element_positionx = Convert.ToDouble(posx);
+                                                double element_positiony = Convert.ToDouble(posy);
+                                                double element_sizex = Convert.ToDouble(sizex);
+                                                double element_sizey = Convert.ToDouble(sizey);
+
+                                                if (element_type == "Label")
+                                                {
+                                                    string element_text = level1Element.Element("Text").Value;
+                                                    string element_action = level1Element.Element("Action").Value;
+                                                    string element_parameter = level1Element.Element("Parameter").Value;
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    decimal element_size = Convert.ToDecimal(level1Element.Element("Size").Value.ToString().Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_bold = level1Element.Element("Bold").Value;
+                                                    string element_italic = level1Element.Element("Italic").Value;
+                                                    string element_underline = level1Element.Element("Underline").Value;
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    if (element_valign != "Middle")
+                                                    {
+                                                        <div class="uiElement" data-bind="@(element_action)" parameter="@(element_parameter)" bold="@(element_bold)" italic="@(element_italic)" underline="@(element_underline)" align="@(element_align)" valign="@(element_valign)" style="border:dotted 2px #CCC; cursor:move; color:@(element_color); left:@(element_positionx); top:@(element_positiony); width:@(element_sizex); height:@(element_sizey); font-family:@(element_font); font-size:@(element_size)px;" type="Label" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"><label>@(element_text)</label></div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="uiElement" data-bind="@(element_action)" parameter="@(element_parameter)" bold="@(element_bold)" italic="@(element_italic)" underline="@(element_underline)" align="@(element_align)" valign="@(element_valign)" style="border:dotted 2px #CCC; cursor:move; color:@(element_color); left:@(element_positionx); top:@(element_positiony); width:@(element_sizex); height:@(element_sizey); line-height: @(element_sizey)px; font-family:@(element_font); font-size:@(element_size)px;" type="Label" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"><label>@(element_text)</label></div>
+                                                    }
+                                                }
+
+                                                if (element_type == "MediaElement")
+                                                {
+                                                    string element_playlist = level1Element.Element("BackgroundImage").Value;
+
+                                                    <div class="uiElement rw" playlist="@(element_playlist)" type="MediaElement" id="@(element_id)" name="@(element_name)" style="border:dotted 2px #CCC; cursor:move; width:@(element_sizex); height:@(element_sizey); left:@(element_positionx); top:@(element_positiony);" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"><span class="fa fa-play cntr">&nbsp;</span></div>
+                                                }
+
+                                                if (element_type == "TextBox")
+                                                {
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    string element_font_size_el = level1Element.Element("Size").Value;
+                                                    decimal element_fontsize = Convert.ToDecimal(element_font_size_el.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_bold = level1Element.Element("Bold").Value;
+                                                    string element_italic = level1Element.Element("Italic").Value;
+                                                    string element_underline = level1Element.Element("Underline").Value;
+
+                                                    string text = level1Element.Element("Text").Value;
+
+                                                    string action = level1Element.Element("Action").Value;
+
+
+                                                    <div class="uiElement rw" style="width:@(element_sizex); height:@(element_sizey); left:@(element_positionx); top:@(element_positiony); color:@(element_color); font-family:@(element_font); font-size:@(element_fontsize)px; cursor:move;" type="TextBox" text="" bold="@(element_bold)" italic="@(element_italic)" underline="@(element_underline)" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)" action="@(action)"> <label>@(text)</label> <span class="fa fa-font cntr">&nbsp;</span></div>
+                                                }
+
+                                                if (element_type == "QRCode")
+                                                {
+                                                    string text = level1Element.Element("Text").Value;
+
+
+                                                    <div class="uiElement rw" style="width:@(element_sizex); height:@(element_sizey); left:@(element_positionx); top:@(element_positiony); cursor:move;" type="QRCode" text="" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"> <label style="display:none;">@(text)</label> <span class="fa fa-barcode cntr">&nbsp;</span></div>
+                                                }
+
+
+                                                if (element_type == "NumPad")
+                                                {
+                                                    string element_PositionX = level1Element.Element("PositionX").Value;
+                                                    string element_PositionY = level1Element.Element("PositionY").Value;
+                                                    string element_width = level1Element.Element("Width").Value;
+                                                    string element_height = level1Element.Element("Height").Value;
+                                                    string parameter = level1Element.Element("Parameter").Value;
+                                                    string element_action = level1Element.Element("Action").Value;
+                                                    string buttonPath = level1Element.Element("BackgroundImage").Value;
+
+                                                    <div class="uiElement rw" style="width:@(element_sizex); height:@(element_sizey); left:@(element_positionx); top:@(element_positiony);" type="NumPad" action="@(element_action)" parameter="@(parameter)" background="@(buttonPath)" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"><span class="fa fa-keyboard-o cntr">&nbsp;</span></div>
+                                                }
+
+                                                if (element_type == "Button")
+                                                {
+                                                    string element_PositionX = level1Element.Element("PositionX").Value;
+                                                    string element_PositionY = level1Element.Element("PositionY").Value;
+                                                    string element_width = level1Element.Element("Width").Value;
+                                                    string element_height = level1Element.Element("Height").Value;
+                                                    string action = level1Element.Element("Action").Value;
+                                                    string parameter = level1Element.Element("Parameter").Value;
+                                                    string element_bg = level1Element.Element("BackgroundImage").Value;
+													string element_text = level1Element.Element("Text").Value;
+
+                                                    <div class="uiElement rw" action="@(action)" parameter="@(parameter)" style="background-image:url(@(element_bg)); width:@(element_width); height:@(element_height); top:@(element_PositionY); background-image: @element_bg; left:@(element_PositionX);" title="@element_bg" type="Button" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"> <label style="display:none;">@(element_text)</label> <span class="fa fa-square-o cntr">&nbsp;</span></div>
+                                                }
+
+                                                if (element_type == "DataIntegrator")
+                                                {
+                                                    string element_PositionX = level1Element.Element("PositionX").Value;
+                                                    string element_PositionY = level1Element.Element("PositionY").Value;
+                                                    string element_width = level1Element.Element("Width").Value;
+                                                    string element_height = level1Element.Element("Height").Value;
+                                                    string element_serviceType = level1Element.Element("ServiceType").Value;
+                                                    string element_serviceUrl = level1Element.Element("ServiceURL").Value;
+                                                    string element_method = level1Element.Element("Method").Value;
+
+                                                    <div class="uiElement rw" style="width:@(element_width); height:@(element_height); top:@(element_PositionY); left:@(element_PositionX);" type="DataIntegrator" servicetype="@(element_serviceType)" serviceurl="@(element_serviceUrl)" method="@(element_method)" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)">
+                                                        <span class="fa fa-connectdevelop cntr">&nbsp;</span>
+                                                        @if (level1Element.Element("Arguments").Elements().Any())
+                                                        {
+                                                            foreach (var argument in level1Element.Element("Arguments").Elements())
+                                                            {
+                                                                <div style="display: none;" class="input-group" type="Argument" name="@(argument.Element("Name").Value)" integrator="@(element_name)" textbox="@(argument.Element("Value").Value)"> </div>
+                                                            }
+                                                        }
+
+                                                        @if (level1Element.Element("Returns").Elements().Any())
+                                                        {
+                                                            foreach (var returnType in level1Element.Element("Returns").Elements())
+                                                            {
+                                                                <div style="display: none;" class="input-group" type="Return" name="@(returnType.Element("Name").Value)" integrator="@(element_name)" returntype="@(returnType.Element("Type").Value)"> </div>
+                                                            }
+                                                        }
+
+
+                                                    </div>
+                                                }
+
+                                                if (element_type == "ReturnTrigger")
+                                                {
+                                                    string element_PositionX = level1Element.Element("PositionX").Value;
+                                                    string element_PositionY = level1Element.Element("PositionY").Value;
+                                                    string element_width = level1Element.Element("Width").Value;
+                                                    string element_height = level1Element.Element("Height").Value;
+                                                    string element_integrator = level1Element.Element("Integrator").Value;
+                                                    string element_parameter = level1Element.Element("Parameter").Value;
+                                                    string element_trigger = level1Element.Element("Trigger").Value;
+                                                    string element_argument = level1Element.Element("Argument").Value;
+                                                    string element_errorPage = level1Element.Element("ErrorPage").Value;
+                                                    string element_successPage = level1Element.Element("SuccessPage").Value;
+
+
+                                                    <div class="uiElement rw" style="width:@(element_width); height:@(element_height); top:@(element_PositionY); left:@(element_PositionX);" type="ReturnTrigger" onClick="GetProperties($(this));" name="@(element_name)" id="@(element_id)" integrator="@(element_integrator)" paramater="@(element_parameter)" trigger="@(element_trigger)" argument="@(element_argument)" errorpage="@(element_errorPage)" successpage="@(element_successPage)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)"><span class="fa fa-undo cntr">&nbsp;</span></div>
+                                                }
+
+                                                if (element_type == "AppointmentList")
+                                                {
+                                                    string element_PositionX = level1Element.Element("PositionX").Value;
+                                                    string element_PositionY = level1Element.Element("PositionY").Value;
+                                                    string element_width = level1Element.Element("Width").Value;
+                                                    string element_height = level1Element.Element("Height").Value;
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    decimal element_size = Convert.ToDecimal(level1Element.Element("Size").Value.ToString().Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_bg = level1Element.Element("BackgroundImage").Value;
+                                                    string element_copycount = level1Element.Element("CopyCount").Value;
+                                                    string ticketDesignId = level1Element.Element("TicketDesign").Value;
+
+                                                    <div class="uiElement rw" style="background-image:url(@(element_bg)); width:@(element_width); height:@(element_height);  left:@(element_PositionX); top:@(element_PositionY); color:@(element_color); font-family:@(element_font); font-size:@(element_size)px;" title="@element_bg" type="AppointmentList" name="@(element_name)" copycount="@(element_copycount)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)" ticketdesignid="@(ticketDesignId)"><span class="fa fa-list cntr">&nbsp;</span></div>
+                                                }
+
+                                                <script>
+                                                    $("#@(element_id)").css("left", ConvertToPx("@(element_positionx)", "Horizontal"));
+                                                    $("#@(element_id)").css("top", ConvertToPx("@(element_positiony)", "Vertical"));
+
+                                                    $("#@(element_id)").css("width", ConvertToPx("@(element_sizex)", "Horizontal"));
+                                                    $("#@(element_id)").css("height", ConvertToPx("@(element_sizey)", "Vertical"));
+                                                </script>
+                                            }
+
+                                        }
+                                    </div>
+								</div>
+							</div>
+							<div class="col-md-12" id="CodeTab" style="display:none; padding:0px;">
+								<div class="panel panel-default">
+									<div class="panel-body" id="SourceDiv">
+										<textarea name="txtSourceCode" id="txtSourceCode" class="form-control" style="width:100%; height:100%; min-height:500px;"></textarea>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+
+				<!-- Property Area -->
+				<div class="col-md-3" style="max-height:100%; height:100%; overflow-y:scroll; overflow-x:hidden;">
+
+					<!-- Page Properties -->
+					<div id="page-properties">
+						<center>
+							<h3 id="title-of-page-properties">Page Properties</h3>
+						</center>
+
+						<!-- Page Background -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3">Page Background</span>
+
+							<input type="text" class="form-control" id="page-background" aria-describedby="basic-addon3" value="@(PageBG)">
+
+							<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=page-background', 'Browser', 'width=1100,height=750');" /></span>
+						</div>
+						<span class="validate-for text-danger" id="page-background-validation"></span>
+
+						<!-- Page Reset -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3">Page Reset Time</span>
+
+							<input type="number" class="form-control" id="reset-time" aria-describedby="basic-addon3" value="@(ResetTime)" />
+						</div>
+						<span class="validate-for text-danger" id="page-reset-validation"></span>
+
+						<!-- Kiosk Not Serving (Pause Design) -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Kiosk Not Serving</span>
+
+							<select class="select2" id="pause-design" aria-describedby="basic-addon3">
+								@{
+									foreach (qmScreenDesign item in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										if (item.ScreenDesignID == NotServing)
+										{
+											<option value="@(item.ScreenDesignID)" selected="selected">@(item.DesignName)</option>
+										}
+										else
+										{
+											<option value="@(item.ScreenDesignID)">@(item.DesignName)</option>
+										}
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="pause-design-validation"></span>
+					</div>
+
+					<!-- Common Properties -->
+					<div id="common-properties">
+						<center>
+							<h3 id="title-of-common-properties">Common Properties</h3>
+						</center>
+
+						<!-- Type -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Type</span>
+
+							<input type="text" class="form-control" id="element-type" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="type-validation"></span>
+
+						<!-- Identifier -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Identifier</span>
+
+							<input type="number" class="form-control" id="element-id" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="identifier-validation"></span>
+
+						<!-- Name -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Name</span>
+
+							<input type="text" class="form-control" id="element-name" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="name-validation"></span>
+
+						<!-- Position X and Y -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Position</span>
+							<input type="text" class="form-control" id="position-x" aria-describedby="basic-addon3">
+
+							<span class="input-group-addon" id="basic-addon3">&nbsp;</span>
+
+							<input type="text" class="form-control" id="position-y" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="posx-validation"></span>
+						<span class="validate-for text-danger" id="posy-validation"></span>
+
+						<!-- Size X and Y -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Size</span>
+							<input type="text" class="form-control" id="size-x" aria-describedby="basic-addon3">
+
+							<span class="input-group-addon" id="basic-addon3">&nbsp;</span>
+
+							<input type="text" class="form-control" id="size-y" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="sizex-validation"></span>
+						<span class="validate-for text-danger" id="sizey-validation"></span>
+
+					</div>
+
+					<!-- Special Properties -->
+					<div id="special-properties">
+						<center>
+							<h3 id="title-of-special-properties">Special Properties</h3>
+						</center>
+
+						<!-- Background -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Background</span>
+
+							<input type="text" class="form-control" id="element-background" aria-describedby="basic-addon3">
+
+							<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" id="btnBackgroundBrowser" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=element-background', 'Browser', 'width=1100,height=750');" /></span>
+						</div>
+						<span class="validate-for text-danger" id="background-validation"></span>
+
+						<!-- Data Bind (cmbAction) -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Bind</span>
+
+                            <select class="select2" id="data-bind" style="width: 100%" aria-describedby="basic-addon3" onclick="ChangeActionBtn();">
+                                <option value="Static">Static Text</option>
+                                <option value="Error">Error Message</option>
+                                <option value="AppointmentCount">Appointment Count</option>
+                                <option value="ServiceLoad">Service Load</option>
+                            </select>
+						</div>
+						<span class="validate-for text-danger" id="data-bind-validation"></span>
+
+						<!-- Button Element Data Bind (Button Action) -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Bind</span>
+
+							<select class="select2" style="width: 100%" id="button-data-bind" aria-describedby="basic-addon3" onclick="ChangeActionBtn();">
+								<option value="GoToScreen">Go To Screen</option>
+								<option value="PrintTicket">Print Ticket</option>
+								<option value="LoginCustomer">Login Customer</option>
+								<option value="RunIntegrator">Run Integrator</option>
+
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="button-data-bind-validation"></span>
+
+						<!-- TextBox Action -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Action</span>
+
+							<select class="select2" style="width: 100%" id="textbox-action" aria-describedby="basic-addon3">
+								<option value="Text">Text</option>
+								<option value="Password">Password</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="textbox-action-validation"></span>
+
+						<!-- Ticket Design List -->
+						<div class="input-group ButtonSpecialPrint" id="appListTicketDesign" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:140px;">Ticket Design List</span>
+
+							<select class="select2" style="width:100%;" id="ticket-design-list" aria-describedby="basic-addon3">
+								@{
+									if (designs.Count(x => x.DesignType == 3) > 0)
+									{
+										foreach (var design in designs.Where(x => x.DesignType == 3).ToList())
+										{
+											<option value="@(design.ScreenDesignID)">@(design.DesignName)</option>
+										}
+									}
+									else
+									{
+										<option value="">Select</option>
+									}
+
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="ticket-design-list-validation"></span>
+
+						<!-- Design Element Text Boxes -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Text Boxes</span>
+
+							<select class="select2" style="width:100%" id="text-boxes" aria-describedby="basic-addon3"></select>
+						</div>
+						<span class="validate-for text-danger" id="text-boxes-validation"></span>
+
+						<!-- Button Element ATR List -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;" title="Auto Transfer Route">ATRs</span>
+
+							<select class="select2" style="width: 100%" id="atr-list" aria-describedby="basic-addon3">
+								<option selected="selected" value="0">No Route</option>
+
+								@for (int i = 0; i < atrs.Count; i++)
+								{
+									<option value="@atrs[i].AutoTransferRuleID">@atrs[i].AutoTransferName</option>
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="atr-select-validation"></span>
+
+						<!-- Go To Screen Select -->
+						<div class="input-group ButtonSpecialScreen" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Screen</span>
+
+							<select class="select2" style="width: 100%" id="go-to-screen-select" aria-describedby="basic-addon3">
+								@{
+									foreach (var screen in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										<option value="@(screen.ScreenDesignID)">@(screen.DesignName)</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="go-to-screen-select-validation"></span>
+
+						<!-- Success Page -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Success Page</span>
+
+							<select class="select2" style="width: 100%" id="success-page-select" aria-describedby="basic-addon3">
+								@{
+									foreach (var screen in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										<option value="@(screen.ScreenDesignID)">@(screen.DesignName)</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="success-page-select-validation"></span>
+
+						<!-- Fail Page -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Fail Page</span>
+
+							<select class="select2" style="width: 100%" id="fail-page-select" aria-describedby="basic-addon3">
+								@{
+									foreach (var screen in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										<option value="@(screen.ScreenDesignID)">@(screen.DesignName)</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="fail-page-select-validation"></span>
+
+						<!-- Service / Segment Select -->
+						<div class="input-group ButtonSpecialPrint" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Service / Segment</span>
+
+							<select class="select2" style="width: 100%" id="service-segment-select" aria-describedby="basic-addon3">
+								@{
+									foreach (qmSegment item in segments)
+									{
+										qmService serv = services.Where(x => x.ServiceID == item.ServiceID).FirstOrDefault();
+
+										<option value="@(serv.ServiceID) @(item.SegmentID)">@(serv.ServiceName) / @(item.SegmentName)</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="service-segment-select-validation"></span>
+
+						<!-- Ticket Design -->
+						<div class="input-group ButtonSpecialPrint" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Ticket Design</span>
+
+							<select class="select2" style="width: 100%" id="ticket-design" aria-describedby="basic-addon3">
+								@{
+									foreach (qmScreenDesign item in designs.Where(x => x.DesignType == 3).ToList())
+									{
+										<option value="@(item.ScreenDesignID)">@(item.DesignName)</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="ticket-design-validation"></span>
+
+						<!-- Copy Count -->
+						<div class="input-group" id="copyCount" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Copy Count</span>
+
+							<input type="number" class="form-control" id="copy-count" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="copy-count-validation"></span>
+
+						<!-- Caption -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Caption</span>
+
+							<input type="text" class="form-control" id="caption" aria-describedby="basic-addon3">
+						</div>
+						<span class="validate-for text-danger" id="caption-validation"></span>
+
+						<!-- Play List -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Playlist</span>
+
+							<input type="text" class="form-control" id="play-list" aria-describedby="basic-addon3">
+
+							<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" class="btn btn-default" value="..." onclick="window.open('/KioskDesigner/VideoBrowser?reff=play-list', 'Browser', 'width=1100,height=750');" style="margin:0px;" /></span>
+						</div>
+						<span class="validate-for text-danger" id="play-list-validation"></span>
+					</div>
+
+					<!-- Font Properties -->
+					<div id="FontProperties">
+						<center>
+							<h3 id="title-of-font-properties">Font Properties</h3>
+						</center>
+
+						<!-- Font Style -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font</span>
+
+							<select class="select2" style="width: 100%" id="font-style" aria-describedby="basic-addon3">
+								<option value="Arial">Arial</option>
+								<option value="Tahoma">Tahoma</option>
+								<option value="Segoe UI">Segoe UI</option>
+								<option value="Times New Roman">Times New Roman</option>
+								<option value="Comic Sans">Comic Sans</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="font-style-validation"></span>
+
+						<!-- Font Size -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Size</span>
+
+							<select class="select2" style="width: 100%" id="font-size" aria-describedby="basic-addon3">
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+								<option value="12">12</option>
+								<option value="14">14</option>
+								<option value="16">16</option>
+								<option value="18">18</option>
+								<option value="20">20</option>
+								<option value="22">22</option>
+								<option value="24" selected="selected">24</option>
+								<option value="28">28</option>
+								<option value="32">32</option>
+								<option value="36">36</option>
+								<option value="40">40</option>
+								<option value="48">48</option>
+								<option value="54">54</option>
+								<option value="60">60</option>
+								<option value="65">65</option>
+								<option value="72">72</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="font-size-validation"></span>
+
+						<!-- Font Colour -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Color</span>
+
+							<select class="select2" style="width: 100%" id="font-colour" aria-describedby="basic-addon3">
+								<option value="rgb(0, 0, 0)">Black</option>
+								<option value="rgb(255, 255, 255)">White</option>
+								<option value="rgb(0, 255, 0)">Green</option>
+								<option value="rgb(255, 255, 0)">Yellow</option>
+								<option value="rgb(255, 0, 0)">Red</option>
+								<option value="rgb(0, 0, 255)">Blue</option>
+								<option value="rgb(255, 0, 255)">Pink</option>
+								<option value="rgb(128, 128, 128)">Gray</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="font-colour-validation"></span>
+
+						<!-- Align -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Align</span>
+
+							<select class="select2" style="width: 100%" id="align" aria-describedby="basic-addon3">
+								<option value="Left">Left</option>
+								<option value="Center">Center</option>
+								<option value="Right">Right</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="align-validation"></span>
+
+						<!-- Valign -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Vertical Align</span>
+
+							<select class="select2" style="width: 100%" id="valign" aria-describedby="basic-addon3">
+								<option value="Top">Top</option>
+								<option value="Middle">Middle</option>
+								<option value="Bottom">Bottom</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="valign-validation"></span>
+
+						<!-- Bold, Italic & Underline -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Type</span>
+							<a href="javascript:fontActions('bold');" class="btn btn-default" id="font-bold" aria-describedby="basic-addon3"><span class="fa fa-bold"></span></a>
+
+							<a href="javascript:fontActions('italic');" class="btn btn-default" id="font-italic" aria-describedby="basic-addon3"><span class="fa fa-italic"></span></a>
+
+							<a href="javascript:fontActions('underline');" class="btn btn-default" id="font-underline" aria-describedby="basic-addon3"><span class="fa fa-underline"></span></a>
+
+						</div>
+					</div>
+
+					<!-- Data Integrator Properties -->
+					<div id="IntegratorProperties">
+						<center>
+							<h3 id="title-of-data-integrator">Data Intergrator Properties</h3>
+						</center>
+
+						<!-- Service Type -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:105px;">Service Type</span>
+
+							<select class="select2" style="width:100%" id="ServiceType" aria-describedby="basic-addon3">
+								<option value="WCF">WCF</option>
+								<option value="SOAP">SOAP</option>
+								<option value="XAML">XAML</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="service-type-validation"></span>
+
+						<!-- Service Url -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Service URL</span>
+
+							<input type="text" class="form-control" name="ServiceUrl" id="ServiceUrl" value="" />
+						</div>
+						<span class="validate-for text-danger" id="service-url-validation"></span>
+
+						<!-- Method Box -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Method</span>
+
+							<input type="text" class="form-control" name="MethodBox" id="MethodBox" value="" />
+						</div>
+						<span class="validate-for text-danger" id="method-box-validation"></span>
+
+						<!-- Argument Properties -->
+						<center>
+							<h4 id="title-of-arguments">Arguments</h4>
+						</center>
+
+						<!-- Add New Argument -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Add New Argument</span>
+
+							<button class="btn btn-primary" onclick="AddArgument($('#txtName').val(),$('#argumentName').val(), $('#TextBoxes').val());" id="AddArgument" style="float:right; margin-right: 10px; margin-top:5px;"><i class="fa fa-plus"></i></button>
+						</div>
+
+						<!-- Argument Name & Current Text Boxes -->
+						<div class="input-group col-md-12" style="margin:0px; padding:5px;">
+							<input type="text" class="input-group-addon" style="width: 45% !important;" id="argumentName" value="" placeholder="Type Argument Name *" />
+
+							<select class="select2" id="TextBoxes" style="width: 50% !important;">
+								<!--Text Boxes Will Add Here-->
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="argument-name-validation"></span>
+
+						<!-- Argument Accordion (Collapse) -->
+						<div class="panel-group">
+							<div class="panel panel-default">
+
+								<a data-toggle="collapse" href="#collapse1" style="text-decoration: none; color:#666">
+									<div class="panel-heading">
+										<h5 class="panel-title">
+											Argument List
+										</h5>
+									</div>
+								</a>
+
+								<div id="collapse1" class="panel-collapse collapse">
+									<div class="panel-body" id="argument-list">
+										<!-- Arguments will be list here -->
+									</div>
+								</div>
+							</div>
+						</div>
+						<span class="validate-for text-danger" id="argument-list-validation"></span>
+
+
+						<!-- Return Properties -->
+						<center>
+							<h4 id="title-of-return-types">Return Types</h4>
+						</center>
+
+						<!-- Add New Return -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Add New Return</span>
+
+							<button class="btn btn-primary" onclick="AddReturns($('#txtName').val(),$('#returnName').val(), $('#ReturnTypes').val());" id="AddReturns" style="float:right; margin-right: 10px; margin-top:5px;"><i class="fa fa-plus"></i></button>
+						</div>
+
+						<!-- Type Return Name -->
+						<div class="input-group col-md-12" style="margin:0px;">
+							<input type="text" class="input-group-addon" style="width: 50% !important;" id="returnName" value="" placeholder="Type Return Name" />
+
+							<select class="select2" id="ReturnTypes" style="width: 50% !important;">
+								<option value="string">String</option>
+								<option value="int">Int</option>
+								<option value="bool">Bool</option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="return-name-validation"></span>
+						<span class="validate-for text-danger" id="return-type-validation"></span>
+
+						<!-- Return Accordion (Collapse) -->
+						<div class="panel-group">
+							<div class="panel panel-default">
+
+								<a data-toggle="collapse" href="#collapse2" style="text-decoration: none; color:#666">
+									<div class="panel-heading">
+
+										<h5 class="panel-title">
+											Return List
+										</h5>
+									</div>
+								</a>
+
+								<div id="collapse2" class="panel-collapse collapse">
+									<div class="panel-body" id="return-list">
+										<!-- Returns will be list here -->
+									</div>
+								</div>
+								<span class="validate-for text-danger" id="valign-validation"></span>
+
+							</div>
+						</div>
+						<span class="validate-for text-danger" id="return-list-validation"></span>
+
+					</div>
+
+					<!-- Return Trigger Properties -->
+					<div id="TriggerProperties">
+
+						<!-- Return Trigger Properties -->
+						<center>
+							<h3 id="title-of-return-trigger">Return Trigger Properties</h3>
+						</center>
+
+						<!-- Integrator Name -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Data Integrator</span>
+
+							<input type="text" class="form-control" name="DataIntegratorName" id="DataIntegratorName" value="" disabled />
+						</div>
+						<span class="validate-for text-danger" id="integrator-validation"></span>
+
+						<!-- Parameter -->
+						<div class="input-group col-md-12" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Parameter</span>
+
+							<select class="select2" id="ReturnList" style="width: 100% !important;">
+								<!-- Data Integrato's Return's will be list here. -->
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="parameter-validation"></span>
+
+						<!-- Trigger Type -->
+						<div class="input-group col-md-12" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Trigger Type</span>
+
+							<select class="select2" id="Trigger" style="width: 100% !important;">
+								<option value="NULL"> Null </option>
+								<option value="NOTNULL"> Not Null </option>
+								<option value="TRUE"> True </option>
+								<option value="FALSE"> False </option>
+								<option value="CONTAIN"> Contain </option>
+								<option value="LOWER_THAN"> Lower Than </option>
+								<option value="LOWER_OR_EQUAL"> Lower or Equal </option>
+								<option value="EQUAL"> Equal </option>
+								<option value="HIGHER_THAN"> Higher Than </option>
+								<option value="HIGHER_OR_EQUAL"> Higher Than or Equal </option>
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="trigger-type-validation"></span>
+
+						<!-- Argument -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Argument</span>
+
+							<input type="text" class="form-control" name="TriggerArgument" id="TriggerArgument" value="" />
+						</div>
+						<span class="validate-for text-danger" id="argument-validation"></span>
+
+						<!-- Error Page -->
+						<div class="input-group col-md-12" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Error Page</span>
+
+							<select class="select2" id="ErrorPages" style="width: 100% !important;">
+								@{
+									foreach (qmScreenDesign item in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										<option value="@(item.ScreenDesignID)">
+											@(item.DesignName)
+										</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="error-validation"></span>
+
+						<!-- Succes Page -->
+						<div class="input-group col-md-12" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width: 105px;">Success Page</span>
+
+							<select class="select2" id="SuccesPages" style="width: 100% !important;">
+								@{
+									foreach (qmScreenDesign item in designs.Where(x => x.DesignType == 1).ToList())
+									{
+										<option value="@(item.ScreenDesignID)">
+											@(item.DesignName)
+										</option>
+									}
+								}
+							</select>
+						</div>
+						<span class="validate-for text-danger" id="succes-validation"></span>
+
+					</div>
+
+					<!-- Buttons -->
+					<div class="well text-center" style="margin-top:10px;">
+						<div class="row">
+							<div class="col-md-6">
+								<input type="button" class="btn btn-danger" value="Remove" onclick="RemoveItem();" />
+							</div>
+							<div class="col-md-6">
+								<input type="button" class="btn btn-success" value="Apply" onclick="SetProperties();" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="~/Scripts/KioskDesigner.js"></script>

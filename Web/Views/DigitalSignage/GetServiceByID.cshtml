@@ -1,0 +1,9 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmService service = ViewBag.service;
+    if (service != null)
+    {
+        @(service.ServiceName)
+    }
+}

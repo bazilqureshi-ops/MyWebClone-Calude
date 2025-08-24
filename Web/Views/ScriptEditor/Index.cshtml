@@ -1,0 +1,115 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmScreenDesign
+@{
+    ViewBag.Title = "Script Editor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmScreenDesign> designs = ViewBag.designs;
+    List<qmMacro> macros = ViewBag.macros;
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-3">
+        <div class="card">
+            <div class="card-header">
+                Scripts
+            </div>
+            <div class="card-body no-padding table-responsive" style="max-height:600px; overflow-y:scroll;">
+                <table class="table card-table">
+                    <thead>
+                        <tr>
+                            <th>Script Name</th>
+                            <th width="50">Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ 
+                            foreach (qmScreenDesign item in designs)
+                            {
+                                <tr>
+                                    <td>@(item.DesignName)</td>
+                                    <td><a href="~/ScriptEditor?ScreenDesignID=@(item.ScreenDesignID)" class="btn btn-default"><i class="fa fa-folder-open"></i></a></td>
+                                </tr>
+                            }
+                        }
+                        <tr>
+                            <td colspan="2" class="text-center">
+                                <b>Macro Scripts</b>
+                            </td>
+                        </tr>
+                        @{
+                            foreach (qmMacro item in macros)
+                            {
+                                <tr>
+                                    <td>@(item.MacroName)</td>
+                                    <td><a href="~/ScriptEditor?MacroID=@(item.MacroID)" class="btn btn-default"><i class="fa fa-folder-open"></i></a></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-9">
+        <div class="card">
+            <div class="card-header">
+                Editor
+            </div>
+            <div class="card-body" style="padding:0px;">
+                @{
+                    string theformgo = "";
+                    if (Request.QueryString["ScreenDesignID"] != null)
+                    {
+                        theformgo = "ScriptEditor?ScreenDesignID="+ Request.QueryString["ScreenDesignID"];
+                    }
+
+                    if (Request.QueryString["MacroID"] != null)
+                    {
+                        theformgo = "ScriptEditor?MacroID=" + Request.QueryString["MacroID"];
+                    }
+                }
+                <form action="@(theformgo)" method="post" id="form1" name="form1">
+                    <div class="row" style="padding:0px; padding-right:30px;">
+                        <div class="col-xs-12" style="padding:0px; margin-left:15px; margin-top:0px; margin-bottom:0px;">
+                            <div id="editor" style="width:100%; height:550px;">@{if (ViewBag.script != null){string script = ViewBag.script;@(script)}}</div>
+                            <textarea id="scripttext" name="scripttext" style="display:none;"></textarea>
+                        </div>
+                        <div class="form-footer text-right" style="margin:30px;">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3" style="margin-top:20px; margin-bottom:20px;">
+                                    <button type="button" class="btn btn-primary" onclick="SaveIt();">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/Scripts/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+
+    editor.getSession().setMode("ace/mode/html");
+    editor.setTheme("ace/theme/chrome");
+</script>
+<script>
+    function SaveIt() {
+        var thetext = editor.getValue();
+        $("#scripttext").val(thetext);
+        $("#form1").submit();
+    }
+</script>

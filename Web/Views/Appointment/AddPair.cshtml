@@ -1,0 +1,11 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmScheduleBranch sc = ViewBag.Added;
+    List<qmBranch> branches = ViewBag.Branches;
+}
+
+<tr id="item_@(sc.ScheduleBranchID)">
+    <td>@(branches.Where(x=>x.BranchID == sc.BranchID).FirstOrDefault().BranchName.ToString())</td>
+    <td><input type="button" class="btn btn-danger" value="Remove" onclick="RemoveItem(@(sc.ScheduleBranchID));" /></td>
+</tr>

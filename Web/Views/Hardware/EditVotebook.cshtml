@@ -1,0 +1,176 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmVotebook
+@{
+    ViewBag.Title = "Create Votebook";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<qmTerminal> terminals = ViewBag.terminals;
+    List<qmSurvey> surveys = ViewBag.surveys;
+    List<qmScreenDesign> designs = ViewBag.designs;
+    qmVotebook data = ViewBag.data;
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var designcount = @(designs.Count());
+        var branchcount = @(surveys.Count());
+
+        if (branchcount < 1 || designcount < 1) {
+            var str = "<p>You're not meeting the minimum requirements of creating a new votebook. You should have at least one branch and a design.</p>";
+
+            if (branchcount < 1) {
+                str += "Please <a href = '../Survey' > click here</a > to create new survey.< br /> ";
+            }
+            if (designcount < 1) {
+                str += "Please <a href='../VotebookDesigner'>click here</a> to create new design.<br/>";
+            }
+
+            swal({
+                title: "Hmm.. Consider This",
+                text: str,
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+                content: str
+            });
+
+            $(".swal-text").html(str);
+        }
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Votebook Management
+            </div>
+            <div class="card-body">
+                <form action="~/Hardware/EditVoteBook?VotebookID=@(data.VotebookID)" method="post">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Survey</label>
+                                    <div class="col-md-9">
+                                        <select name="SurveyID" id="SurveyID" class="select2">
+                                            @{
+                                                foreach (qmSurvey item in surveys)
+                                                {
+                                                    if (data.SurveyID == item.SurveyID)
+                                                    {
+                                                        <option value="@item.SurveyID" selected="selected">@item.SurveyName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.SurveyID">@item.SurveyName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Screen Design</label>
+                                    <div class="col-md-9">
+                                        <select name="ScreenDesignID" id="ScreenDesignID" class="select2">
+                                            @{
+                                                foreach (qmScreenDesign item in designs)
+                                                {
+                                                    if (data.ScreenDesignID == item.ScreenDesignID)
+                                                    {
+                                                        <option value="@item.ScreenDesignID" selected="selected">@item.DesignName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.ScreenDesignID">@item.DesignName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Trigger Terminal</label>
+                                    <div class="col-md-9">
+                                        <select name="BranchID" id="BranchID" class="select2">
+                                            <option value="0">None</option>
+                                            @{
+                                                foreach (qmTerminal item in terminals)
+                                                {
+                                                    if (data.TriggerTerminalID == item.TerminalID)
+                                                    {
+                                                        <option value="@item.TerminalID" selected="selected">@item.TerminalName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.TerminalID">@item.TerminalName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Votebook Name</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => data.VotebookName, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">IP Address</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => data.VotebookIP, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Sleep Video</label>
+                                    <div class="col-md-6">
+                                        @Html.EditorFor(model => data.SleepVideoURL, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="button" value="..." id="QuestionImageBrowser" class="btn btn-default" onclick="window.open('/KioskDesigner/VideoBrowser?reff=data_SleepVideoURL', 'Browser', 'width=1100,height=750');">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../Hardware/Votebook" class="btn btn-default">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

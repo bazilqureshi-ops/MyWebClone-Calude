@@ -1,0 +1,299 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels;
+@model MainDisplayViewModel
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="card">
+			<div class="card-header">
+				Main Display Management
+			</div>
+
+			<div class="card-body">
+
+				<form action="~/Hardware/SaveMainDisplay" method="post" class="row">
+					<input type="hidden" name="MainDisplay.MainDisplayID" value="@Model.MainDisplay.MainDisplayID" />
+					<input type="hidden" name="MainDisplay.ImageMethod" value="100" />
+					<input type="hidden" name="MainDisplay.LogoIMG" value="100" />
+
+					<!-- Communication Protocol & Counter Id-->
+					<div class="row">
+						<!-- Communication Protocol -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Communication Protocol *</label>
+								<div class="col-md-9">
+									<select name="MainDisplay.Protocol" id="MainDisplay.Protocol" class="select2">
+										<option value="H">H Protocol</option>
+										<option value="G">G Protocol</option>
+									</select>
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.Protocol)
+									</label>
+								</div>
+
+							</div>
+						</div>
+
+						<!-- Display Model -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Display Model</label>
+								<div class="col-md-9">
+									<select name="MainDisplay.Model" id="MainDisplay.Model" class="select2">
+										<option value="ADG1048" selected="selected">ADG1048</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+					<!-- Number of Row & Display Model -->
+					<div class="row">
+
+						<!-- Row Id-->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">First Row ID *</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.RowID, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.RowID)
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<!-- Number of Row -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Number of row *</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.RowPiece, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.RowPiece)
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Dimming Time && Arrow Directions -->
+					<div class="row">
+						<!-- Dimming Time -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Dimming Time *</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.DimmingTime, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.DimmingTime)
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<!-- Arrow Direction -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Arrow Direction</label>
+								<div class="col-md-9">
+									<select name="MainDisplay.ArrowDirection" id="MainDisplay.ArrowDirection" class="select2">
+										@{
+											if (Model.MainDisplay.ArrowDirection == "Up")
+											{
+												<option value="Up" selected="selected">Up</option>
+											}
+											else
+											{
+												<option value="Up">Up</option>
+											}
+
+											if (Model.MainDisplay.ArrowDirection == "Right")
+											{
+												<option value="Right" selected="selected">Right</option>
+
+											}
+											else if (string.IsNullOrEmpty(Model.MainDisplay.ArrowDirection))
+											{
+												<option value="Right" selected="selected">Right</option>
+											}
+											else
+											{
+												<option value="Right">Right</option>
+											}
+
+											if (Model.MainDisplay.ArrowDirection == "Down")
+											{
+												<option value="Down" selected="selected">Down</option>
+
+											}
+											else
+											{
+												<option value="Down">Down</option>
+
+											}
+
+											if (Model.MainDisplay.ArrowDirection == "Left")
+											{
+												<option value="Left" selected="selected">Left</option>
+
+											}
+											else
+											{
+												<option value="Left">Left</option>
+
+											}
+
+										}
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Flash Count & Contrast -->
+					<div class="row">
+						<!-- Flash Count -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Flash Count *</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.FlashCount, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.FlashCount)
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<!-- Contrast -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Contrast *</label>
+								<div class="col-md-9" style="min-height:40px;">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.Contrast, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.Contrast)
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+					<!-- Show Terminal Number & Show Service Code & Using Standart Font & Right To Left -->
+					<div class="row">
+
+						<!--Show Terminal Number & Show Service -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Show Terminal Number</label>
+								<div class="col-md-3" style="min-height:40px;">
+									@Html.CheckBox("MainDisplay.ShowTerminalNo", true)
+									<label for="showAll" style="display:inline">Yes</label>
+								</div>
+
+								<label class="col-md-3 control-label">Show Service Code</label>
+								<div class="col-md-3" style="min-height:40px;">
+									@Html.CheckBox("MainDisplay.ShowServiceCode", true)
+									<label for="showAll" style="display:inline">Yes</label>
+								</div>
+							</div>
+						</div>
+
+						<!--Using Standart Font & Right To Left -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Using Standard Font?</label>
+								<div class="col-md-3" style="min-height:40px;">
+									@Html.CheckBox("MainDisplay.StandardFont", true, new { @class = "twinz" })
+									<label for="showAll" style="display:inline">Yes</label>
+								</div>
+
+								<label class="col-md-3 control-label">Right To Left</label>
+								<div class="col-md-3" style="min-height:40px;">
+									@Html.CheckBox("MainDisplay.RightToLeft", true, new { @class = "twinz" })
+									<label for="showAll" style="display:inline">Yes</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Arabic Transition & Scroll Message Time -->
+					<div class="row">
+
+						<!-- Arabic Transition Time -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Arabic Transition Time *</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.ArabicTime, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.ArabicTime)
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<!-- Scroll Message Time -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Scroll Message Time *</label>
+								<div class="col-md-9" style="min-height:40px;">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.ScrollMessageTime, new { htmlAttributes = new { @class = "form-control" } })
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(validate => validate.MainDisplay.ScrollMessageTime)
+									</label>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- Scroll Message -->
+					<div class="row">
+						<!-- Scroll Message -->
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label class="col-md-3 control-label">Scroll Message</label>
+								<div class="col-md-9">
+									@Html.EditorFor(MainDisplay => MainDisplay.MainDisplay.ScrollMessage, new { htmlAttributes = new { @class = "form-control", @placeholder = "This message will be display on counter." } })
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+
+					<!-- Button Area -->
+					<div class="form-footer text-right">
+						<div class="form-group">
+							<div class="col-md-9 col-md-offset-3">
+								<a href="../Hardware/MainDisplay" class="btn btn-default">Cancel</a>
+								<button type="submit" class="btn btn-primary">Save</button>
+							</div>
+						</div>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$('.twinz').on('change', (element) => {
+		$(element.currentTarget).prop('checked') ? $('.twinz').prop('checked', true) : $('.twinz').prop('checked', false);
+
+	});
+
+</script>

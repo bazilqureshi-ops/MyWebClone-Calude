@@ -1,0 +1,52 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmTriggerCorrespond correspond = ViewBag.retturn;
+    qmUser user = ViewBag.user;
+}
+    <tr id="Correspond_@(correspond.TriggerCorrespondID)">
+        <td>@(user.FullName)</td>
+        <td>@(user.EMail)</td>
+        <td>@(user.PhoneNumber)</td>
+        <td>
+            @{
+                if (correspond.SendMail)
+                {
+                    <input type='checkbox' class='form-control' name='mail_@(correspond.TriggerCorrespondID)' id="mail_@(correspond.TriggerCorrespondID)" checked="checked" />
+                }
+                else
+                {
+                    <input type='checkbox' class='form-control' name='mail_@(correspond.TriggerCorrespondID)' id="mail_@(correspond.TriggerCorrespondID)" />
+                }
+            }
+        </td>
+        <td>
+            @{
+                if (correspond.SendSMS)
+                {
+                    <input type='checkbox' class='form-control' name='sms_@(correspond.TriggerCorrespondID)' id="sms_@(correspond.TriggerCorrespondID)" checked="checked" />
+                }
+                else
+                {
+                    <input type='checkbox' class='form-control' name='sms_@(correspond.TriggerCorrespondID)' id="sms_@(correspond.TriggerCorrespondID)" />
+                }
+            }
+        </td>
+        <td>
+            @{
+                if (correspond.SendMobileNotification)
+                {
+                    <input type='checkbox' class='form-control' name='notification_@(correspond.TriggerCorrespondID)' id="notification_@(correspond.TriggerCorrespondID)" checked="checked" />
+                }
+                else
+                {
+                    <input type='checkbox' class='form-control' name='notification_@(correspond.TriggerCorrespondID)' id="notification_@(correspond.TriggerCorrespondID)" />
+                }
+            }
+        </td>
+        <td><a class="btn btn-danger" href="javascript:DeleteCorrespond(@(correspond.TriggerCorrespondID));"><i class="fa fa-remove"></i></a></td>
+    </tr>
+
+<script>
+    Triggers.push(@(correspond.TriggerCorrespondID));
+</script>

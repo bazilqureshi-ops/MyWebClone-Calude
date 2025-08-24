@@ -1,0 +1,401 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels;
+@model CounterDisplayViewModel
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var interfacecount = @(Model.Interfaces.Count());
+        var terminalcount = @(Model.Terminals.Count());
+
+        if (interfacecount < 1 || terminalcount < 1) {
+            var str = "<p>You're not meeting the minimum requirements of creating a new counter display. You should have at least one interface and a terminal.</p>";
+
+            if (interfacecount < 1) {
+                str += "Please <a href = '../Hardware/Interface' > click here</a > to create new interface.<br /> ";
+            }
+            if (terminalcount < 1) {
+                str += "Please <a href='../Terminal'>click here</a> to create new service.<br/>";
+            }
+
+            swal({
+                title: "Hmm.. Consider This",
+                text: str,
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+                content: str
+            });
+
+            $(".swal-text").html(str);
+        }
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Counter Display Management
+            </div>
+
+            <div class="card-body">
+
+                <form action="~/Hardware/SaveCounterDisplay" method="post" class="row">
+                    @{
+                        for (int i = 0; i < Model.Terminals.Count; i++)
+                        {
+                            <input type="hidden" name="Terminals[@i].TerminalID" value="@Model.Terminals[i].TerminalID" />
+                            <input type="hidden" name="Terminals[@i].TerminalName" value="@Model.Terminals[i].TerminalName" />
+                            <input type="hidden" name="Terminals[@i].TerminalLocation" value="@Model.Terminals[i].TerminalLocation" />
+                        }
+                        for (int i = 0; i < Model.Branches.Count; i++)
+                        {
+                            <input type="hidden" name="Branches[@i].BranchID" value="@Model.Branches[i].BranchID" />
+                            <input type="hidden" name="Branches[@i].BranchName" value="@Model.Branches[i].BranchName" />
+                        }
+                    }
+                    <input type="hidden" name="CounterDisplay.CounterDisplayID" value="@Model.CounterDisplay.CounterDisplayID" />
+                    <input type="hidden" name="CounterDisplay.ImageMethod" value="100" />
+                    <input type="hidden" name="CounterDisplay.LogoIMG" value="100" />
+
+                    <!-- Communication Protocol & Counter Id-->
+                    <div class="row">
+                        <!-- Communication Protocol -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Communication Protocol *</label>
+                                <div class="col-md-9">
+                                    <select name="CounterDisplay.Protocol" id="CounterDisplay.Protocol" class="select2">
+                                        <option value="H">H Protocol</option>
+                                        <option value="G">G Protocol</option>
+                                    </select>
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.Protocol)
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Counter Id-->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Counter ID *</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.DisplayID, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.DisplayID)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fake Id & Display Model -->
+                    <div class="row">
+                        <!-- Fake Id -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Fake ID *</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.FakeID, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.FakeID)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Display Model -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Display Model</label>
+                                <div class="col-md-9">
+                                    <select name="CounterDisplay.Model" id="CounterDisplay.Model" class="select2">
+                                        <option value="DG1040" selected="selected">DG1040</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dimming Time && Terminals -->
+                    <div class="row">
+                        <!-- Dimming Time -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Dimming Time *</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.DimmingTime, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.DimmingTime)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terminals -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Terminal</label>
+                                <div class="col-md-9">
+                                    <select name="CounterDisplay.TerminalID" id="Model.CounterDisplay.TerminalID" class="select2">
+                                        @{
+                                            foreach (var item in Model.Terminals)
+                                            {
+                                                if (item.TerminalID == Model.CounterDisplay.TerminalID)
+                                                {
+                                                    <option value="@(item.TerminalID)" selected="selected">[@(item.qmBranch.BranchName)] @(item.TerminalName)</option>
+
+                                                }
+                                                else
+                                                {
+                                                    <option value="@(item.TerminalID)">[@(item.qmBranch.BranchName)] @(item.TerminalName)</option>
+                                                }
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flash Count & Contrast -->
+                    <div class="row">
+                        <!-- Flash Count -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Flash Count *</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.FlashCount, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.FlashCount)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contrast -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Contrast *</label>
+                                <div class="col-md-9" style="min-height:40px;">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.Contrast, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.Contrast)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Show Terminal Number & Show Service Code & Using Standart Font & Right To Left -->
+                    <div class="row">
+
+                        <!--Show Terminal Number & Show Service -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Show Terminal Number</label>
+                                <div class="col-md-3" style="min-height:40px;">
+                                    @Html.CheckBox("CounterDisplay.ShowTerminalNo", true)
+                                    <label for="showAll" style="display:inline">Yes</label>
+                                </div>
+
+                                <label class="col-md-3 control-label">Show Service Code</label>
+                                <div class="col-md-3" style="min-height:40px;">
+                                    @Html.CheckBox("CounterDisplay.ShowServiceCode", true)
+                                    <label for="showAll" style="display:inline">Yes</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--Using Standart Font & Right To Left -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Using Standard Font?</label>
+                                <div class="col-md-3" style="min-height:40px;">
+                                    @Html.CheckBox("CounterDisplay.StandartFont", true, new { @class = "twinz" })
+                                    <label for="showAll" style="display:inline">Yes</label>
+                                </div>
+
+                                <label class="col-md-3 control-label">Right To Left</label>
+                                <div class="col-md-3" style="min-height:40px;">
+                                    @Html.CheckBox("CounterDisplay.RightToLeft", true, new { @class = "twinz" })
+                                    <label for="showAll" style="display:inline">Yes</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arabic Transition & Scroll Message Time -->
+                    <div class="row">
+
+                        <!-- Arabic Transition Time -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Arabic Transition Time *</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.ArabicTime, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.ArabicTime)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scroll Message Time -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Scroll Message Time *</label>
+                                <div class="col-md-9" style="min-height:40px;">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.ScrollMessageTime, new { htmlAttributes = new { @class = "form-control" } })
+
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(validate => validate.CounterDisplay.ScrollMessageTime)
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scroll Message & Arrow Direction-->
+                    <div class="row">
+                        <!-- Scroll Message -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Scroll Message</label>
+                                <div class="col-md-9">
+                                    @Html.EditorFor(counterDisplay => counterDisplay.CounterDisplay.ScrollMessage, new { htmlAttributes = new { @class = "form-control", @placeholder = "This message will be display on counter." } })
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Arrow Direction -->
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Arrow Direction</label>
+                                <div class="col-md-9">
+                                    <select name="CounterDisplay.ArrowDirection" id="CounterDisplay.ArrowDirection" class="select2">
+                                        @{
+                                            if (Model.CounterDisplay.ArrowDirection == "Up")
+                                            {
+                                                <option value="Up" selected="selected">Up</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="Up">Up</option>
+                                            }
+
+                                            if (Model.CounterDisplay.ArrowDirection == "Right")
+                                            {
+                                                <option value="Right" selected="selected">Right</option>
+
+                                            }
+                                            else if (string.IsNullOrEmpty(Model.CounterDisplay.ArrowDirection))
+                                            {
+                                                <option value="Right" selected="selected">Right</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="Right">Right</option>
+                                            }
+
+                                            if (Model.CounterDisplay.ArrowDirection == "Down")
+                                            {
+                                                <option value="Down" selected="selected">Down</option>
+
+                                            }
+                                            else
+                                            {
+                                                <option value="Down">Down</option>
+
+                                            }
+
+                                            if (Model.CounterDisplay.ArrowDirection == "Left")
+                                            {
+                                                <option value="Left" selected="selected">Left</option>
+
+                                            }
+                                            else
+                                            {
+                                                <option value="Left">Left</option>
+
+                                            }
+
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">Interface</label>
+                                <div class="col-md-9">
+                                    <select name="CounterDisplay.InterfaceID" id="Model.CounterDisplay.InterfaceID" class="select2">
+                                        @{
+                                            foreach (var item in Model.Interfaces)
+                                            {
+                                                if (item.InterfaceID == Model.CounterDisplay.InterfaceID)
+                                                {
+                                                    <option value="@(item.InterfaceID)" selected="selected">@(item.InterfaceName)</option>
+                                                    //@(item.InterfaceName.Contains("[OVERLOADED]") == true ? "disabled" : "")
+
+                                                }
+                                                else
+                                                {
+                                                    <option value="@(item.InterfaceID)">@(item.InterfaceName)</option>
+                                                    //@(item.InterfaceName.Contains("[OVERLOADED]") == true ? "disabled" : "")
+                                                }
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Button Area -->
+                    <div class="form-footer text-right">
+                        <div class="form-group">
+                            <div class="col-md-9 col-md-offset-3">
+                                <a href="../Hardware/CounterDisplay" class="btn btn-default">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('.twinz').on('change', (element) => {
+        $(element.currentTarget).prop('checked') ? $('.twinz').prop('checked', true) : $('.twinz').prop('checked', false);
+
+    });
+</script>

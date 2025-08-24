@@ -1,0 +1,140 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "User List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmUser> users = ViewBag.data;
+    var roles = ViewBag.roles;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                User Management
+            </div>
+            <div class="card-body no-padding">
+                <table class="datatable table table-striped primary" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Corporate Number</th>
+                            <th>Gender</th>
+                            <th>User Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (qmUser item in users)
+                            {
+                                <tr>
+                                    <td><img src="@item.ProfilePicture" height="50" /></td>
+                                    <td>@item.FullName</td>
+                                    <td>@item.Username</td>
+                                    <td>@item.CorporateNumber</td>
+                                    <td>
+                                        @{
+                                            if (item.Gender == true)
+                                            {
+                                                <label>Male</label>
+                                            }
+                                            else
+                                            {
+                                                <label>Female</label>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            @item.qmUserRole.UserRoleName
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="../User/EditUser?id=@item.UserID" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                        <button value="@(item.UserID)" type="button" class="btn btn-danger"><span class="fa fa-remove"></span></button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="btn-floating" id="help-actions">
+    <div class="btn-bg"></div>
+    <button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+        <i class="icon fa fa-plus"></i>
+        <span class="help-text">Shortcut</span>
+    </button>
+    <div class="toggle-content">
+        <ul class="actions">
+            <li><a href="~/User/CreateUser">Create User</a></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+
+    //Delete User Function
+    $('.btn-danger').click(function () {
+        var id = $(this).val();
+
+        swal({
+            title: "Are you sure to delete this user?",
+            text: "If you delete the user, you will disconnect this user Web Terminal Access",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/User/DeleteUser",
+                        dataType: "JSON",
+                        data: "id=" + id,
+                        success: function (result) {
+                            if (result === "hasConnection") {
+                                swal({
+                                    title:
+                                        "This user has Terminal Connection, before you delete this user please ensure his / her logout from system.",
+                                    icon: "info",
+                                });
+                            }
+                            else if (result === "deleted") {
+                                swal({
+                                    icon: "success",
+                                    title: "This user successfully deleted.",
+                                    buttons: {
+                                        ok: "Confirm"
+                                    }
+                                }).then(redirect => {
+                                    window.location = "/User";
+                                });
+
+
+
+                            }
+                        }
+                    });
+
+                } else {
+                    swal({
+                        title: "Canceled",
+                        icon: "info",
+                    });
+                }
+            });
+    });
+</script>

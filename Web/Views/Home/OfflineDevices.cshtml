@@ -1,0 +1,64 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmKiosk> Kiosk = ViewBag.OfflineKiosk;
+    List<qmDigitalSignage> DigitalSignage = ViewBag.OfflineDS;
+    List<qmBranch> Branches = ViewBag.Branches;
+}
+    <div class="row">
+        <div class="col-md-12" style="margin-top:10px;">
+            <div class="card card-tab card-mini">
+                <div class="card-header" style="overflow:hidden;">
+                    <ul class="nav nav-tabs">
+                        <li class="tabsap active" style="min-width:200px;" id="TabSap1" onclick="SwitchTab(1);">
+                            <a href="javascript:SwitchTab(1);" role="tab" data-toggle="tab"><i class="fa fa-ticket" aria-hidden="true"></i> Kiosk</a>
+                        </li>
+                        <li class="tabsap" style="min-width:200px;" id="TabSap2" onclick="SwitchTab(2);">
+                            <a href="javascript:SwitchTab(2);" role="tab" data-toggle="tab"><i class="fa fa-tv" aria-hidden="true"></i> Digital Signage</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content no-padding">
+                    <div class="tab-pane active" id="tab1" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        <table width="100%" class="table card-table">
+                            <tr>
+                                <td><b>Kiosk Name</b></td>
+                                <td><b>Branch</b></td>
+                                <td><b>Device IP</b></td>
+                            </tr>
+                            @{
+                                foreach (qmKiosk kiosk in Kiosk)
+                                {
+                                    <tr>
+                                        <td>@(kiosk.KioskName)</td>
+                                        <td>@(Branches.Where(x=>x.BranchID == kiosk.BranchID).FirstOrDefault().BranchName)</td>
+                                        <td>@(kiosk.IPAddress)</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="tab2" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        <table width="100%" class="table card-table">
+                            <tr>
+                                <td><b>DS Name</b></td>
+                                <td><b>Branch</b></td>
+                                <td><b>Device IP</b></td>
+                            </tr>
+                            @{
+                                foreach (qmDigitalSignage ds in DigitalSignage)
+                                {
+                                    <tr>
+                                        <td>@(ds.DigitalSignageName)</td>
+                                        <td>@(Branches.Where(x=>x.BranchID == ds.BranchID).FirstOrDefault().BranchName)</td>
+                                        <td>@(ds.IPAddress)</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>

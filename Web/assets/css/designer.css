@@ -1,0 +1,290 @@
+﻿body > .fa-edit, .fa-trash {
+	font-size: 14px !important;
+}
+
+#MainLegend {
+	padding: 0px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	max-height: 300px;
+}
+
+
+.uiElement {
+	position: absolute;
+}
+
+	.uiElement > a:hover {
+		color: #29c75f;
+	}
+
+.selected {
+	border-color: #29c75f !important;
+}
+
+.design-icons {
+	font-size: 20px !important;
+	padding: 5px;
+}
+
+	.design-icons:hover {
+	}
+
+.fa-trash {
+	float: right;
+	position: absolute;
+	right: 0;
+	margin-right: 5px;
+}
+
+.fa-edit {
+	color: #29c75f;
+	float: left;
+	left: 0;
+	position: absolute;
+}
+
+.designer-select {
+	width: 100%;
+	height: 100%;
+	font-family: 'Open Sans', sans-serif;
+	color: #444;
+	padding: 7px 10px;
+	border: 0;
+}
+
+.input-group {
+	min-height: 42px;
+}
+
+	.input-group > .input-group-addon {
+		border-right: 1px solid #c8d1d3;
+	}
+
+	.input-group > input[type=checkbox] {
+		margin-top: 2%;
+	}
+
+#common-props-container, #font-props-container, #special-props-container, #content-container {
+	padding: 5% 5% 0 5%;
+}
+
+#apply-button {
+	margin-top: 25px;
+}
+
+.double-item {
+	width: 50% !important;
+}
+
+#position-x, #size-x {
+	border-right: 1px solid #c8d1d3;
+}
+
+.media-element-icons {
+	position: absolute;
+	top: 0;
+	z-index: 99;
+	font-size: 2.5em;
+}
+
+/* Row Accordion */
+#row-accordion {
+	padding: 5px;
+	border: 1px solid #c8d1d3;
+	border-radius: 2px;
+	display: none;
+	width: 100%;
+}
+
+	#row-accordion > ul {
+		padding: 0;
+		text-decoration: none;
+		margin: 0;
+		list-style-type: none;
+	}
+
+		#row-accordion > ul > li {
+			padding: 10px;
+		}
+
+
+#row-map {
+	width: 70%;
+}
+
+.ds-success {
+	width: 30%;
+	background-color: #29c75f !important;
+	color: #fff;
+}
+
+.ds-failed {
+	width: 30%;
+	background-color: #a94442 !important;
+	color: #fff;
+}
+
+#waiting-list-label {
+	width: 100%;
+	padding: 10px 15px 0 15px;
+	font-weight: normal;
+}
+
+	#waiting-list-label > i {
+		float: right;
+		font-size: 14px;
+		margin: 5px 0;
+	}
+
+#waiting-list-multi-select {
+	border: 1px solid #c8d1d3;
+	position: absolute;
+	z-index: 99;
+	background-color: #fff;
+	top: 103%;
+	display: none;
+}
+
+	#waiting-list-multi-select > label {
+		padding: 10px;
+		width: 100%;
+		font-weight: normal;
+	}
+
+.list-checkbox {
+}
+
+/* Design Tool Element */
+.design-tool-element {
+	display: inline-block;
+	color: #555;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	font-size: 36px;
+	float: right !important;
+}
+
+.design-tool-element:hover {
+	color: red;
+}
+
+.vbdesign-tool-element {
+	display: inline-block;
+	color: #555;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	font-size: 24px;
+	float: right !important;
+}
+.vbdesign-tool-element:hover {
+	color: red;
+}
+
+.description-container {
+	float: right;
+	padding: 10px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #888;
+}
+
+.description-icons {
+	left: unset !important;
+	position: unset !important;
+	margin-right: 5px;
+	margin-top: 2.5%;
+	float: unset;
+	right: unset;
+}
+
+/* Coordinate Arrows Styles */
+#x-arrow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 10px;
+	height: 1px;
+	color: grey;
+	border: 0.3px dotted grey;
+	display: none;
+	z-index: 9999;
+}
+
+#y-arrow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 50px;
+	color: grey;
+	border: 0.3px dotted grey;
+	display: none;
+	z-index: 9999;
+}
+
+.arrow-enabled {
+	display: block !important;
+}
+
+.side-arrows {
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: red;
+	border: 0.3px dotted red;
+	display: none;
+	opacity: 0.8;
+	z-index: 9999;
+}
+
+#upper-left, #upper-right {
+	width: 1px;
+	height: 100%;
+}
+
+#bottom-left, #bottom-right {
+	width: 100%;
+	height: 1px;
+}
+
+/* Validate Styles */
+
+.validate-for {
+	display: none;
+}
+
+.validate-for-active {
+	display: block;
+}
+
+.delete-item {
+	color: red;
+	margin-left: 5px;
+}
+
+
+/* Setup Options */
+.setup-options {
+	list-style-type: none;
+	padding-top: 15px;
+	padding-left: 0;
+	width: 75%;
+	display: flex;
+	float: left;
+	border-bottom: 0.1rem dotted #444;
+	margin-bottom: 5px;
+}
+
+	.setup-options > li {
+		width: 25%;
+		display: inline-block;
+		padding: 7px;
+		margin-right: 10px;
+	}
+
+.select-option-active {
+	border-left: 1px solid #29c75f;
+	border-top: 1px solid #29c75f;
+	border-right: 1px solid #29c75f;
+}

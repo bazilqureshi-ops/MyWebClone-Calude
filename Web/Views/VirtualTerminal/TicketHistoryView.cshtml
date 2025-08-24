@@ -1,0 +1,25 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmTicket> customs = ViewBag.history;
+}
+
+
+@{
+    if(customs.Count() > 0)
+    {
+        foreach (qmTicket item in customs.Take(10))
+        {
+            <tr>
+                <td>@item.TicketPrefix @item.TicketNumber</td>
+                <td>@item.PrintTime.ToString()</td>
+                <td>@item.CallingTime.ToString()</td>
+                <!--<td><a class="btn btn-default" href="javascript:CallFromHistory(@item.TicketID);"><span class="fa fa-hand-o-up "></span> Call From History</a></td>-->
+            </tr>
+            }
+        }
+    else
+    {
+        <p>No ticket found for this terminals history.</p>
+    }
+}

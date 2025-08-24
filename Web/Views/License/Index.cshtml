@@ -1,0 +1,312 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.Domain.Helpers;
+@{
+    Layout = null;
+    string LicenseStatus = ViewBag.Status;
+
+    List<qmBranch> branches = ViewBag.branches;
+    List<qmKiosk> kiosks = ViewBag.kiosks;
+    List<qmDigitalSignage> digitalsignages = ViewBag.digitalsignages;
+    List<qmCounterDisplay> counterdisplays = ViewBag.counterdisplays;
+    List<qmMainDisplay> maindisplays = ViewBag.maindisplays;
+    List<qmTerminal> terminals = ViewBag.terminals;
+    List<qmInterface> interfaces = ViewBag.interfaces;
+    List<qmVotebook> votebooks = ViewBag.votebooks;
+
+    List<qmLicense> licenses = new List<qmLicense>();
+
+    using (QMagicEntities db = new QMagicEntities())
+    {
+        licenses.AddRange(db.qmLicense.ToList());
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>QMagic License Center</title>
+
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <link href="~/assets/css/flat-admin.css" rel="stylesheet" />
+    <link href="~/assets/css/vendor.min.css" rel="stylesheet" />
+    <link href="~/assets/css/jquery-ui.min.css" rel="stylesheet" />
+    <link href="~/assets/css/custom.css" rel="stylesheet" />
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <style>
+        .toggleable{
+            display:none;
+        }
+    </style>
+    <script>
+        function Toggleable(WhereClause) {
+            if ($("#toggle_" + WhereClause).hasClass("fa fa-plus")) {
+                $("#toggle_" + WhereClause).removeClass("fa fa-plus");
+                $("#toggle_" + WhereClause).addClass("fa fa-minus");
+                $("." + WhereClause).fadeIn();
+            }
+            else {
+                $("#toggle_" + WhereClause).removeClass("fa fa-minus");
+                $("#toggle_" + WhereClause).addClass("fa fa-plus");
+                $("." + WhereClause).fadeOut();
+            }
+        }
+    </script>
+</head>
+<body style="background-color:#F5F5F5;">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3" style="margin-top:100px;">
+            <form name="form1" id="form1" action="#" method="post" autocomplete="off">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        @{
+                            if (LicenseStatus == "Expired")
+                            {
+                                <h2 style="color:#ff0000;"><i class="fa fa-warning"></i> Cannot Access!</h2>
+                                <p>Looks like you are having difficulties to reach your database. After recovery you will need a new license key. Old license snapshots are below. These keys are hard copied from database to file system. In that way, you can copy and try to re-active your product with a valid key.</p>
+
+                                <p>You can see your activation history below.</p>
+
+
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        @{
+                                            foreach (qmLicense item in licenses)
+                                            {
+                                                <span>License activated in @(item.ActivationDate). </span><br />
+                                            }
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        @(ViewBag.Info)
+                                    </div>
+                                </div>
+
+                                <p>Please enter your activation code below.</p>
+
+                                <p><input type="text" class="form-control" name="txtSerial" id="txtSerial" autocomplete="off" /></p>
+
+                                <p><input type="submit" value="Activate" class="btn btn-primary" /></p>
+
+                                <script>
+                                    $(document).ready(function () {
+                                        $("#form1").attr("action", "License/ActiveQMagic");
+                                    });
+                                </script>
+                            }
+                            else
+                            {
+                                <h2 style="color:#4cff00;"><i class="fa fa-check"></i> License Valid!</h2>
+                                <p>Thank you for using legal software and supporting QMagic.</p>
+
+                                <p>You can see your activation details below.</p>
+
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        @{ 
+                                            qmLicense lastlicense = licenses.OrderByDescending(x => x.LicenseID).Take(1).FirstOrDefault();
+
+                                            string[] thescript = CryptoHelper.Decrypt(lastlicense.LicenseCode, "KadirTahaCANCI").Split('|');
+                                            string PlaceName = thescript[0];
+                                            string ExpireDate = thescript[1];
+                                            string BranchCount = thescript[2];
+                                            string KioskCount = thescript[3];
+                                            string DSCount = thescript[4];
+                                            string TerminalCount = thescript[5];
+                                            string CounterCount = thescript[6];
+                                            string MainDisplayCount = thescript[7];
+                                            string InterfaceCount = thescript[8];
+                                            string VotebookCount = thescript[9];
+                                        }
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <p><i class="fa fa-key"></i> Central License (Last activation date @(lastlicense.ActivationDate))</p>
+                                            </div>
+                                            <div class="col-md-1" style="border-bottom:dotted 1px #CCC; border-left:dotted 1px #CCC;">
+                                                <i class="fa fa-dots"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p><b>@(PlaceName)</b></p>
+                                            </div>
+                                            <!-- BRANCH -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('branches')" id="toggle_branches"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(BranchCount) / @(branches.Count) Branches</p>
+                                            </div>
+                                            <div class="branches toggleable">
+                                                @{
+                                                    foreach (qmBranch branch in branches)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(branch.BranchName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- KIOSK -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('kiosks')" id="toggle_kiosks"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(KioskCount) / @(kiosks.Count) Kiosks</p>
+                                            </div>
+                                            <div class="kiosks toggleable">
+                                                @{
+                                                    foreach (qmKiosk kiosk in kiosks)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(kiosk.KioskName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- DIGITAL SIGNAGE -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('digitalsignages')" id="toggle_digitalsignages"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(DSCount) / @(digitalsignages.Count) Digital Signages (with Digital Counter Displays)</p>
+                                            </div>
+                                            <div class="digitalsignages toggleable">
+                                                @{
+                                                    foreach (qmDigitalSignage digitalsignage in digitalsignages)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(digitalsignage.DigitalSignageName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- TERMINAL -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('terminals')" id="toggle_terminals"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(TerminalCount) / @(terminals.Count) Terminals</p>
+                                            </div>
+                                            <div class="terminals toggleable">
+                                                @{
+                                                    foreach (qmTerminal terminal in terminals)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(terminal.TerminalName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- Counter Display -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('counters')" id="toggle_counters"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(CounterCount) / @(counterdisplays.Count) Counter Displays</p>
+                                            </div>
+                                            <div class="counters toggleable">
+                                                @{
+                                                    foreach (qmCounterDisplay counter in counterdisplays.OrderBy(x=>x.DisplayID))
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(counter.DisplayID)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- Main Display -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('maindisplays')" id="toggle_maindisplays"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(MainDisplayCount) / @(maindisplays.Count) Main Displays</p>
+                                            </div>
+                                            <div class="maindisplays toggleable">
+                                                @{
+                                                    foreach (qmMainDisplay maindisplay in maindisplays)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>Row : @(maindisplay.RowID) Matrix : @(maindisplay.RowPiece)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- Interface -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('interfaces')" id="toggle_interfaces"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(InterfaceCount) / @(interfaces.Count) Interfaces</p>
+                                            </div>
+                                            <div class="interfaces toggleable">
+                                                @{
+                                                    foreach (qmInterface interfacee in interfaces)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(interfacee.InterfaceName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <!-- Votebook -->
+                                            <div class="col-md-1" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                <i class="fa fa-plus" onclick="Toggleable('votebooks')" id="toggle_votebooks"></i>
+                                            </div>
+                                            <div class="col-md-11">
+                                                <p>@(VotebookCount) / @(votebooks.Count) Votebooks</p>
+                                            </div>
+                                            <div class="votebooks toggleable">
+                                                @{
+                                                    foreach (qmVotebook votebook in votebooks)
+                                                    {
+                                                        <div class="col-md-2" style="border-bottom: dotted 1px #CCC; border-left: dotted 1px #CCC;">
+                                                            <i class="fa fa-dots"></i>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <p>@(votebook.VotebookName)</p>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+
+
+
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <a href="~/" class="btn btn-primary"><i class="fa fa-home"></i> Go Home</a>
+                            }
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

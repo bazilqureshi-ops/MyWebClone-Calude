@@ -1,0 +1,59 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model AutoTransferRouteViewModel
+
+
+<table class="datatable table table-striped primary" id="dataTable" cellspacing="0" width="100%">
+	<thead>
+		<tr>
+			<th>Service Name</th>
+			<th>Segment Name</th>
+			<th>Transfer Service Name</th>
+			<th>Transfer Segment Name</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+	<tbody id="atrList">
+
+		@{
+			if (Model.Atrs != null)
+			{
+				for (int i = 0; i < Model.Atrs.Count; i++)
+				{
+
+					<tr id="tr_id_Atrs[@i]" type="row-element" priority="@Model.Atrs[i].Priority">
+
+						<input type="hidden" name="Atrs[@i].ATRID" value="@Model.Atrs[i].ATRID" />
+						<input type="hidden" name="Atrs[@i].Priority" value="@Model.Atrs[i].Priority" />
+
+						<td>
+							@Model.Atrs[i].qmService.ServiceName
+							<input type="hidden" name="Atrs[@i].ServiceID" value="@Model.Atrs[i].ServiceID" />
+						</td>
+
+						<td>
+							@Model.Atrs[i].qmSegment.SegmentName
+							<input type="hidden" name="Atrs[@i].SegmentID" value="@Model.Atrs[i].SegmentID" />
+						</td>
+
+						<td>
+							@Model.Atrs[i].qmService1.ServiceName
+							<input type="hidden" name="Atrs[@i].TransferServiceID" value="@Model.Atrs[i].TransferServiceID" />
+						</td>
+
+						<td>
+							@Model.Atrs[i].qmSegment1.SegmentName
+							<input type="hidden" name="Atrs[@i].TransferSegmentID" value="@Model.Atrs[i].TransferSegmentID" />
+						</td>
+
+						<td>
+							@*<a href="javascript:DeleteRecord(@Model.Atrs[i].ATRID);" class="btn btn-danger"><span class="fa fa-remove"></span></a>*@
+							<button type="button" value="@Model.Atrs[i].ATRID" class="btn btn-danger"><span class="fa fa-remove"></span></button>
+						</td>
+					</tr>
+				}
+			}
+		}
+
+	</tbody>
+</table>
+

@@ -1,0 +1,110 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+	/**/
+
+	ViewBag.Title = "Index";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	List<qmMacro> macrolist = ViewBag.macro;
+}
+<div class="row">
+	<div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+		<div class="card">
+			<div class="card-header">
+				Macro Management
+			</div>
+			<div class="card-body no-padding">
+				<table class="datatable table table-striped primary" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>Macro Name</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						@{
+							foreach (qmMacro item in macrolist)
+							{
+								<tr>
+									<td>@item.MacroName</td>
+                                    <td style="max-width:80px;">
+                                        <a href="../Macro/EditMacro?MacroID=@item.MacroID" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                        <a href="javascript:DeleteItem(@(item.MacroID));" class="btn btn-danger"><span class="fa fa-remove"></span></a>
+                                    </td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="btn-floating" id="help-actions">
+	<div class="btn-bg"></div>
+	<button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+		<i class="icon fa fa-plus"></i>
+		<span class="help-text">Shortcut</span>
+	</button>
+	<div class="toggle-content">
+		<ul class="actions">
+			<li><a href="~/Macro/CreateMacro">Create Macro</a></li>
+		</ul>
+	</div>
+</div>
+
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+	function DeleteItem(itemid) {
+		//var r = confirm("Do you really want to delete this macro? \n If there is a terminal using this macro please delete or change macro first from this terminal then you can delete this macro. Otherwise you cannot delete this macro.");
+
+		swal({
+			title: "Are you sure to delete this macro?",
+			text: "If there is a terminal using this macro you will not able to delete this macro.",
+			icon: "warning",
+			buttons: true,
+			dangerMode: true,
+		}).then((willDelete) => {
+			if (willDelete) {
+				$.ajax({
+					type: "POST",
+					url: "/Macro/DeleteMacro",
+					dataType: "JSON",
+					data: "id=" + itemid,
+					success: function (result) {
+
+						//Deleted
+						if (result === "deleted") {
+							swal({
+								icon: "success",
+								title: "The macro successfully deleted.",
+								buttons: {
+									ok: "Confirm"
+								}
+							}).then(redirect => {
+								window.location = "/Macro";
+							});
+						}
+						//Failed to delete
+						else if (result === "failed") {
+							swal({
+								text: "The macro is using by active terminal(s), if you want to delete this macro from system, first you need to delete terminal or change the terminal's macro.",
+								icon: "info",
+							});
+						}
+					}
+				});
+			} else {
+				swal({
+					title: "Canceled",
+					icon: "info"
+				});
+			}
+		});
+
+	}
+</script>

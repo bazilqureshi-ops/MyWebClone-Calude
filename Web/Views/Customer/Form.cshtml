@@ -1,0 +1,465 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model CustomerViewModel
+
+@{
+	List<string> countries = new List<string>();
+
+	#region Countries
+
+	countries.Add("Afghanistan");
+	countries.Add("Albania");
+	countries.Add("Algeria");
+	countries.Add("Andorra");
+	countries.Add("Angola");
+	countries.Add("Antigua & Deps");
+	countries.Add("Argentina");
+	countries.Add("Armenia");
+	countries.Add("Australia");
+	countries.Add("Austria");
+	countries.Add("Azerbaijan");
+	countries.Add("Bahamas");
+	countries.Add("Bahrain");
+	countries.Add("Bangladesh");
+	countries.Add("Barbados");
+	countries.Add("Belarus");
+	countries.Add("Belgium");
+	countries.Add("Belize");
+	countries.Add("Benin");
+	countries.Add("Bhutan");
+	countries.Add("Bolivia");
+	countries.Add("Bosnia Herzegovina");
+	countries.Add("Botswana");
+	countries.Add("Brazil");
+	countries.Add("Brunei");
+	countries.Add("Bulgaria");
+	countries.Add("Burkina");
+	countries.Add("Burundi");
+	countries.Add("Cambodia");
+	countries.Add("Cameroon");
+	countries.Add("Canada");
+	countries.Add("Cape Verde");
+	countries.Add("Central African Rep");
+	countries.Add("Chad");
+	countries.Add("Chile");
+	countries.Add("China");
+	countries.Add("Colombia");
+	countries.Add("Comoros");
+	countries.Add("Congo");
+	countries.Add("Congo {Democratic Rep}");
+	countries.Add("Costa Rica");
+	countries.Add("Croatia");
+	countries.Add("Cuba");
+	countries.Add("Cyprus");
+	countries.Add("Czech Republic");
+	countries.Add("Denmark");
+	countries.Add("Djibouti");
+	countries.Add("Dominica");
+	countries.Add("Dominican Republic");
+	countries.Add("East Timor");
+	countries.Add("Ecuador");
+	countries.Add("Egypt");
+	countries.Add("El Salvador");
+	countries.Add("Equatorial Guinea");
+	countries.Add("Eritrea");
+	countries.Add("Estonia");
+	countries.Add("Ethiopia");
+	countries.Add("Fiji");
+	countries.Add("Finland");
+	countries.Add("France");
+	countries.Add("Gabon");
+	countries.Add("Gambia");
+	countries.Add("Georgia");
+	countries.Add("Germany");
+	countries.Add("Ghana");
+	countries.Add("Greece");
+	countries.Add("Grenada");
+	countries.Add("Guatemala");
+	countries.Add("Guinea");
+	countries.Add("Guinea-Bissau");
+	countries.Add("Guyana");
+	countries.Add("Haiti");
+	countries.Add("Honduras");
+	countries.Add("Hungary");
+	countries.Add("Iceland");
+	countries.Add("India");
+	countries.Add("Indonesia");
+	countries.Add("Iran");
+	countries.Add("Iraq");
+	countries.Add("Ireland {Republic}");
+	countries.Add("Israel");
+	countries.Add("Italy");
+	countries.Add("Ivory Coast");
+	countries.Add("Jamaica");
+	countries.Add("Japan");
+	countries.Add("Jordan");
+	countries.Add("Kazakhstan");
+	countries.Add("Kenya");
+	countries.Add("Kiribati");
+	countries.Add("Korea North");
+	countries.Add("Korea South");
+	countries.Add("Kosovo");
+	countries.Add("Kuwait");
+	countries.Add("Kyrgyzstan");
+	countries.Add("Laos");
+	countries.Add("Latvia");
+	countries.Add("Lebanon");
+	countries.Add("Lesotho");
+	countries.Add("Liberia");
+	countries.Add("Libya");
+	countries.Add("Liechtenstein");
+	countries.Add("Lithuania");
+	countries.Add("Luxembourg");
+	countries.Add("Macedonia");
+	countries.Add("Madagascar");
+	countries.Add("Malawi");
+	countries.Add("Malaysia");
+	countries.Add("Maldives");
+	countries.Add("Mali");
+	countries.Add("Malta");
+	countries.Add("Marshall Islands");
+	countries.Add("Mauritania");
+	countries.Add("Mauritius");
+	countries.Add("Mexico");
+	countries.Add("Micronesia");
+	countries.Add("Moldova");
+	countries.Add("Monaco");
+	countries.Add("Mongolia");
+	countries.Add("Montenegro");
+	countries.Add("Morocco");
+	countries.Add("Mozambique");
+	countries.Add("Myanmar, {Burma}");
+	countries.Add("Namibia");
+	countries.Add("Nauru");
+	countries.Add("Nepal");
+	countries.Add("Netherlands");
+	countries.Add("New Zealand");
+	countries.Add("Nicaragua");
+	countries.Add("Niger");
+	countries.Add("Nigeria");
+	countries.Add("Norway");
+	countries.Add("Oman");
+	countries.Add("Pakistan");
+	countries.Add("Palau");
+	countries.Add("Panama");
+	countries.Add("Papua New Guinea");
+	countries.Add("Paraguay");
+	countries.Add("Peru");
+	countries.Add("Philippines");
+	countries.Add("Poland");
+	countries.Add("Portugal");
+	countries.Add("Qatar");
+	countries.Add("Romania");
+	countries.Add("Russian Federation");
+	countries.Add("Rwanda");
+	countries.Add("St Kitts & Nevis");
+	countries.Add("St Lucia");
+	countries.Add("Saint Vincent & the Grenadines");
+	countries.Add("Samoa");
+	countries.Add("San Marino");
+	countries.Add("Sao Tome & Principe");
+	countries.Add("Saudi Arabia");
+	countries.Add("Senegal");
+	countries.Add("Serbia");
+	countries.Add("Seychelles");
+	countries.Add("Sierra Leone");
+	countries.Add("Singapore");
+	countries.Add("Slovakia");
+	countries.Add("Slovenia");
+	countries.Add("Solomon Islands");
+	countries.Add("Somalia");
+	countries.Add("South Africa");
+	countries.Add("South Sudan");
+	countries.Add("Spain");
+	countries.Add("Sri Lanka");
+	countries.Add("Sudan");
+	countries.Add("Suriname");
+	countries.Add("Swaziland");
+	countries.Add("Sweden");
+	countries.Add("Switzerland");
+	countries.Add("Syria");
+	countries.Add("Taiwan");
+	countries.Add("Tajikistan");
+	countries.Add("Tanzania");
+	countries.Add("Thailand");
+	countries.Add("Togo");
+	countries.Add("Tonga");
+	countries.Add("Trinidad & Tobago");
+	countries.Add("Tunisia");
+	countries.Add("Turkey");
+	countries.Add("Turkmenistan");
+	countries.Add("Tuvalu");
+	countries.Add("Uganda");
+	countries.Add("Ukraine");
+	countries.Add("United Arab Emirates");
+	countries.Add("United Kingdom");
+	countries.Add("United States");
+	countries.Add("Uruguay");
+	countries.Add("Uzbekistan");
+	countries.Add("Vanuatu");
+	countries.Add("Vatican City");
+	countries.Add("Venezuela");
+	countries.Add("Vietnam");
+	countries.Add("Yemen");
+	countries.Add("Zambia");
+	countries.Add("Zimbabwe");
+
+	#endregion
+
+}
+
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+	<div class="col-xs-8 col-xs-offset-2">
+		@if (!string.IsNullOrEmpty(ViewBag.Error))
+		{
+
+			var customer = ViewBag.Entity;
+
+			<div class="alert-danger" style="margin-bottom: 10px;">
+				<label style="padding: 10px">
+					@ViewBag.Error <a href="/customer/editcustomer?id=@customer.CustomerID">here.</a>
+				</label>
+			</div>
+
+		}
+
+		<div class="card">
+			<div class="card-header">
+				@if (Model.Customer.CustomerID > 0)
+				{
+					<label>
+						Update Customer Information
+					</label>
+				}
+				else
+				{
+					<label>
+						Create a New Customer
+					</label>
+				}
+			</div>
+			<div class="card-body">
+				@using (Html.BeginForm("Save", "Customer", FormMethod.Post, new { @id = "customerForm", enctype = "multipart/form-data" }))
+				{
+					@Html.Hidden("Customer.CustomerID", Model.Customer.CustomerID, new { @id = "customerID" })
+					@Html.Hidden("UniqueIDHash", Model.UniqueIDHash, new { @id = "customerUniqueID" })
+					@Html.Hidden("Customer.Password", Model.Customer.Password, new { @id = "customerPassword" })
+
+
+					<div class="row">
+						<div class="col-xs-12">
+							<div class="row">
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> UniqueID </label>
+										<div class="col-md-9">
+											@Html.EditorFor(customer => customer.Customer.UniqueID, new { htmlAttributes = new { @class = "form-control" } })
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> Password </label>
+										<div class="col-md-9" id="userOption">
+											@Html.EnumDropDownListFor(customer => customer.PasswordOption, new { @class = "form-control select2" })
+											<label class="text-danger">
+												@Html.ValidationMessageFor(customer => customer.Customer.Password)
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> Name </label>
+										<div class="col-md-9">
+											@Html.EditorFor(customer => customer.Customer.Name, new { htmlAttributes = new { @class = "form-control" } })
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> Surname </label>
+										<div class="col-md-9">
+											@Html.EditorFor(customer => customer.Customer.Surname, new { htmlAttributes = new { @class = "form-control" } })
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> E-mail </label>
+										<div class="col-md-9">
+											@Html.EditorFor(customer => customer.Customer.EMail, new { htmlAttributes = new { @class = "form-control" } })
+											<label class="text-danger">
+												@Html.ValidationMessageFor(customer => customer.Customer.EMail)
+											</label>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> Phone </label>
+										<div class="col-md-9">
+											@Html.EditorFor(customer => customer.Customer.Phone, new { htmlAttributes = new { @class = "form-control" } })
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-xs-6">
+									<div class="form-group">
+										<label class="col-md-3 control-label"> Country </label>
+										<div class="col-md-9">
+											<select name="Customer.Country" id="Customer.Country" class="form-control select2">
+												@if (string.IsNullOrEmpty(Model.Customer.Country))
+												{
+													<option >Select</option>
+												}
+												else
+												{
+													<option>Select</option>
+												}
+
+
+												@foreach (var country in countries.OrderBy(c => c))
+												{
+													if (country == Model.Customer.Country)
+													{
+														<option selected="selected" value="@country">@country</option>
+													}
+													else
+													{
+														<option value="@country">@country</option>
+													}
+
+												}
+
+
+											</select>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+						<div class="form-footer text-right">
+							<div class="form-group">
+								<div class="col-md-9 col-md-offset-3">
+									<a href="../Customer" class="btn btn-default">Cancel</a>
+									<button type="submit" class="btn btn-primary">Save</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+<link href="/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+	$(document).ready(function () {
+		$('#PasswordOption').change(function () {
+			var value = this.value;
+			var customerID = $('#customerID').val();
+			var password = $('#customerPassword').val();
+
+			if (customerID > 0) {
+
+				if (value == 3) {
+
+					swal({
+						title: "Are you sure?",
+						text: "You are about the change users password.",
+						icon: "warning",
+						buttons: true,
+						dangerMode: true,
+					})
+						.then((willDelete) => {
+							if (willDelete) {
+
+								$.ajax({
+									type: "POST",
+									url: "/Customer/GeneratePassword",
+									dataType: "Json",
+									success: function (data) {
+										$('#customerPassword').val(data);
+										var formElement = jQuery('#customerForm').serializeArray();
+										$.ajax({
+											type: "POST",
+											url: "/Customer/UpdatePassword",
+											data: formElement,
+											success: function (result) {
+												swal({
+														title: "Customer Password",
+														text: data,
+														icon: "success",
+														button: "Close",
+														dangerMode: true,
+													});
+
+											}
+										});
+
+
+									}
+								});
+
+							} else {
+								swal({
+									title: "Canceled",
+									icon: "info",
+								});
+							}
+						});
+				}
+
+
+			}
+			else if (customerID == 0) {
+
+                if (value == 3) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Customer/GeneratePassword",
+                        dataType: "Json",
+                        success: function (data) {
+                            $('#customerPassword').val(data);
+
+                            swal({
+                                title: "Customer Password",
+                                text: data,
+                                icon: "success",
+                                button: "Close",
+                                dangerMode: true,
+                            });
+
+                        }
+                    });
+                }
+
+			}
+
+		});
+
+	});
+</script>

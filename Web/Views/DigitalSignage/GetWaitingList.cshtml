@@ -1,0 +1,50 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.Domain.Helpers;
+@using Emse.QMagic.Web.XTO;
+@{
+    Layout = null;
+
+    List<qmTicket> TicketList = ViewBag.WaitingList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+    List<qmCustomer> CustomerList = ViewBag.CustomerList;
+
+    TimeSpan BeklenecekSure = new TimeSpan(0);
+	
+}
+
+    <tr>
+        <td style="background-color:#8D1B3D; font-weight:bold;" align="center">Number</td>
+        <td style="background-color:#8D1B3D; font-weight:bold;" align="center">Print Time</td>
+        <td style="background-color:#8D1B3D; font-weight:bold;" align="center">Average Call</td>
+        <td style="background-color:#8D1B3D; font-weight:bold;" align="center">Elapsed Time</td>
+        <td style="background-color:#8D1B3D; font-weight:bold;" align="center">Remaining Time</td>
+    </tr>
+
+@{
+    foreach (qmTicket ticket in TicketList.Distinct(new WaitingComparer()).ToList())
+    {
+        TimeSpan Avg = SegmentList.Where(x => x.SegmentID == ticket.SegmentID).FirstOrDefault().AvgWaitingTime??new TimeSpan();
+        TimeSpan GecenSure = new TimeSpan(DateTime.Now.Ticks - ticket.PrintTime.Value.Ticks);
+        TimeSpan BasimSaati = ticket.PrintTime.Value.TimeOfDay;
+
+        TimeSpan OlmasiGereken = BeklenecekSure + Avg;
+        DateTime SaatOlarak = ticket.PrintTime.Value.Add(OlmasiGereken);
+        TimeSpan KalanSure = SaatOlarak.Subtract(DateTime.Now);
+
+        if(KalanSure.Ticks <= 0)
+        {
+            KalanSure = new TimeSpan(0);
+        }
+
+        BeklenecekSure = OlmasiGereken;
+
+    <tr>
+        <td>@(ticket.TicketPrefix) @(ticket.TicketNumber)</td>
+        <td>@(ticket.PrintTime.Value.ToShortTimeString())</td>
+        <td>@(BeklenecekSure.Hours < 10 ? "0" + BeklenecekSure.Hours : "" + BeklenecekSure.Hours):@(BeklenecekSure.Minutes < 10 ? "0" + BeklenecekSure.Minutes : "" + BeklenecekSure.Minutes):@(BeklenecekSure.Seconds < 10 ? "0" + BeklenecekSure.Seconds : "" + BeklenecekSure.Seconds)</td>
+        <td>@(GecenSure.Hours < 10 ? "0" + GecenSure.Hours : "" + GecenSure.Hours):@(GecenSure.Minutes < 10 ? "0" + GecenSure.Minutes : "" + GecenSure.Minutes):@(GecenSure.Seconds < 10 ? "0" + GecenSure.Seconds : "" + GecenSure.Seconds)</td>
+        <td>@(KalanSure.Hours < 10 ? "0" + KalanSure.Hours : "" + KalanSure.Hours):@(KalanSure.Minutes < 10 ? "0" + KalanSure.Minutes : "" + KalanSure.Minutes):@(KalanSure.Seconds < 10 ? "0" + KalanSure.Seconds : "" + KalanSure.Seconds)</td>
+    </tr>
+    }
+}

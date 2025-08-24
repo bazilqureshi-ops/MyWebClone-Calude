@@ -1,0 +1,11 @@
+﻿@using Emse.QMagic.Web.Models;
+<option value="0">Please select a digital signage</option>
+@{
+    Layout = null;
+    List<qmDigitalSignage> terminals = ViewBag.data;
+
+    foreach (qmDigitalSignage item in terminals)
+    {
+        <option value="@item.DigitalSignageID">@item.DigitalSignageName</option>
+    }
+}

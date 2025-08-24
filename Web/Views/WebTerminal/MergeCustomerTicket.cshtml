@@ -1,0 +1,31 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmCustomer customer = ViewBag.Customer;
+}
+
+
+<script>
+    $("#arCustomerID").val("@(customer.CustomerID)");
+    $("#arCustomerName").html("@(customer.Name) @(customer.Surname)");
+    $("#arUniqueID").html("@(customer.UniqueID)");
+    $("#arMail").html("@(customer.EMail)");
+    $("#arPhone").html("@(customer.Phone)");
+    if ("" != "@(customer.DeviceToken)") {
+        $("#arDevice").html("<span class='fa fa - mobile - phone' style='font - size: 32px; color: #333;'></span>");
+    }
+    else {
+        $("#arDevice").html("<span>No Device Found</span>");
+    }
+
+    $("#CustomerModal").modal("hide");
+</script>
+
+
+<center>
+
+    <span class="fa fa-hand-o-up" style="font-size:64px;"></span>
+
+    <h4>@(customer.Name) @(customer.Surname) selected.</h4>
+
+</center>

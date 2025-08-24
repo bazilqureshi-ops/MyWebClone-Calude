@@ -1,0 +1,831 @@
+﻿@using Emse.QMagic.Web.Models
+@using System.Xml.Linq
+@using System.Globalization
+@{
+    ViewBag.Title = "MainDesigner";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    qmScreenDesign Design = ViewBag.Design;
+    int DesignID = ViewBag.DesignID;
+    string PageBG = "";
+    string trigger = "";
+    string timeOutTime = "";
+
+    List<qmTerminal> TerminalList = ViewBag.TerminalList;
+
+    PageBG = XElement.Parse(Design.DesignSource).Element("Page").Attribute("BackgroundImage").Value;
+
+    trigger = XElement.Parse(Design.DesignSource).Element("Page").Attribute("Trigger").Value.ToLower();
+
+    timeOutTime = XElement.Parse(Design.DesignSource).Element("Page").Attribute("Timeout").Value.ToLower();
+}
+
+<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+<link href="~/assets/css/designer.css" rel="stylesheet" />
+
+<script src="~/assets/js/jquery.js"></script>
+<script src="~/assets/jquery-ui/jquery-ui.js"></script>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+	function ConvertToPx(Percentage, Orient) {
+		var area_width = $("#DesignArea").width();
+		var area_height = (area_width * 9) / 16;
+
+		var Result = 0;
+		if (Orient == "Vertical") {
+			Result = area_height * (Percentage / 100);
+		}
+		else {
+			Result = area_width * (Percentage / 100);
+		}
+
+		return Result;
+	}
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-body" id="MainLegend">
+
+
+                <div class="col-md-12" style="padding:5px;">
+
+                    <div class="col-md-12">
+                        @using (Html.BeginForm())
+                        {
+                            <!-- Page Name -->
+                            <div class="input-group" style="margin-top:15px;">
+                                <span class="input-group-addon" id="basic-addon3">Page Name</span>
+
+                                <input type="text" class="form-control" id="txtPageName" name="txtPageName" aria-describedby="basic-addon3" value="@(Design.DesignName)">
+
+                                <span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+                                    <input type="button" onclick="SaveScreen();" class="btn btn-primary" value="Save Design" style="margin:0px;" />
+                                </span>
+                            </div>
+
+                            <div class="col-xs-12 col-md-12 col-lg-12" style="padding:0px;">
+
+                                <!-- Description Icons -->
+                                <div class="row">
+                                    <!-- Edit Item -->
+                                    <span class="description-container"> <i class="fa fa-edit description-icons"></i> Edit element button </span>
+
+                                    <!-- Delete Item -->
+                                    <span class="description-container"> <i class="fa fa-trash text-danger description-icons"></i> Delete element button </span>
+
+                                    <!-- Drag Resize Item -->
+                                    <span class="description-container"> <i style="display:inline-flex;" class="ui-icon ui-icon-gripsmall-diagonal-se"></i> Dragabble resizer </span>
+                                </div>
+
+                                <!-- Nav Bar-->
+                                <ul class="nav nav-tabs" style="display:inherit;" id="nav-tab">
+
+                                    <!-- Tab Changes -->
+                                    <li role="presentation" class="active" id="btnGoDesigner">
+                                        <a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a>
+                                    </li>
+
+                                    <li role="presentation" id="btnGoSourceCode">
+                                        <a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a>
+                                    </li>
+
+                                    <li role="presentation" id="btnGoSourceCode">
+                                        <a href="javascript:modalActive('PageProperties');"><span class="fa fa-cogs"></span> Page Properties</a>
+                                    </li>
+
+                                    <!-- Tool Box (Elements) -->
+                                    <!-- Question Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('QuestionArea');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-question"></span>
+                                                Question Area
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Answer Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('AnswerArea');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-bar-chart"></span>
+                                                Answer Area
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Label Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('Label');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-file-video-o"></span>
+                                                Label
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Media Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('WMV');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-music"></span> Media Element</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Rss Feed Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('RSSFeed');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-rss"></span> RSS Feed</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Date & Time Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('DateTime');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-calendar-times-o"></span> Date & Time</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Scroll Text Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('ScrollText');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-bars"></span> Scroll Text</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Next Button Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('NextButton');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-step-forward"></span> Next Button</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Previous Element -->
+                                    <li role="presentation" class="vbdesign-tool-element">
+                                        <a href="javascript:createElement('PreviousButton');" style="padding:15px 10px;">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-step-backward"></span> Previous Button</h5>
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                            <div class="col-md-12" id="DesignTab" style="padding:0px;">
+                                <div class="panel panel-default">
+                                    <div class="panel-body" id="DesignArea" style="border:solid 1px #000000; background-size:100% 100%; padding:0px; font-family:Arial; font-size:8px; color:#000;">
+
+                                        <!-- Close Side Arrows -->
+                                        <div id="x-arrow"></div>
+
+                                        <div id="y-arrow"></div>
+
+                                        <!-- Side Arrows -->
+                                        <div class="side-arrows" id="upper-left"></div>
+
+                                        <div class="side-arrows" id="upper-right"></div>
+
+                                        <div class="side-arrows" id="bottom-left"></div>
+
+                                        <div class="side-arrows" id="bottom-right"></div>
+
+
+
+                                        @{
+                                            PageBG = XElement.Parse(Design.DesignSource).Element("Page").Attribute("BackgroundImage").Value;
+
+                                            trigger = XElement.Parse(Design.DesignSource).Element("Page").Attribute("Trigger").Value.ToLower();
+
+                                            timeOutTime = XElement.Parse(Design.DesignSource).Element("Page").Attribute("Timeout").Value.ToLower();
+
+                                            <script>
+                                                    $(document).ready(function () {
+                                                        $("#DesignArea").css("background-image", "url(@(PageBG))");
+                                                    });
+                                            </script>
+
+                                            foreach (XElement level1Element in XElement.Parse(Design.DesignSource).Elements("Page").Elements("Control"))
+                                            {
+                                                NumberFormatInfo provider = new NumberFormatInfo();
+                                                provider.NumberDecimalSeparator = ",";
+                                                provider.NumberGroupSeparator = ".";
+                                                provider.NumberGroupSizes = new int[] { 3 };
+
+                                                string element_type = level1Element.Attribute("type").Value;
+                                                int element_id = Convert.ToInt32(level1Element.Element("Identifier").Value);
+                                                string element_name = level1Element.Element("Name").Value;
+
+                                                string posx = level1Element.Element("PositionX").Value;
+                                                string posy = level1Element.Element("PositionY").Value;
+
+                                                double element_positionx = Convert.ToDouble(posx);
+                                                double element_positiony = Convert.ToDouble(posy);
+
+                                                double element_sizex = Convert.ToDouble(level1Element.Element("Width").Value);
+                                                double element_sizey = Convert.ToDouble(level1Element.Element("Height").Value);
+
+                                                if (element_type == "Label")
+                                                {
+                                                    string element_bind = level1Element.Element("Type").Value;
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_text = level1Element.Element("Text").Value;
+                                                    string element_bold = level1Element.Element("Bold").Value;
+                                                    string element_italic = level1Element.Element("Italic").Value;
+                                                    string element_underline = level1Element.Element("Underline").Value;
+
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    <div class="uiElement" data-bind="@(element_bind)" align="@(element_align)" valign="@(element_valign)" @(element_bold == "true" ? "bold='true'" : "") @(element_italic == "true" ? "italic='true'" : "") @(element_underline == "true" ? "underline='true'" : "") style="position:absolute; width: @(element_sizex)%; height: @(element_sizey)%; left:@(element_positionx)%; top:@(element_positiony)%; font-size:@(element_fontsize)px; border:dotted 2px #CCC; cursor:pointer; color:@(element_color); line-height:100%" type="Label" name="@(element_name)" id="@(element_id)"><a onclick="modalActive($(this).parent())"><i class="fa fa-edit design-icons"></i></a><span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger"></span><label>@(element_text)</label></div>
+                                                }
+                                                else if (element_type == "NextButton")
+                                                {
+                                                    string element_bg = level1Element.Element("BackgroundImage").Value;
+                                                    <div class="uiElement" style="position:absolute; left:@(element_positionx)%; top:@(element_positiony)%; width: @(element_sizex)%; height: @(element_sizey)%; border:dotted 2px #CCC; cursor:pointer; line-height:100%;" type="NextButton" name="@(element_name)" id="@(element_id)" background-image="@(element_bg)"> <a onclick="modalActive($(this).parent())"><i class="fa fa-edit design-icons"></i></a><span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger"></span><span class="fa fa-step-forward" style="font-size:32px;"></span></div>
+                                                }
+                                                else if (element_type == "PreviousButton")
+                                                {
+                                                    string element_bg = level1Element.Element("BackgroundImage").Value;
+                                                    <div class="uiElement" style="position:absolute; left:@(element_positionx)%; top:@(element_positiony)%; width: @(element_sizex)%; height: @(element_sizey)%; border:dotted 2px #CCC; cursor:pointer; line-height:100%;" type="PreviousButton" name="@(element_name)" id="@(element_id)" background-image="@(element_bg)"> <a onclick="modalActive($(this).parent())"><i class="fa fa-edit design-icons"></i></a><span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger"></span><span class="fa fa-step-forward" style="font-size:32px;"></span></div>
+                                                }
+                                                else if (element_type == "QuestionArea")
+                                                {
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_bold = level1Element.Element("Bold").Value;
+                                                    string element_italic = level1Element.Element("Italic").Value;
+                                                    string element_underline = level1Element.Element("Underline").Value;
+
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    <div class="uiElement" align="@(element_align)" valign="@(element_valign)" @(element_bold == "true" ? "bold='true'" : "") @(element_italic == "true" ? "italic='true'" : "") @(element_underline == "true" ? "underline='true'" : "") style="position:absolute; width: @(element_sizex)%; height: @(element_sizey)%; left:@(element_positionx)%; top:@(element_positiony)%; font-size:@(element_fontsize)px; border:dotted 2px #CCC; cursor:pointer; color:@(element_color); line-height:100%" type="QuestionArea" name="@(element_name)" id="@(element_id)"><a onclick="modalActive($(this).parent())"><i class="fa fa-edit design-icons"></i></a><span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger"></span><span class="fa fa-question" style="font-size:64px;"></span></div>
+                                                }
+                                                else if (element_type == "AnswerArea")
+                                                {
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_bold = level1Element.Element("Bold").Value;
+                                                    string element_italic = level1Element.Element("Italic").Value;
+                                                    string element_underline = level1Element.Element("Underline").Value;
+
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    <div class="uiElement" align="@(element_align)" valign="@(element_valign)" @(element_bold == "true" ? "bold='true'" : "") @(element_italic == "true" ? "italic='true'" : "") @(element_underline == "true" ? "underline='true'" : "") style="position:absolute; width: @(element_sizex)%; height: @(element_sizey)%; left:@(element_positionx)%; top:@(element_positiony)%; font-size:@(element_fontsize)px; border:dotted 2px #CCC; cursor:pointer; color:@(element_color); line-height:100%" type="AnswerArea" name="@(element_name)" id="@(element_id)"><a onclick="modalActive($(this).parent())"><i class="fa fa-edit design-icons"></i></a><span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger"></span><span class="fa fa-list" style="font-size:64px;"></span></div>
+                                                }
+                                                else if (element_type == "MediaElement")
+                                                {
+                                                    string element_playlist = level1Element.Element("BackgroundImage").Value;
+
+                                                    <div class="uiElement" playlist="@(element_playlist)" type="MediaElement" id="@(element_id)" name="@(element_name)" style="width: 350px; height: 200px; z-index: 99; border: dotted 2px #CCC;" element-left="@element_positionx" element-top="@element_positiony" element-width="@element_sizex" element-height="@element_sizey">
+                                                        <i class="fa fa-file-video-o" style="font-size:64px; color:#FFF;"></i>
+
+                                                        <a onclick="modalActive($(this).parent())" class="fa fa-edit design-icons media-element-icons">
+                                                        </a>
+                                                        <span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger media-element-icons"></span>
+                                                    </div>
+                                                }
+
+                                                else if (element_type == "ScrollText")
+                                                {
+                                                    string element_text = level1Element.Element("Text").Value;
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+
+                                                    string element_righttoleft = level1Element.Element("RightToLeft").Value;
+                                                    string element_tickrate = level1Element.Element("TickRate").Value;
+                                                    string element_tickpercentage = level1Element.Element("TickPercentage").Value;
+
+                                                    <div class="uiElement" righttoleft="@(element_righttoleft)" tickrate="@(element_tickrate)" tickpercentage="@(element_tickpercentage)" style="border:dotted 2px #CCC; cursor:pointer; font-family:'@(element_font)'; font-size:@(element_fontsize)px; color:@(element_color); line-height:100%" type="ScrollText" name="@(element_name)" id="@(element_id)" element-left="@element_positionx" element-top="@element_positiony" element-width="@element_sizex" element-height="@element_sizey">
+                                                        <marquee>@(element_text)</marquee>
+
+                                                        <a onclick="modalActive($(this).parent())" class="fa fa-edit design-icons media-element-icons">
+                                                        </a>
+                                                        <span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger media-element-icons" style="font-size: .9em;"></span>
+                                                    </div>
+                                                }
+
+                                                else if (element_type == "RSSFeed")
+                                                {
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_datasource = level1Element.Element("DataSource").Value;
+                                                    string element_rowcount = level1Element.Element("RowCount").Value;
+                                                    string element_rowname = level1Element.Element("RowName").Value;
+                                                    string element_rowmap = level1Element.Element("RowMap").Value;
+                                                    string element_refleshtime = level1Element.Element("RefleshTime").Value;
+
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    <div class="uiElement text-center" datasource="@(element_datasource)" rowcount="@(element_rowcount)" rowname="@(element_rowname)" rowmap="@(element_rowmap)" autoscroll="false" refleshtime="@(element_refleshtime)" align="@(element_align)" valign="@(element_valign)" style="border:dotted 2px #CCC; cursor:pointer; font-family:'@(element_font)'; font-size:@(element_fontsize)px; color:@(element_color);" type="RSSFeed" name="@(element_name)" id="@(element_id)" element-left="@element_positionx" element-top="@element_positiony" element-width="@element_sizex" element-height="@element_sizey">
+
+
+                                                        <a onclick="modalActive($(this).parent())" class="fa fa-edit design-icons media-element-icons" style="left:0; font-size:26px;">
+                                                        </a>
+
+                                                        <span class="fa fa-rss" style="font-size:128px;"></span>
+
+
+                                                        <span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger media-element-icons" style="font-size:16px;"></span>
+
+                                                    </div>
+                                                }
+
+                                                else if (element_type == "DateTime")
+                                                {
+                                                    string element_font = level1Element.Element("Font").Value;
+                                                    int element_fontsize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                                                    string element_color = level1Element.Element("Color").Value;
+                                                    string element_showdate = level1Element.Element("ShowDate").Value;
+                                                    string element_showtime = level1Element.Element("ShowTime").Value;
+
+                                                    string element_align = level1Element.Element("Align").Value;
+                                                    string element_valign = level1Element.Element("Valign").Value;
+
+                                                    <div class="uiElement" showdate="@(element_showdate)" showtime="@(element_showtime)" align="@(element_align)" valign="@(element_valign)" style="border:dotted 2px #CCC; cursor:pointer; font-family:'@(element_font)'; font-size:@(element_fontsize)px; color:@(element_color); line-height:100%" type="DateTime" name="@(element_name)" id="@(element_id)" element-left="@element_positionx" element-top="@element_positiony" element-width="@element_sizex" element-height="@element_sizey">
+                                                        <a onclick="modalActive($(this).parent())" class=" fa fa-edit design-icons media-element-icons">
+                                                        </a>
+
+                                                        00.00.0000 00:00:00
+
+                                                        <span onclick="deleteItem($(this))" class="fa fa-trash design-icons text-danger media-element-icons" style="font-size: 16px;"></span>
+                                                    </div>
+                                                }
+
+
+                                                <script>
+                                                            $("#@(element_id)").css("left", ConvertToPx("@(element_positionx)", "Horizontal"));
+                                                            $("#@(element_id)").css("top", ConvertToPx("@(element_positiony)", "Vertical"));
+
+                                                            $("#@(element_id)").css("width", ConvertToPx("@(element_sizex)", "Horizontal"));
+                                                            $("#@(element_id)").css("height", ConvertToPx("@(element_sizey)", "Vertical"));
+                                                </script>
+                                            }
+                                        }
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12" id="CodeTab" style="display:none; padding:0px;">
+                                <div class="panel panel-default">
+                                    <div class="panel-body" id="SourceDiv">
+                                        <textarea name="txtSourceCode" id="txtSourceCode" class="form-control" style="width:100%; height:100%; min-height:500px;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Start -->
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Element Settings -->
+            <div class="row" id="props-container">
+                <div class="col-xs-12">
+
+                    <!-- Element Settings -->
+                    <div class="col-md-12 text-center" style="padding-top:10px; padding-bottom:10px;" id="modal-container">
+                        <ul class="setup-options" id="setup-options">
+                            <li onclick="changeSetting('quick')" class="select-option-active" id="quick-setting">Quick Settings</li>
+
+                            <li onclick="changeSetting('advanced')" id="advanced-setting">Advanced Settings</li>
+                        </ul>
+
+                        <!-- Page Props Area-->
+                        <div class="row" id="content-container">
+                            <h3> Page Properties </h3>
+
+                            <!-- Page Background -->
+                            <div class="input-group" id="page-background-container">
+                                <span class="input-group-addon" id="basic-addon3">Page Background</span>
+
+                                <input type="text" class="form-control" id="page-background" aria-describedby="basic-addon3" value="@(PageBG)">
+
+                                <span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+                                    <input type="button" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=page-background', 'Browser', 'width=1100,height=750');" />
+                                </span>
+                            </div>
+
+                            <!-- Trigger -->
+                            <div class="input-group" style="margin:0px;" id="trigger-type-container">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Trigger Type</span>
+
+                                <select id="trigger-type" class="designer-select">
+                                    <option value="Click" @(trigger == "Click" ? "selected='selected'" : "")>Tap To Start Survey</option>
+                                    <option value="Terminal" @(trigger == "Terminal" ? "selected='selected'" : "")>Wait For The Terminal Command</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Operation Timeout</span>
+
+                                <input type="number" class="form-control" id="operation-timeout" aria-describedby="basic-addon3" value="@(timeOutTime)" min="5" max="600" />
+                            </div>
+                            <span class="validate-for text-danger" id="display-validation"></span>
+                        </div>
+
+                        <!-- Common Props Area -->
+                        <div class="row" id="common-props-container">
+                            <h3> Common Properties </h3>
+
+                            <!-- Type -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Type</span>
+
+                                <input type="text" class="form-control" id="element-type" aria-describedby="basic-addon3">
+                            </div>
+
+                            <!-- Identifier -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Identifier</span>
+
+                                <input type="text" class="form-control" id="element-id" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="id-validation"></span>
+
+                            <!-- Name -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Name</span>
+
+                                <input type="text" class="form-control" id="element-name" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="name-validation"></span>
+
+                            <!-- Position -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Position</span>
+
+                                <input type="number" class="form-control double-item" id="position-x" aria-describedby="basic-addon3">
+
+                                <input type="number" class="form-control double-item" id="position-y" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="posx-validation"></span>
+
+                            <span class="validate-for text-danger" id="posy-validation"></span>
+
+                            <!-- Size -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Size</span>
+
+                                <input type="number" class="form-control double-item" id="size-x" aria-describedby="basic-addon3">
+
+                                <input type="number" class="form-control double-item" id="size-y" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="sizex-validation"></span>
+
+                            <span class="validate-for text-danger" id="sizey-validation"></span>
+
+                        </div>
+
+                        <!-- Special Props Area -->
+                        <div id="special-props-container" class="row">
+                            <h3> Special Properties</h3>
+
+                            <!-- Data Bind -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Bind</span>
+
+                                <select class="designer-select" id="data-bind" aria-describedby="basic-addon3">
+                                    <option value="Static">Static Text</option>
+                                    <option value="CustomerName">Customer Name</option>
+                                    <option value="BranchName">Branch Name</option>
+                                    <option value="ServiceName">Service Name</option>
+                                    <option value="SegmentName">Segment Name</option>
+                                    <option value="TerminalName">Terminal Name</option>
+                                    <option value="UserFullName">Caller Name</option>
+                                    <option value="TicketNumber">Ticket Number</option>
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="data-bind-validation"></span>
+
+                            <!-- Right To Left -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Right To Left</span>
+
+                                <input type="checkbox" class="form-control" id="right-to-left" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="right-to-left-validation"></span>
+
+                            <!-- Tick Rate -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Tick Rate</span>
+
+                                <input type="number" class="form-control" id="tick-rate" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="tick-rate-validation"></span>
+
+                            <!-- Tick Percentage -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Tick Percentage</span>
+
+                                <input type="number" class="form-control" id="tick-percentage" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="tick-percentage-validation"></span>
+
+                            <!-- Auto Scroll-->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Auto Scroll</span>
+
+                                <input type="checkbox" class="form-control" id="auto-scroll" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="auto-scroll-validation"></span>
+
+                            <!-- Data Source -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Source</span>
+
+                                <input type="text" class="form-control" id="data-source" style="width:70%" aria-describedby="basic-addon3">
+                                <i class="btn fa" id="ds-icon"></i>
+                            </div>
+                            <span class="validate-for text-danger" id="data-source-validation"></span>
+
+                            <!-- Background -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Background</span>
+
+                                <input type="text" class="form-control" id="element-background" aria-describedby="basic-addon3">
+
+                                <span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" id="btnBackgroundBrowser" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=element-background', 'Browser', 'width=1100,height=750');" /></span>
+                            </div>
+
+                            <!-- Caption -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:115px;">Caption</span>
+
+                                <input type="text" class="form-control" id="element-caption" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="caption-validation"></span>
+
+                            <!-- Row Count -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Count</span>
+
+                                <input type="number" class="form-control" id="row-count" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="row-count-validation"></span>
+
+                            <!-- Row Name -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Name</span>
+
+                                <input type="text" class="form-control" id="row-name" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="row-name-validation"></span>
+
+                            <!-- Row Map -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Map</span>
+
+                                <input type="text" class="form-control" id="row-map" aria-describedby="basic-addon3">
+
+                                <button class="btn btn-warning" id="add-map-item"> Add Map </button>
+                                <button class="btn btn-primary" id="accordion-button">
+                                    <i class="fa fa-plus-circle"></i>
+                                </button>
+                            </div>
+                            <span class="validate-for text-danger" id="row-map-validation"></span>
+
+                            <!-- Row Accordion -->
+                            <div id="row-accordion">
+                                <ul id="row-list"></ul>
+                            </div>
+                            <span class="validate-for text-danger" id="row-accordion-validation"></span>
+
+                            <!-- Refresh Time -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Reflesh Time</span>
+
+                                <input type="number" class="form-control" id="refresh-time" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="refresh-time-validation"></span>
+
+                            <!-- Show Date -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Date</span>
+
+                                <input type="checkbox" class="form-control" id="show-date" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="show-date-validation"></span>
+
+                            <!-- Show Time -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Time</span>
+
+                                <input type="checkbox" class="form-control" id="show-time" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="show-time-validation"></span>
+
+                            <!-- Play List -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Playlist</span>
+
+                                <input type="text" class="form-control" id="play-list" aria-describedby="basic-addon3">
+
+                                <span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+                                    <input type="button" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/DigitalSignageDesigner/VideoBrowser?reff=play-list', 'Browser Video', 'width=1100,height=750');" />
+                                </span>
+                            </div>
+                            <span class="validate-for text-danger" id="play-list-validation"></span>
+
+                            <!-- Waiting List Multi Select -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;"> Waiting List Properties </span>
+
+                                <label id="waiting-list-label">Please Select Properties <i class="fa fa-caret-down"></i></label>
+                                <div id="waiting-list-multi-select">
+                                    <label>
+                                        <input class="list-checkbox" type="checkbox" name="show-ticket" id="show-ticket" value="" />
+
+                                        <span>Show Ticket</span>
+                                    </label>
+
+                                    <label>
+                                        <input class="list-checkbox" type="checkbox" name="show-customer-name" id="show-customer-name" value="" />
+
+                                        <span>Show Customer Name</span>
+                                    </label>
+
+                                    <label>
+                                        <input class="list-checkbox" type="checkbox" name="show-service" id="show-service" value="" />
+
+                                        <span>Show Service Name</span>
+                                    </label>
+
+                                    <label>
+                                        <input class="list-checkbox" type="checkbox" name="show-approximate-time" id="show-approximate-time" value="" />
+
+                                        <span>Show Approximate Time</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="validate-for text-danger" id="waiting-list-validation"></span>
+
+                            <!-- Length -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Length</span>
+
+                                <input type="number" class="form-control" id="length" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="length-validation"></span>
+
+                            <!-- Border Thickness -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Border Thickness</span>
+
+                                <input type="number" class="form-control" id="border-thickness" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="border-thickness-validation"></span>
+
+                            <!-- Show Border -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Border</span>
+
+                                <input type="checkbox" class="form-control" id="show-border" aria-describedby="basic-addon3">
+                            </div>
+                            <span class="validate-for text-danger" id="show-border-validation"></span>
+
+                            <!-- Macro List -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Macro List</span>
+                                <select class="designer-select" id="macro-list">
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="macro-validation"></span>
+
+                            <!-- Branch List -->
+                            <div class="input-group" style="margin:0;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:130px;">Branch List</span>
+                                <select class="designer-select" id="branch-list">
+                                    @{
+                                        var branchList = (List<qmBranch>)ViewBag.BranchList;
+                                        foreach (var branch in branchList)
+                                        {
+                                            <option value="@branch.BranchID">@branch.BranchName</option>
+                                        }
+                                    }
+
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="branch-validation"></span>
+
+                        </div>
+
+                        <!-- Font Props Area -->
+                        <div id="font-props-container" class="row">
+                            <h3 id="font-properties-header">Font Properties</h3>
+
+                            <!-- Font Style -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Font</span>
+
+                                <select class="designer-select" id="font-list" aria-describedby="basic-addon3">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Tahoma">Tahoma</option>
+                                    <option value="Segoe UI">Segoe UI</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Comic Sans">Comic Sans</option>
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="font-style-validation"></span>
+
+                            <!-- Font Size -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Size</span>
+
+                                <input type="number" class="designer-select" id="font-size" aria-describedby="basic-addon3" value="24" min="8" max="200" />
+                            </div>
+                            <span class="validate-for text-danger" id="font-size-validation"></span>
+
+                            <!-- Font Colour-->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Color</span>
+
+                                <select class="designer-select" id="font-colour" aria-describedby="basic-addon3">
+                                    <option value="rgb(0, 0, 0)">Black</option>
+                                    <option value="rgb(255, 255, 255)">White</option>
+                                    <option value="rgb(0, 255, 0)">Green</option>
+                                    <option value="rgb(255, 255, 0)">Yellow</option>
+                                    <option value="rgb(255, 0, 0)">Red</option>
+                                    <option value="rgb(0, 0, 255)">Blue</option>
+                                    <option value="rgb(255, 0, 255)">Pink</option>
+                                    <option value="rgb(128, 128, 128)">Gray</option>
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="font-colour-validation"></span>
+
+                            <!-- Align -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Align</span>
+
+                                <select class="designer-select" id="align" aria-describedby="basic-addon3">
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="align-validation"></span>
+
+                            <!-- VAlign -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Vertical Align</span>
+
+                                <select class="designer-select" id="valign" aria-describedby="basic-addon3">
+                                    <option value="top">Top</option>
+                                    <option value="middle">Middle</option>
+                                    <option value="bottom">Bottom</option>
+                                </select>
+                            </div>
+                            <span class="validate-for text-danger" id="valign-validation"></span>
+
+                            <!-- Font Type -->
+                            <div class="input-group" style="margin:0px;">
+                                <span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Type</span>
+
+                                <a href="javascript:fontActions('bold');" class="btn btn-default" id="font-bold" aria-describedby="basic-addon3"><span class="fa fa-bold"></span></a>
+
+                                <a href="javascript:fontActions('italic');" class="btn btn-default" id="font-italic" aria-describedby="basic-addon3"><span class="fa fa-italic"></span></a>
+
+                                <a href="javascript:fontActions('underline');" class="btn btn-default" id="font-underline" aria-describedby="basic-addon3"><span class="fa fa-underline"></span></a>
+                            </div>
+                            <span class="validate-for text-danger" id="font-type-validation"></span>
+
+                        </div>
+
+                        <!-- Button -->
+                        <div class="row">
+
+                            <button type="button" onclick="applySettings()" class="btn btn-warning col-md-offset-9" id="apply-button">
+                                Apply Settings
+
+                                <i class="fa fa-check-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal End -->
+
+<script src="~/Scripts/VotebookDesigner.js"></script>

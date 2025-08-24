@@ -1,0 +1,37 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    int RowEffect = ViewBag.ReturnType;
+    int TicketID = ViewBag.TicketID;
+    int TerminalID = ViewBag.TerminalID;
+
+    if (TicketID != null && TerminalID != null)
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-pause"></i></h2>
+        <p>
+            <b>@(Localization.Translate(LanguageCode,"TicketParked"))</b><br />
+            <i>@(DateTime.Now.Hour):@(DateTime.Now.Minute):@(DateTime.Now.Second)</i>
+        </p>
+        <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        <p>&nbsp;</p>
+        <input type="hidden" id="InfoTicketID" name="InfoTicketID" value="" />
+    }
+    else
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-ticket"></i> <b>-/-</b></h2>
+        <p>
+            <b>-/-</b><br />
+            <i>-/-</i>
+        </p>
+        <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        <p>&nbsp;</p>
+    }
+}

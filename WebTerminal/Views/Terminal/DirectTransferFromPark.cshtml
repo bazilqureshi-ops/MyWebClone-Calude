@@ -1,0 +1,47 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    int RowEffect = ViewBag.RowEffect;
+    bool isSendSMS = ViewBag.isSendSMS;
+
+    if (RowEffect > 0)
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-right-left"></i></h2>
+        <p>
+            <b>@(Localization.Translate(LanguageCode,"TicketDirectlyTransferred"))</b><br />
+            <i>&nbsp;</i>
+        </p>
+        <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        /*if (isSendSMS == true)
+        {
+            <p>
+                <div class="alert alert-primary" role="alert">
+                    <i class="fas fa-check"></i> SMS message has been sent.
+                </div>
+            </p>
+        }
+        else
+        {
+            <p>&nbsp;</p>
+        }*/
+        <input type="hidden" id="InfoTicketID" name="InfoTicketID" value="" />
+    }
+    else
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-ticket"></i> <b>-/-</b></h2>
+        <p>
+            <b>-/-</b><br />
+            <i>-/-</i>
+        </p>
+        <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        <p>&nbsp;</p>
+    }
+}

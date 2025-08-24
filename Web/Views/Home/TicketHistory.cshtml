@@ -1,0 +1,19 @@
+﻿@using Emse.QMagic.Web.XTO;
+@{
+    Layout = null;
+    List<TicketTrack> History = ViewBag.History;
+    History = History.OrderBy(x => x.ActionTime).ToList();
+
+    foreach (TicketTrack item in History)
+    {
+        <div class="col-md-12">
+            <div class="col-md-2 text-center">
+                <span class="@(item.ActionIcon)" style="font-size:64px;"></span>
+            </div>
+            <div class="col-md-10">
+                <h4>@(item.Action)</h4>
+                <p>@(item.ActionTime.Hours):@(item.ActionTime.Minutes):@(item.ActionTime.Seconds)</p>
+            </div>
+        </div>
+    }
+}

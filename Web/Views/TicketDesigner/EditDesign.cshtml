@@ -1,0 +1,447 @@
+﻿@using Emse.QMagic.Web.Models
+@using System.Xml.Linq
+@using System.Globalization
+@{
+	ViewBag.Title = "MainDesigner";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	List<qmTerminal> TerminalList = ViewBag.TerminalList;
+
+	int DesignID = ViewBag.DesignID;
+	qmScreenDesign Design = ViewBag.Design;
+	string PageBG = "";
+	int PHeight = 0;
+	string PLang = "";
+}
+
+<link href="~/assets/jquery-ui/jquery-ui.css" rel="stylesheet" />
+<script src="~/assets/js/jquery.js"></script>
+<script src="~/assets/jquery-ui/jquery-ui.js"></script>
+<link href="~/assets/css/designer.css" rel="stylesheet" />
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<style>
+	#MainLegend {
+		padding: 0px;
+		overflow-y: hidden;
+		overflow-x: hidden;
+		max-height: 500px;
+	}
+
+	.uiElement {
+		position: absolute;
+	}
+
+	.btn btn-default active {
+		border: solid 3px #CCC;
+		background-color: #000;
+		color: #FFF;
+	}
+
+	.rw {
+		margin: 0px auto;
+		display: flex;
+		vertical-align: center;
+		text-align: center;
+		align-items: center;
+		align-content: center;
+		border: dotted 2px #CCC;
+		cursor: move;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+	}
+
+	.cntr {
+		text-align: center;
+		vertical-align: middle;
+		width: 100%;
+		font-size: 32px;
+	}
+
+	.select2 {
+		width: 100%;
+	}
+</style>
+
+<script>
+	function ConvertToPx(Percentage, Orient) {
+		var area_width = $("#DesignArea").width();
+		var area_height = $("#DesignArea").height();
+
+		var Result = 0;
+		if (Orient == "Vertical") {
+			Result = area_height * (Percentage / 100);
+		}
+		else {
+			Result = area_width * (Percentage / 100);
+		}
+
+		return Result;
+	}
+</script>
+
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-default">
+			<div class="panel-body" id="MainLegend" style="overflow-y:scroll;">
+				<div class="col-md-2" style="padding:5px; padding-right:10px;">
+					<center><h3>ToolBox</h3></center>
+					<div class="list-group">
+						<a href="javascript:CreateElement('Label');" class="list-group-item">
+							<h4 class="list-group-item-heading"><span class="fa fa-text-width"></span> Label</h4>
+							<p class="list-group-item-text">You can select data-bind or standart text in your ticket.</p>
+						</a>
+
+						<a href="javascript:CreateElement('RouteMap');" class="list-group-item">
+							<h4 class="list-group-item-heading"><span class="fa fa-map-marker"></span> Route Map</h4>
+							<p class="list-group-item-text">Route Map element.</p>
+						</a>
+					</div>
+				</div>
+				<div class="col-md-7" style="padding:5px;">
+					<div class="col-md-12">
+						@using (Html.BeginForm())
+						{
+							<div class="input-group">
+								<span class="input-group-addon" id="basic-addon3">Page Name</span>
+								<input type="text" class="form-control" id="txtPageName" name="txtPageName" aria-describedby="basic-addon3" value="@(Design.DesignName)">
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" onclick="SaveScreen();" class="btn btn-primary" value="Save Design" style="margin:0px;" /></span>
+							</div>
+
+							<div class="col-md-12" style="padding:0px;">
+								<ul class="nav nav-tabs">
+									<li role="presentation" class="active" id="btnGoDesigner"><a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a></li>
+									<li role="presentation" id="btnGoSourceCode"><a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a></li>
+								</ul>
+							</div>
+
+							PHeight = Convert.ToInt32(XElement.Parse(Design.DesignSource).Element("Page").Attribute("Height").Value);
+							PLang = XElement.Parse(Design.DesignSource).Element("Page").Attribute("Language").Value;
+
+							<div class="col-md-12" id="DesignTab" style="padding:0px;width: 448px;height:@(PHeight)px;">
+								<div class="panel panel-default" style="width:448px !important;height:@(PHeight)px;">
+
+									<div class="panel-body" id="DesignArea" style="border:solid 1px #000000; background-size:cover; padding:0px; font-family:Arial; width:448px; height:@(PHeight)px; font-size:8px; color:#000;">
+
+										<!-- Close Side Arrows -->
+										<div id="x-arrow"></div>
+
+										<div id="y-arrow"></div>
+
+										<!-- Side Arrows -->
+										<div class="side-arrows" id="upper-left"></div>
+
+										<div class="side-arrows" id="upper-right"></div>
+
+										<div class="side-arrows" id="bottom-left"></div>
+
+										<div class="side-arrows" id="bottom-right"></div>
+
+										@{
+											PageBG = XElement.Parse(Design.DesignSource).Element("Page").Attribute("BackgroundImage").Value;
+
+											<script>
+                                                    $(document).ready(function () {
+                                                        $("#DesignArea").css("background-image", "url(@(PageBG))");
+                                                    });
+											</script>
+
+											foreach (XElement level1Element in XElement.Parse(Design.DesignSource).Elements("Page").Elements("Control"))
+											{
+												NumberFormatInfo provider = new NumberFormatInfo();
+												provider.NumberDecimalSeparator = ",";
+												provider.NumberGroupSeparator = ".";
+												provider.NumberGroupSizes = new int[] { 3 };
+
+												string element_type = level1Element.Attribute("type").Value;
+												int element_id = Convert.ToInt32(level1Element.Element("Identifier").Value);
+												string element_name = level1Element.Element("Name").Value;
+
+												string posx = level1Element.Element("PositionX").Value;
+												string posy = level1Element.Element("PositionY").Value;
+												string sizex = level1Element.Element("Width").Value;
+												string sizey = level1Element.Element("Height").Value;
+
+												double element_positionx = Convert.ToDouble(posx);
+												double element_positiony = Convert.ToDouble(posy);
+												double element_sizex = Convert.ToDouble(sizex);
+												double element_sizey = Convert.ToDouble(sizey);
+
+
+
+												if (element_type == "Label")
+												{
+													string element_text = level1Element.Element("Text").Value;
+													string element_action = level1Element.Element("Action").Value;
+													string element_parameter = level1Element.Element("Parameter").Value;
+													string element_font = level1Element.Element("Font").Value;
+													decimal element_size = Convert.ToDecimal(level1Element.Element("Size").Value.ToString().Replace("px", ""));
+													string element_color = level1Element.Element("Color").Value;
+													string element_bold = level1Element.Element("Bold").Value;
+													string element_italic = level1Element.Element("Italic").Value;
+													string element_underline = level1Element.Element("Underline").Value;
+													string element_align = level1Element.Element("Align").Value;
+													string element_valign = level1Element.Element("Valign").Value;
+
+													<div class="uiElement" data-bind="@(element_action)" parameter="@(element_parameter)" bold="@(element_bold)" italic="@(element_italic)" underline="@(element_underline)" align="@(element_align)" valign="@(element_valign)" style="border:dotted 2px #CCC; cursor:move; color:@(element_color); left:@(element_positionx); top:@(element_positiony); width:@(element_sizex); height:@(element_sizey); font-family:@(element_font); font-size:@(element_size)px;" type="Label" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)">
+														<label>@(element_text)</label>
+													</div>
+												}
+												else if (element_type == "RouteMap")
+												{
+													<div class="uiElement" style="border:dotted 2px #CCC; cursor:move; left:@(element_positionx); top:@(element_positiony); width:@(element_sizex); height:@(element_sizey); border:dotted 2px #CCC; cursor:pointer;" type="RouteMap" name="@(element_name)" id="@(element_id)" element-left="@(element_positionx)" element-top="@(element_positiony)" element-width="@(element_sizex)" element-height="@(element_sizey)">
+														<i class="fa fa-map-marker"></i>
+													</div>
+												}
+
+												<script>
+                                                    $("#@(element_id)").css("left", ConvertToPx("@(element_positionx)", "Horizontal"));
+                                                    $("#@(element_id)").css("top", ConvertToPx("@(element_positiony)", "Vertical"));
+
+                                                    $("#@(element_id)").css("width", ConvertToPx("@(element_sizex)", "Horizontal"));
+                                                    $("#@(element_id)").css("height", ConvertToPx("@(element_sizey)", "Vertical"));
+												</script>
+											}
+
+										}
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12" id="CodeTab" style="display:none; padding:0px;">
+								<div class="panel panel-default">
+									<div class="panel-body" id="SourceDiv">
+										<textarea name="txtSourceCode" id="txtSourceCode" class="form-control" style="width:100%; height:100%; min-height:500px;"></textarea>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+
+
+				<div class="col-md-3" style="max-height:100%; height:100%; overflow-y:scroll; overflow-x:hidden;">
+
+					<!-- Page Properties -->
+					<center>
+						<h3>Page Properties</h3>
+					</center>
+
+					<!-- Page Background -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3">Page Background</span>
+
+						<input type="text" class="form-control" id="txtPageBackground" aria-describedby="basic-addon3" value="@(PageBG)" />
+
+						<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=txtPageBackground', 'Browser', 'width=1100,height=750');" /></span>
+					</div>
+
+					<!-- Height -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Height</span>
+
+						<input type="text" class="form-control" id="txtHeight" aria-describedby="basic-addon3" value="@(PHeight)">
+					</div>
+
+					<!-- Language -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:130px;">Language</span>
+
+						<select class="select2" id="cmbLanguage" aria-describedby="basic-addon3">
+							<option value="Arabic">Arabic</option>
+							<option value="Other">Latin</option>
+						</select>
+
+						<script>
+                            $("#cmbLanguage").val("@(PLang)").change();
+						</script>
+					</div>
+
+					<!-- Common Properties -->
+					<center>
+						<h3>Common Properties</h3>
+					</center>
+
+					<!-- Type -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Type</span>
+						<input type="text" class="form-control" id="txtType" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Identifier -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Identifier</span>
+						<input type="text" class="form-control" id="txtID" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Name -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Name</span>
+						<input type="text" class="form-control" id="txtName" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Caption -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Caption</span>
+						<input type="text" class="form-control" id="txtCaption" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Position -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Position</span>
+						<input type="text" class="form-control" id="txtPositionX" aria-describedby="basic-addon3">
+						<span class="input-group-addon" id="basic-addon3">&nbsp;</span>
+						<input type="text" class="form-control" id="txtPositionY" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Size -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Size</span>
+						<input type="text" class="form-control" id="txtSizeX" aria-describedby="basic-addon3">
+						<span class="input-group-addon" id="basic-addon3">&nbsp;</span>
+						<input type="text" class="form-control" id="txtSizeY" aria-describedby="basic-addon3">
+					</div>
+
+					<!-- Special Properties -->
+					<center>
+						<h3>Special Properties</h3>
+					</center>
+
+					<div id="SpecialLabel" class="SpecialProps" style="display:none;">
+
+						<!-- Data Bind -->
+						<div class="input-group" style="margin:0px;">
+							<span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Bind</span>
+
+							<select class="select2" id="cmbAction" aria-describedby="basic-addon3" style="width:100%">
+
+								<option value="Static">Static Text</option>
+								<option value="TicketNumber">Ticket Number</option>
+								<option value="CustomerName">Customer Name</option>
+								<option value="ServiceName">Service Name</option>
+								<option value="SegmentName">Segment Name</option>
+								<option value="BranchName">Branch Name</option>
+								<option value="NumberOfWaiting">Number Of Waiting</option>
+								<option value="DateTime">Date and Time</option>
+								<option value="Date">Date</option>
+								<option value="Time">Time</option>
+
+							</select>
+						</div>
+					</div>
+
+					<!-- Font Properties -->
+					<center>
+						<h3>Font Properties</h3>
+					</center>
+
+					<!-- Font Style -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font</span>
+						<select class="select2" id="cmbFont" aria-describedby="basic-addon3">
+							<option value="Arial">Arial</option>
+							<option value="Tahoma">Tahoma</option>
+							<option value="Segoe UI">Segoe UI</option>
+							<option value="Times New Roman">Times New Roman</option>
+							<option value="Comic Sans">Comic Sans</option>
+						</select>
+					</div>
+
+					<!-- Font Size -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Size</span>
+						<select class="select2" id="cmbFontSize" aria-describedby="basic-addon3">
+							<option value="8">8</option>
+							<option value="9">9</option>
+							<option value="10">10</option>
+							<option value="12">12</option>
+							<option value="14">14</option>
+							<option value="16">16</option>
+							<option value="18">18</option>
+							<option value="20">20</option>
+							<option value="22">22</option>
+							<option value="24">24</option>
+							<option value="28">28</option>
+							<option value="32">32</option>
+							<option value="36">36</option>
+							<option value="40">40</option>
+							<option value="48">48</option>
+							<option value="54">54</option>
+							<option value="60">60</option>
+							<option value="65">65</option>
+							<option value="72">72</option>
+						</select>
+					</div>
+
+					<!-- Font Colour -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Color</span>
+						<select class="select2" id="cmbFontColor" aria-describedby="basic-addon3">
+							<option value="rgb(0, 0, 0)">Black</option>
+							<option value="rgb(255, 255, 255)">White</option>
+							<option value="rgb(0, 255, 0)">Green</option>
+							<option value="rgb(255, 255, 0)">Yellow</option>
+							<option value="rgb(255, 0, 0)">Red</option>
+							<option value="rgb(0, 0, 255)">Blue</option>
+							<option value="rgb(255, 0, 255)">Pink</option>
+							<option value="rgb(128, 128, 128)">Gray</option>
+						</select>
+					</div>
+
+					<!-- Align -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Align</span>
+						<select class="select2" id="cmbAlign" aria-describedby="basic-addon3">
+							<option value="Left">Left</option>
+							<option value="Center">Center</option>
+							<option value="Right">Right</option>
+						</select>
+					</div>
+
+					<!-- Valign -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Vertical Align</span>
+						<select class="select2" id="cmbValign" aria-describedby="basic-addon3">
+							<option value="Left">Top</option>
+							<option value="Center">Middle</option>
+							<option value="Right">Bottom</option>
+						</select>
+					</div>
+
+					<!-- Bold, Italic, Underline -->
+					<div class="input-group" style="margin:0px;">
+						<span class="input-group-addon" id="basic-addon3" style="width:105px;">Type</span>
+						<a href="javascript:fontActions('bold');" class="btn btn-default" id="font-bold" aria-describedby="basic-addon3"><span class="fa fa-bold"></span></a>
+
+						<a href="javascript:fontActions('italic');" class="btn btn-default" id="font-italic" aria-describedby="basic-addon3"><span class="fa fa-italic"></span></a>
+
+						<a href="javascript:fontActions('underline');" class="btn btn-default" id="font-underline" aria-describedby="basic-addon3"><span class="fa fa-underline"></span></a>
+
+					</div>
+
+					<div class="well text-center" style="margin-top:10px;">
+						<div class="row">
+							<div class="col-md-6">
+								<input type="button" class="btn btn-danger" value="Remove" onclick="RemoveItem();" />
+							</div>
+							<div class="col-md-6">
+								<input type="button" class="btn btn-success" value="Apply" onclick="SetProperties();" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="~/Scripts/TicketDesigner.js"></script>

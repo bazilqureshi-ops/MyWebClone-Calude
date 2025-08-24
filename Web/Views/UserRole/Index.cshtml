@@ -1,0 +1,85 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+	List<qmUserRole> userRoles = ViewBag.model;
+}
+
+<script>
+	function DeleteRecord(recordid) {
+        swal({
+            title: "Are you sure want to delete this record?",
+            text: "This action cannot be irrevocable. If there is a user who is using this role this user's role will be changed with another role.",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+				if (willDelete) {
+					$.post("UserRole/DeleteUserRole", { id: recordid }, function (data) {
+						if (data.includes("OK++")) {
+							location.reload();
+                        }
+					});
+                } else {
+                    swal({
+                        title: "Nothing changed",
+                        icon: "success"
+                    });
+                }
+            });
+	}
+</script>
+
+<div class="row">
+	<div class="col-xs-12 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+		<div class="card">
+			<div class="card-header">
+				User Role List
+			</div>
+			<div class="card-body">
+				<table class="datatable table table-striped primary" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>User Role Name</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						@{
+							if (userRoles.Count > 0)
+							{
+								foreach (var item in userRoles)
+								{
+									<tr>
+										<td>@item.UserRoleName</td>
+
+                                        <td width="200">
+                                            <a href="../UserRole/EditUserRole?id=@item.UserRoleID" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                            <button type="button" class="btn btn-danger" onclick="javascript:DeleteRecord(@(item.UserRoleID));"><span class="fa fa-remove"></span></button>
+                                        </td>
+									</tr>
+								}
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="btn-floating" id="help-actions">
+	<div class="btn-bg"></div>
+	<button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+		<i class="icon fa fa-plus"></i>
+		<span class="help-text">Shortcut</span>
+	</button>
+	<div class="toggle-content">
+		<ul class="actions">
+			<li><a href="/UserRole/CreateUserRole">Create a User Role</a></li>
+		</ul>
+	</div>
+</div>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>

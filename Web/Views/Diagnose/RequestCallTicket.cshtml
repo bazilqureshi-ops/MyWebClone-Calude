@@ -1,0 +1,18 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmTicket Ticket = ViewBag.Ticket;
+
+    int TerminalID = ViewBag.Terminal;
+    int UserID = ViewBag.User;
+}
+
+Ticket @(Ticket.TicketPrefix)@(Ticket.TicketNumber) called !
+
+<script>
+    $(document).ready(function () {
+        signalRHub.server.send("TicketCalled(@(Ticket.TicketID),@(TerminalID)) - DIAGNOSING...").fail(function (e) {
+            alert(e.message);
+        });
+    });
+</script>

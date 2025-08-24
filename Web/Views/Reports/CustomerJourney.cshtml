@@ -1,0 +1,329 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model ReportViewModel
+
+<link href="~/assets/css/report.css" rel="stylesheet" />
+<link href="~/assets/css/Chart.min.css" rel="stylesheet" />
+
+<script src="~/assets/js/Chart.min.js"></script>
+<script src="~/Scripts/report.js"></script>
+<script src="~/Scripts/chartjs-label-plugin.min.js"></script>
+
+<script>
+	function CallPrint(value) {
+		const pageTitle = 'Detailed Customer Journey Report';
+		const orginalPage = value;
+		const orginalPageCopy = value.documentElement.innerHTML;
+		const pageProperties = 'width="1920", height="1080"';
+
+		//Remove Unnecessary Elements & Make Other Changes
+		$('#navbar').remove();
+		$('#sidebar').remove();
+		$('#printtable').parent().remove();
+		$('#MainContainer').css('padding-left', '0');
+		$('.app-footer').remove()
+
+		//Create Window Page
+		let windowPage = value.documentElement.innerHTML;
+		let windowContainer = window.open('#', pageTitle, pageProperties);
+		let windowDocument = windowContainer.document.open();
+		windowDocument.write('<!DOCTYPE html><html lang="en">');
+		windowDocument.write(windowPage);
+		orginalPage.documentElement.innerHTML = orginalPageCopy;
+		windowDocument.write('</html>');
+
+		windowDocument.close();
+
+		$(windowContainer).on('load', function () {
+			windowContainer.print();
+
+		})
+
+	}
+
+</script>
+
+<div class="row">
+	<div class="col-xs-12 col-md-12 col-lg-12">
+		<div class="card">
+			<div class="card-header">
+				<div class="bussines-info-box left">
+					<p>Custom Journey Report</p>
+					<p>@Model.CorporateNumber</p>
+					<p>
+						@{
+							string branchList = "";
+							for (int i = 0; i < Model.UserBranches.Count; i++)
+							{
+								if (i == Model.UserBranches.Count - 1) { branchList += $"{Model.UserBranches[i].Name}"; }
+								else { branchList += $"{Model.UserBranches[i].Name}, "; }
+							}
+
+						}
+						@branchList
+					</p>
+					<p>@Model.StartDate.ToLongDateString() - @Model.FinishDate.ToLongDateString()</p>
+				</div>
+
+				<div class="bussines-info-box right">
+					<p>@Model.UserName</p>
+					<p>@Model.UserRole</p>
+					<p>@DateTime.Now.ToLongDateString() / @DateTime.Now.ToLongTimeString()</p>
+				</div>
+			</div>
+
+			<form action="/Reports/ExportExcel" method="post" class="row" style="padding-left:10px; padding-right:10px;">
+
+				<div class="card-header" id="button-area" style="border-top: 1px solid #dfe6e8;">
+					<button type="button" onClick="callPrint(document);" id="printpage" class="btn btn-danger"><i class="fa fa-print"></i> Print Page </button>
+					<span>&nbsp;</span>
+
+					<button type="submit" class="btn btn-danger"><i class="fa fa-file-excel-o"></i>  Export to Excel</button>
+					<span>&nbsp;</span>
+
+					<button type="button" id="sign-report" class="btn btn-success" data-toggle="modal" data-target="#sign-report-modal"><i class="fa fa-pencil"></i> Sign Report </button>
+				</div>
+
+				<div class="card-body" id="raport-body">
+					<div class="row" style="float: right !important; position: relative; padding:10px; padding-top:0;">
+						<label><i class="fa fa-print"></i> : Ticket Print Time</label> -
+						<label><i class="fa fa-hourglass-end"></i> : Ticket End Time</label> -
+						<label><i class="fa fa-refresh"></i> : Ticket Transfer Time</label> -
+						<label><i class="fa fa-bullhorn"></i> : Ticket Called Time</label>
+						<label><i class="fa fa-hand-paper-o"></i> : Park Ticket Time</label>
+					</div>
+
+					<div class="journey-container">
+						@{
+							<input type="hidden" name="Data[0]" value="Name" />
+							<input type="hidden" name="Data[0]" value="Surname" />
+							<input type="hidden" name="Data[0]" value="Visit Date" />
+							<input type="hidden" name="Data[0]" value="Branch Name" />
+							<input type="hidden" name="Data[0]" value="Service Name" />
+							<input type="hidden" name="Data[0]" value="Segment Name" />
+							<input type="hidden" name="Data[0]" value="Ticket Number" />
+
+							for (int i = 0; i < Model.ReportProperties.Count; i++)
+							{
+								var report = Model.ReportProperties[i];
+
+								<div class="row journey">
+									<div class="journey-header" style="padding-top:1%; padding-left:1.5%">
+										<table id="tableIDExport" border="1" class="col-xs-12 col-md-12 col-lg-12" cellspacing="0" width="100%">
+											<thead>
+												<tr>
+
+													<th style="width: 12%; text-align: center">Name</th>
+													<th style="width: 12%;">Surname</th>
+													<th>Visit Date</th>
+													<th>Branch Name</th>
+													<th>Service Name</th>
+													<th>Segment Name</th>
+													<th>Ticket Number</th>
+
+												</tr>
+											</thead>
+											<tbody>
+												<tr style="text-align: center;">
+													<td>@Model.ReportProperties[i].Name</td>
+													<td>@Model.ReportProperties[i].Surname</td>
+													<td>@Model.ReportProperties[i].VisitDate</td>
+													<td>@Model.ReportProperties[i].BranchName</td>
+													<td>@Model.ReportProperties[i].ServiceName</td>
+													<td>@Model.ReportProperties[i].SegmentName</td>
+													<td>@Model.ReportProperties[i].TicketNumber</td>
+
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].Name" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].Surname" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].VisitDate" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].BranchName" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].ServiceName" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].SegmentName" />
+													<input type="hidden" name="Data[@(i + 1)]" value="@Model.ReportProperties[i].TicketNumber" />
+
+												</tr>
+
+											</tbody>
+										</table>
+									</div>
+
+									<div class="journey-content col-xs-12 col-md-12 col-lg-12">
+										@{
+											string journeyString = "";
+										}
+										<!-- Print Time -->
+										<label>
+											<i class="fa fa-print"></i>
+											@report.PrintTime - Printed <i class="fa fa-long-arrow-right"></i>
+											@{
+												journeyString += $"{report.PrintTime} - Printed -> ";
+											}
+										</label>
+
+										@{
+											//First Call
+											if (!string.IsNullOrEmpty(report.CallTime) && !report.CallTime.Contains("Not Called") && !report.CallTime.Contains("Not Ended"))
+											{
+												<label>
+													<i class="fa fa-bullhorn"></i> @report.CallTime - Called (Terminal No: @report.TerminalNumber) <i class="fa fa-long-arrow-right"></i>
+												</label>
+
+												journeyString += $"First Call - {report.CallTime} - Called (Terminal No: {report.TerminalNumber}) -> ";
+
+											}
+											else if (report.CallTime.Contains("Not Called"))
+											{
+												<label>
+													<i class="fa fa-hourglass-end"></i>
+													Not Called
+												</label>
+
+												journeyString += $"Not Called";
+
+											}
+
+											for (int j = 0; j < report.JourneyDTO.Count; j++)
+											{
+												var journey = report.JourneyDTO[j];
+
+												//Terminal Transfer
+												if (journey.JourneyType == Emse.QMagic.Web.Domain.Enums.JourneyType.Transfer)
+												{
+													if (journey.TransferTime != null)
+													{
+														<label>
+															<i class="fa fa-refresh"></i> @journey.TransferTime.Value.Hours:@journey.TransferTime.Value.Minutes:@journey.TransferTime.Value.Seconds - Terminal Transfer (Terminal No: @journey.Name) <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Transfer - {journey.TransferTime.Value.Hours}:{journey.TransferTime.Value.Minutes}:{journey.TransferTime.Value.Seconds} - Terminal Transfer (Terminal No: {journey.Name}) -> ";
+													}
+
+													if (journey.TransferCallTime != null)
+													{
+														<label>
+															<i class="fa fa-bullhorn"></i> @journey.TransferCallTime.Value.Hours:@journey.TransferCallTime.Value.Minutes:@journey.TransferCallTime.Value.Seconds - Terminal Transfer Call (Terminal No: @journey.TerminalID) <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Call - {journey.TransferCallTime.Value.Hours}:{journey.TransferCallTime.Value.Minutes}:{journey.TransferCallTime.Value.Seconds} - Terminal Transfer Call (Terminal No: {journey.TerminalID}) -> ";
+													}
+
+												}
+												//Service Transfer
+												else if (journey.JourneyType == Emse.QMagic.Web.Domain.Enums.JourneyType.ServiceTransfer)
+												{
+													if (journey.TransferTime != null)
+													{
+														<label>
+															<i class="fa fa-refresh"></i> @journey.TransferTime.Value.Hours:@journey.TransferTime.Value.Minutes:@journey.TransferTime.Value.Seconds - Service Transfer (@journey.Name) <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Transfer - {journey.TransferTime.Value.Hours}:{journey.TransferTime.Value.Minutes}:{journey.TransferTime.Value.Seconds} - Service Transfer (Terminal No: {journey.Name}) -> ";
+													}
+
+													if (journey.TransferCallTime != null)
+													{
+														<label>
+															<i class="fa fa-bullhorn"></i> @journey.TransferCallTime.Value.Hours:@journey.TransferCallTime.Value.Minutes:@journey.TransferCallTime.Value.Seconds - Service Transfer Call (Terminal No: @journey.TerminalID) <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Call - {journey.TransferCallTime.Value.Hours}:{journey.TransferCallTime.Value.Minutes}:{journey.TransferCallTime.Value.Seconds} - Service Transfer Call (Terminal No: {journey.TerminalID}) -> ";
+													}
+
+												}
+												//Park
+												else if (journey.JourneyType == Emse.QMagic.Web.Domain.Enums.JourneyType.Park)
+												{
+													if (journey.TransferTime != null)
+													{
+														<label>
+															<i class="fa fa-hand-paper-o"></i> @journey.TransferTime.Value.Hours:@journey.TransferTime.Value.Minutes:@journey.TransferTime.Value.Seconds - Parked <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Park - {journey.TransferTime.Value.Hours}:{journey.TransferTime.Value.Minutes}:{journey.TransferTime.Value.Seconds} - Parked -> ";
+													}
+
+													if (journey.TransferCallTime != null)
+													{
+														<label>
+															<i class="fa fa-bullhorn"></i> @journey.TransferCallTime.Value.Hours:@journey.TransferCallTime.Value.Minutes:@journey.TransferCallTime.Value.Seconds - Call From Park (Terminal No: @journey.TerminalID) <i class="fa fa-long-arrow-right"></i>
+														</label>
+
+														journeyString += $"Call - {journey.TransferCallTime.Value.Hours}:{journey.TransferCallTime.Value.Minutes}:{journey.TransferCallTime.Value.Seconds} - Call from Park (Terminal No: {journey.TerminalID}) -> ";
+													}
+
+												}
+
+											}
+										}
+
+										<!-- End Time -->
+										@if (!string.IsNullOrEmpty(report.EndTime) && !report.EndTime.Contains("Not Called") && !report.EndTime.Contains("Not Ended"))
+										{
+											<label>
+												<i class="fa fa-hourglass-end"></i>
+
+												@report.EndTime - Ended
+											</label>
+
+											journeyString += $"{report.EndTime} - Ended";
+
+										}
+										else if (report.EndTime.Contains("Not Ended"))
+										{
+											<label>
+												<i class="fa fa-hourglass-end"></i>
+
+												Not Ended
+											</label>
+
+											journeyString += $"Not Ended";
+
+										}
+
+										<input type="hidden" name="Data[@(i + 1)]" value="@journeyString" />
+									</div>
+								</div>
+							}
+						}
+					</div>
+
+
+				</div>
+
+				<!-- Sign Report Modal -->
+				<div class="modal" tabindex="-1" role="dialog" id="sign-report-modal">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">Add Signer</h3>
+
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<div class="row">
+									<input type="text" name="signer-name" class="form-control col-xs-6 col-md-6" placeholder="Replace this text with name" value="" />
+									<input type="text" name="signer-surname" class="form-control col-xs-6 col-md-6" placeholder="Replace this text with surname" value="" />
+									<input type="text" name="signer-job-title" class="form-control col-xs-6 col-md-12" placeholder="Replace this text with job title (optional)" value="" />
+
+									<button type="button" class="btn btn-primary" onclick="addSigner()">Add Signer</button>
+								</div>
+
+								<hr />
+
+								<ul id="signer-list">
+								</ul>
+							</div>
+
+							<div class="modal-footer">
+								<button type="button" class="btn btn-primary" onclick="saveSigners()">Save changes</button>
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</form>
+		</div>
+	</div>
+</div>

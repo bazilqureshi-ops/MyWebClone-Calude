@@ -1,0 +1,190 @@
+﻿@{
+    Layout = null;
+    List<FileInfo> files = ViewBag.filelist;
+}
+
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<link href="~/assets/css/flat-admin.css" rel="stylesheet" />
+<link href="~/assets/css/vendor.min.css" rel="stylesheet" />
+<link href="~/assets/css/jquery-ui.min.css" rel="stylesheet" />
+<link href="~/assets/css/custom.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap.min.js"></script>
+
+
+<!--<script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+-->
+
+
+<script>
+    $(document).ready(function () {
+        var w_height = $(document).height();
+        $("#BrowserContainer").height(w_height - 100);
+        $("#UploadContainer").height(w_height - 100);
+    });
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var ListPlay = "";
+
+    function SelectPlaylist() {
+        var referer = getParameterByName('reff');
+        this.opener.document.getElementById("" + referer).value = ListPlay;
+        this.close();
+    }
+
+    function CreateDirectory(referer) {
+        var dirname = prompt("Please enter directory name", "New Folder");
+
+        window.location = "ImageBrowser?reff=" + referer + "&CreateDirectory=true&DirectoryName=" + dirname;
+    }
+
+    function SelectFolder(foldername, referer) {
+        var referer = getParameterByName("reff");
+        if (referer != null) {
+            this.opener.document.getElementById("" + referer).value = "http://" + window.location.hostname + "/Upload/Image/" + foldername;
+            this.close();
+        }
+        else {
+            this.close();
+        }
+    }
+
+    function DeleteFolder(foldername, referer) {
+        window.location = "ImageBrowser?reff=" + referer + "&DeleteFolder=true&DirectoryName=" + foldername;
+    }
+
+    function MainFolder(referer) {
+        window.location = "ImageBrowser?reff=" + referer;
+    }
+
+    function DeleteFile(filename, referer) {
+        window.location = "ImageBrowser?reff=" + referer + "&DeleteFile=true&FileName=" + filename;
+    }
+
+    /*function SelectItem(theURL, indx) {
+        var element = $("#item_" + indx);
+
+        if (element.css("border") == "3px solid rgb(41, 174, 73)") {
+            element.css("border", "solid 1px #CCC");
+            var whatreplace = "'" + location.protocol + '//' + location.host + theURL + "';";
+            var reped = ListPlay.replace(whatreplace, "");
+            ListPlay = reped;
+        }
+        else {
+            ListPlay += "'" + location.protocol + '//' + location.host + theURL + "';";
+            element.css("border", "solid 3px #29ae49");
+        }
+    }*/
+
+    function SelectItem(theURL) {
+        var referer = getParameterByName("reff");
+        if (referer != null) {
+            this.opener.document.getElementById("" + referer).value = "http://" + window.location.hostname + "/Upload/Image/" + theURL;
+            this.close();
+        }
+        else {
+            this.close();
+        }
+    }
+
+    function SelectUpload() {
+        $("#BrowserContainer").hide();
+        $("#UploadContainer").show();
+        $("#TabBrowser").removeClass("active");
+        $("#TabUpload").addClass("active");
+    }
+
+    function SelectBrowser() {
+        $("#BrowserContainer").show();
+        $("#UploadContainer").hide();
+        $("#TabUpload").removeClass("active");
+        $("#TabBrowser").addClass("active");
+    }
+</script>
+
+<style>
+    .selecteditem {
+        border: solid 3px #29ae49;
+    }
+
+    .notselected {
+        border: solid 1px #CCC;
+        cursor: pointer;
+        margin: 5px;
+        align: left;
+    }
+
+    .hoverer {
+    }
+
+        .hoverer:hover {
+            background-color: #F5F5F5;
+        }
+
+    .ezicitab{
+        height:40px;
+        color:#FFF;
+        width:40%;
+    }
+    .ezicitab:hover{
+        height:40px;
+    }
+</style>
+
+<body style="background-image:url(../../assets/images/pattern1.png); background-size:cover; background-color:#29ae49;">
+    <div class="col-md-10 col-md-offset-1" style="margin-top:20px; padding:0px;">
+        <ul class="nav nav-tabs nav-justified">
+            <li role="presentation" class="ezicitab active" style="width:70%;" id="TabBrowser"><a href="javascript:SelectBrowser();"><span class="glyphicon glyphicon-globe"></span> Browser</a></li>
+        </ul>
+    </div>
+
+    <div class="col-md-10 col-md-offset-1" id="BrowserContainer" style="overflow-y:scroll; height:300px; overflow-x:hidden; border:solid 1px #CCC; border-top:none; background-color:#FFF;">
+        <div class="row">
+            <div class="col-md-12" style="background-color:#F5F5F5; padding:10px;">
+                <input type="button" class="btn btn-default" value="New Folder" onclick="CreateDirectory('@(Request.QueryString["reff"])');" />
+            </div>
+            <div class="col-md-12" id="ListOfVideos">
+                @{
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="border-bottom:solid 1px #CCC; border-right:solid 1px #CCC; padding:10px;">Icon</td>
+                            <td style="border-bottom:solid 1px #CCC; border-right:solid 1px #CCC; padding:10px;" height="30">Folder</td>
+                            <td style="border-bottom:solid 1px #CCC; padding:10px;" height="30" width="40">Delete</td>
+                        </tr>
+                        <tr class="hoverer" onclick="MainFolder('@(Request.QueryString["reff"])');">
+                            <td style="border-bottom:dotted 1px #CCC; padding:10px;" width="58"> <img src="~/assets/images/folder.png" /></td>
+                            <td style="border-bottom:dotted 1px #CCC; padding:10px;">...</td>
+                            <td style="border-bottom:dotted 1px #CCC; padding:10px;">
+                                &nbsp;
+                            </td>
+                        </tr>
+                        @{
+                            foreach (string dir in Directory.GetDirectories(Server.MapPath("~/Upload/Image"), "*", SearchOption.AllDirectories))
+                            {
+                                <tr class="hoverer">
+                                    <td style="border-bottom:dotted 1px #CCC; padding:10px;" width="58"> <img src="~/assets/images/folder.png" alt="@(dir)" title="@(dir)" /></td>
+                                    <td style="border-bottom:dotted 1px #CCC; padding:10px;" onclick="SelectFolder('@(Path.GetFileName(dir))', '@(Request.QueryString["reff"])');">@(Path.GetFileName(dir))</td>
+                                    <td style="border-bottom:dotted 1px #CCC; padding:10px;">
+                                        <a href="#" class="btn btn-default" onclick="DeleteFolder('@(Path.GetFileName(dir))', '@(Request.QueryString["reff"])')">
+                                            <img src="~/assets/images/close16.png" />
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</body>

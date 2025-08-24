@@ -1,0 +1,35 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Virtual Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmTicket> ParkedList = ViewBag.ParkedList;
+    Layout = null;
+}
+<div class="card card-mini" style="border-style:none;">
+    <div class="card-body no-padding table-responsive" style="min-height:450px;">
+        <table class="table card-table">
+            <thead>
+                <tr>
+                    <th>Ticket</th>
+                    <th>Print Time</th>
+                    <th>Call Time</th>
+                    <th>Call</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (qmTicket item in ParkedList)
+                    {
+                        <tr>
+                            <td>@(item.TicketPrefix) @(item.TicketNumber)</td>
+                            <td>@(item.PrintTime)</td>
+                            <td>@(item.CallingTime)</td>
+                            <td width="80"><button class="btn btn-default" value="Call from Park" onclick="CallFromPark(@(item.TicketNote));"><span class="fa fa-bell"></span></button></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

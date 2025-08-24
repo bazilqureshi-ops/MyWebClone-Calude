@@ -1,0 +1,26 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = null;
+    qmTicket Ticket = ViewBag.Ticket;
+    int NumberOfWaiting = ViewBag.NumberOfWaiting;
+    qmService Service = ViewBag.Service;
+    qmSegment Segment = ViewBag.Segment;
+    qmBranch Branch = ViewBag.Branch;
+    qmCustomer Customer = ViewBag.Customer;
+}
+
+<center>
+    <p>@(Branch.BranchName)</p>
+    <h1 style="font-weight:bold;">@(Ticket.TicketPrefix)@(Ticket.TicketNumber)</h1>
+    <p>
+        @(Service.ServiceName)<br />
+        @(Segment.SegmentName)
+    </p>
+    @{
+        if (Customer != null)
+        {
+            <p>@(Customer.Name)  @(Customer.Surname)</p>
+        }
+    }
+    <!--<p>Waiting : @(NumberOfWaiting)</p>-->
+</center>

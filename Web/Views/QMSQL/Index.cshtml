@@ -1,0 +1,155 @@
+﻿@using System.Collections;
+@using System.Reflection;
+@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<qmSQL> SQLs = ViewBag.SQLs;
+    if (ViewBag.SelectedSQL != null)
+    {
+        qmSQL selected = ViewBag.SelectedSQL;
+        ViewBag.query = selected.SQLScript;
+    }
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    function SwitchTab(tabid) {
+        $(".tab-pane").hide();
+        $("#tab" + tabid).show();
+
+        $(".tab-pane").removeClass("active");
+        $("#tab" + tabid).addClass("active");
+
+        $(".tabsap").removeClass("active");
+        $("#TabSap" + tabid).addClass("active");
+    }
+</script>
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-3">
+        <div class="card">
+            <div class="card-header" style="overflow:hidden;">
+                SQL Scripts
+            </div>
+            <div class="card-body no-padding table-responsive">
+                <table class="table card-table">
+                    <tbody>
+                        @{
+                            foreach (qmSQL item in SQLs)
+                            {
+                                <tr>
+                                    <td>@(item.SQLName)</td>
+                                    <td width="30" style="padding:3px;"><a href="~/QMSQL?SQLID=@(item.SQLID)" class="btn btn-primary"><i class="fa fa-youtube-play"></i></a></td>
+                                    <td width="30" style="padding:3px;"><a href="javascript:DeleteRecord(@(item.SQLID))" class="btn btn-danger"><i class="fa fa-remove"></i></a></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-9">
+        <div class="card">
+            <form name="form1" id="form1" action="~/QMSQL/Index" method="post">
+                <div class="card card-tab card-mini">
+                    <div class="card-header" style="overflow:hidden;">
+                        <ul class="nav nav-tabs">
+                            <li class="tabsap active" style="min-width:200px;" id="TabSap1" onclick="SwitchTab(1);">
+                                <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-caret-square-o-left" aria-hidden="true"></i> SQL</a>
+                            </li>
+                            <li class="tabsap" style="min-width:200px;" id="TabSap2" onclick="SwitchTab(2);">
+                                <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-table" aria-hidden="true"></i> Results</a>
+                            </li>
+                        </ul>
+                        <a href="javascript:Preview();" class="btn btn-default" style="margin-top:10px; margin-right:20px;"><span class="fa fa-file"></span></a>
+                        <input type="text" class="form-control" style="margin-top:10px; margin-right:20px;" name="NameScript" id="NameScript" placeholder="Type a name for this script" />
+                        <a href="javascript:SaveScript();" class="btn btn-default" style="margin-top:10px; margin-right:20px;"><span class="fa fa-save"></span> Save</a>
+                        <a href="javascript:RunCommand();" class="btn btn-primary" style="margin-top:10px; margin-right:15px;"><span class="fa fa-play"></span> Run</a>
+                    </div>
+                    <div class="card-body tab-content no-padding">
+                        <div class="tab-pane active" id="tab1" style="padding:0px;">
+                            <div id="editor" style="width:100%; height:550px;">@(ViewBag.query)</div>
+                            <textarea id="scripttext" name="scripttext" style="display:none;"></textarea>
+                        </div>
+                        <div class="tab-pane" id="tab2">
+                            @Html.Raw(ViewBag.Result)
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@{
+    if (ViewBag.Result != null)
+    {
+        <script>
+            SwitchTab(2);
+        </script>
+    }
+}
+
+<script src="~/Scripts/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+
+    editor.setTheme("ace/theme/chrome");
+    editor.session.setMode("ace/mode/html");
+
+
+    function RunCommand() {
+        var thetext = editor.getValue();
+        $("#scripttext").val(thetext);
+        $("#form1").submit();
+    }
+
+    function SaveScript() {
+        var thetext = editor.getValue();
+        $("#scripttext").val(thetext);
+        $("#form1").attr("action", "../../QMSQL/SaveScript");
+        $("#form1").submit();
+    }
+
+    function Preview() {
+        var win = window.open("", "Result Preview", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=780,height=500");
+        win.document.body.innerHTML = $("#tab2").html();
+    }
+
+    function DeleteRecord(branchid) {
+            swal({
+                title: "Are you sure want to delete this script?",
+                text: "This action cannot be reverted.",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+                content: "This action cannot be reverted."
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        window.location = "QMSQL/DeleteSQL?SQLID=" + branchid;
+
+                        //$("#PostDelete").submit();
+                    } else {
+                        swal({
+                            title: "Nothing changed",
+                            icon: "success"
+                        });
+                    }
+                });
+    }
+</script>

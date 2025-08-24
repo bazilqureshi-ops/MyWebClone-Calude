@@ -1,0 +1,191 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmCustomer> customers = ViewBag.Customers;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+    string t = ViewBag.t;
+}
+
+<table width="100%" class="table card-table">
+    <thead>
+        <th>
+            @{
+                switch (LanguageCode)
+                {
+                    case "AR":
+                        @Html.Label("معرف فريد")
+                        break;
+                    case "TR":
+                        @Html.Label("Müşteri No")
+                        break;
+                    case "FR":
+                        @Html.Label("Pièce d’identité unique")
+                        break;
+                    case "PK":
+                        @Html.Label("منفرد ID")
+                        break;
+                    case "IN":
+                        @Html.Label("यूनिक आईडी")
+                        break;
+                    case "PH":
+                        @Html.Label("Natatanging ID")
+                        break;
+                    default:
+                        @Html.Label("Unique ID")
+                        break;
+                }
+            }
+        </th>
+        <th>
+            @{
+                switch (LanguageCode)
+                {
+                    case "AR":
+                        @Html.Label("اسم العائلة")
+                        break;
+                    case "TR":
+                        @Html.Label("Ad Soyad")
+                        break;
+                    case "FR":
+                        @Html.Label("Nom nom de famille")
+                        break;
+                    case "PK":
+                        @Html.Label("نام مختصر")
+                        break;
+                    case "IN":
+                        @Html.Label("नाम उपनाम")
+                        break;
+                    case "PH":
+                        @Html.Label("Pangalan ng Apelyido")
+                        break;
+                    default:
+                        @Html.Label("Name Surname")
+                        break;
+                }
+            }
+        </th>
+        <th>
+            @{
+                switch (LanguageCode)
+                {
+                    case "AR":
+                        @Html.Label("الهاتف")
+                        break;
+                    case "TR":
+                        @Html.Label("Telefon")
+                        break;
+                    case "FR":
+                        @Html.Label("Téléphone")
+                        break;
+                    case "PK":
+                        @Html.Label("فون")
+                        break;
+                    case "IN":
+                        @Html.Label("फ़ोन")
+                        break;
+                    case "PH":
+                        @Html.Label("Telepono")
+                        break;
+                    default:
+                        @Html.Label("Phone")
+                        break;
+                }
+            }
+        </th>
+        <th>
+            @{
+                switch (LanguageCode)
+                {
+                    case "AR":
+                        @Html.Label("الجهاز")
+                        break;
+                    case "TR":
+                        @Html.Label("Cihazlar")
+                        break;
+                    case "FR":
+                        @Html.Label("Appareil")
+                        break;
+                    case "PK":
+                        @Html.Label("آلہ")
+                        break;
+                    case "IN":
+                        @Html.Label("उपकरण")
+                        break;
+                    case "PH":
+                        @Html.Label("Kagamitan")
+                        break;
+                    default:
+                        @Html.Label("Device")
+                        break;
+                }
+            }
+        </th>
+        <th>
+            @{
+                switch (LanguageCode)
+                {
+                    case "AR":
+                        @Html.Label("العمل")
+                        break;
+                    case "TR":
+                        @Html.Label("İşlem")
+                        break;
+                    case "FR":
+                        @Html.Label("Action")
+                        break;
+                    case "PK":
+                        @Html.Label("عمل")
+                        break;
+                    case "IN":
+                        @Html.Label("मुक़दमा")
+                        break;
+                    case "PH":
+                        @Html.Label("Aksyon")
+                        break;
+                    default:
+                        @Html.Label("Action")
+                        break;
+                }
+            }
+        </th>
+    </thead>
+    <tbody>
+        @{
+            foreach (qmCustomer item in customers)
+            {
+                <tr>
+                    <td>@(item.UniqueID)</td>
+                    <td>@(item.Name) @(item.Surname)</td>
+                    <td>@(item.Phone)</td>
+                    <td align="center">
+                        @{
+                            if (item.DeviceToken != null)
+                            {
+                                <span class="fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="fa fa-remove"></span>
+                            }
+                        }
+                    </td>
+                    @{
+                        if (t == "Fictive")
+                        {
+                            <td><a href="javascript:SelectFictiveCustomer(@(item.CustomerID));" class="btn btn-primary"><span class="fa fa-mouse-pointer"></span></a></td>
+                        }
+                        else
+                        {
+                            <td><a href="javascript:SelectThisCustomer(@(item.CustomerID));" class="btn btn-primary"><span class="fa fa-mouse-pointer"></span></a></td>
+                        }
+                    }
+
+                </tr>
+            }
+        }
+    </tbody>
+</table>

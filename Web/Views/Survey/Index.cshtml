@@ -1,0 +1,94 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Survey";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmSurvey> surveys = ViewBag.Surveys;
+    List<qmBranch> branches = ViewBag.Branches;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    function DeleteRecord(branchid) {
+        $.post("../Survey/PrepareDelete?SurveyID=" + branchid, {}, function (data) {
+
+            swal({
+                title: "Are you sure want to delete this record?",
+                text: data,
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+                content: data
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        $("#PostDelete").submit();
+                    } else {
+                        swal({
+                            title: "Nothing changed",
+                            icon: "success"
+                        });
+                    }
+                });
+
+            $(".swal-text").html(data);
+        });
+    }
+</script>
+
+<div class="row">
+    <div class="col-xs-10 col-xs-offset-1">
+        <div class="card">
+            <div class="card-header">
+                Survey Management
+            </div>
+            <div class="card-body no-padding">
+                <table class="datatable table table-striped primary" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Survey Name</th>
+                            <th>Branch</th>
+                            <th>Background Image</th>
+                            <th>Is Active</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (qmSurvey item in surveys)
+                            {
+                                <tr>
+                                    <td>@item.SurveyName</td>
+                                    <td>@(branches.Where(x=>x.BranchID == item.BranchID).FirstOrDefault().BranchName)</td>
+                                    <td><img src="@(item.BackgroundPicture)" height="40" /></td>
+                                    <td>@(item.IsActive == true ? "Yes" : "No")</td>
+                                    <td>
+                                        <a href="../Survey/Question?SurveyID=@(item.SurveyID)" class="btn btn-default"><i class="fa fa-question"></i></a>
+                                        <a href="../Survey/EditSurvey?SurveyID=@item.SurveyID" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                        <a href="javascript:DeleteRecord(@(item.SurveyID));" class="btn btn-danger"><span class="fa fa-remove"></span></a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="btn-floating" id="help-actions">
+    <div class="btn-bg"></div>
+    <button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+        <i class="icon fa fa-plus"></i>
+        <span class="help-text">Shortcut</span>
+    </button>
+    <div class="toggle-content">
+        <ul class="actions">
+            <li><a href="~/Survey/CreateSurvey">Create Survey</a></li>
+        </ul>
+    </div>
+</div>

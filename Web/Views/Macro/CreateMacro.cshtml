@@ -1,0 +1,523 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "CreateMacro";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmService> servicelist = ViewBag.service;
+    List<qmSegment> segmentlist = ViewBag.segment;
+    List<qmTerminal> terminallist = ViewBag.terminal;
+    List<qmAppointment> appointmentList = ViewBag.appointment;
+}
+
+<style>
+    .formula {
+        height: 35px;
+        font-size: 24px;
+    }
+</style>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var servicecount = @(servicelist.Count());
+        var segmentcount = @(segmentlist.Count());
+
+        if (servicecount < 1 || segmentcount < 1) {
+            var str = "<p>You're not meeting the minimum requirements of creating a new apponintment schedule. You should have at least one service and a segment.</p>";
+
+            if (servicecount < 1) {
+                str += "Please <a href='../Service'>click here</a> to create new service.<br/>";
+            }
+            if (segmentcount < 1) {
+                str += "Please <a href='../Segment'>click here</a> to create new segment.<br/>";
+            }
+
+            swal({
+                title: "Hmm.. Consider This",
+                text: str,
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+                content: str
+            });
+
+            $(".swal-text").html(str);
+        }
+    });
+</script>
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<script>
+    //Add Formula Function
+    function AddFormula() {
+
+        $(".NoFormula").hide();
+        if ($("#cmbMacroType").val() == "TT") {
+            var termid = $("#cmbTerminal").val();
+            var termname = $("#cmbTerminal :selected").text();
+
+            $("#MacroArea").append("<div class='formula' type='TT'>TT(" + termid + ")</div>");
+            $("#MacroDesign").append("<div class='dformula' type='TT'>Transfer To Terminal(" + termname + ")  <i style='' class='macro-delete fa fa-close'></i></div>");
+        }
+        if ($("#cmbMacroType").val() == "ST") {
+            var servid = $("#cmbService").val();
+            var segid = $("#cmbSegment").val();
+
+            var servnm = $("#cmbService :selected").text();
+            var segnm = $("#cmbSegment :selected").text();
+
+            $("#MacroArea").append("<div class='formula' type='ST'>ST(" + servid + ", " + segid + ")</div>");
+            $("#MacroDesign").append("<div class='dformula' type='ST'>Transfer To Service(" + servnm + ", " + segnm + ") <i style='' class='macro-delete fa fa-close'></i></div>");
+        }
+        if ($("#cmbMacroType").val() == "FIFO") {
+            var lastitem = $(".formula").last().attr("type");
+            if (lastitem == "FIFO") {
+                var servid = $("#cmbService").val();
+                var segid = $("#cmbSegment").val();
+
+                var servnm = $("#cmbService :selected").text();
+                var segnm = $("#cmbSegment :selected").text();
+
+                var lastf = $(".formula").last().html();
+                var lastd = $(".dformula").last().html();
+
+                lastf = lastf.replace(")", " + " + servid + "," + segid + ")");
+
+                lastd = lastd.replace(")", " + " + servnm + "," + segnm + ")");
+
+                $(".formula").last().html(lastf);
+                $(".dformula").last().html(lastd);
+            }
+            else {
+                var servid = $("#cmbService").val();
+                var segid = $("#cmbSegment").val();
+
+                var servnm = $("#cmbService :selected").text();
+                var segnm = $("#cmbSegment :selected").text();
+
+                $("#MacroArea").append("<div class='formula' type='FIFO'>FIFO(" + servid + "," + segid + ")</div>");
+                $("#MacroDesign").append("<div class='dformula' type='FIFO'>First in First Out(" + servnm + "," + segnm + ") <i style='' class='macro-delete fa fa-close'></i></div>");
+            }
+        }
+        if ($("#cmbMacroType").val() == "Advance") {
+            var lastitem = $(".formula").last().attr("type");
+            if (lastitem == "Advance") {
+                var servid = $("#cmbAdvService").val();
+                var segid = $("#cmbAdvSegment").val();
+                var cnt = $("#cmbAdvCount").val();
+
+                var servnm = $("#cmbAdvService :selected").text();
+                var segnm = $("#cmbAdvSegment :selected").text();
+                var cntnm = $("#cmbAdvCount :selected").text();
+
+                var lastf = $(".formula").last().html();
+                var lastd = $(".dformula").last().html();
+
+                lastf = lastf.replace(")", " + |" + cnt + "," + servid + "," + segid + "|)");
+                lastd = lastd.replace(")", " + |" + cntnm + "," + servnm + "," + segnm + "|)");
+
+                $(".formula").last().html(lastf);
+                $(".dformula").last().html(lastd);
+            }
+            else {
+                var servid = $("#cmbAdvService").val();
+                var segid = $("#cmbAdvSegment").val();
+                var cnt = $("#cmbAdvCount").val();
+
+                var servnm = $("#cmbAdvService :selected").text();
+                var segnm = $("#cmbAdvSegment :selected").text();
+                var cntnm = $("#cmbAdvCount :selected").text();
+
+                $("#MacroArea").append("<div class='formula' type='Advance'>Advance(|" + cnt + "," + servid + "," + segid + "|)</div>");
+                $("#MacroDesign").append("<div class='dformula' type='Advance'>Advance(|" + cntnm + "," + servnm + "," + segnm + "|) <i style='' class='macro-delete fa fa-close'></i></div>");
+            }
+        }
+        if ($("#cmbMacroType").val() == "AP") {
+            var appointmentId = $("#cmbAppointment").val();
+            var appointmentName = $("#cmbAppointment :selected").text();
+
+            $("#MacroArea").append("<div class='formula' type='AP'>AP(" + appointmentId + ")</div>");
+            $("#MacroDesign").append("<div class='dformula' type='AP'>Appointment (" + appointmentName + ") <i style='' class='macro-delete fa fa-close'></i></div>");
+        }
+
+    }
+
+    //Delete Function
+    $(function () {
+        $("div").on("click", ".fa-close",
+            function (event) {
+
+                swal({
+                    title: "Are you sure to delete this line?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            var object = $(this).parent();
+                            var index = $('.dformula').index(object);
+                            $('.formula').each(function () {
+
+                                if ($('.formula').index(this) === index) {
+                                    $(this).remove();
+                                    return false;
+                                }
+                            });
+
+                            var count = 0;
+                            object.remove();
+                            $('.dformula').each(function () {
+                                count++;
+                            });
+
+                            if (count === 0) {
+                                $(".NoFormula").show();
+                            }
+                        } else {
+                            swal({
+                                title: "Canceled",
+                                icon: "info",
+                            });
+                        }
+                    });
+
+
+
+            });
+    });
+
+    //Decode Formula
+    function DecodeFormula() {
+        var sourcecode = "<xml>\n";
+        $(".formula").each(function () {
+            var command = $(this).html();
+
+            if (command.indexOf("TT") != -1) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                sourcecode += "<line type=\"TT\">\n<argument>" + terminalNumber + "</argument>\n</line>\n";
+            }
+            if (command.indexOf("ST") != -1) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(",");
+                var servnum = command.substring(pFrom + 1, pTo);
+
+                pFrom = command.indexOf(",");
+                pTo = command.indexOf(")");
+                var segnum = command.substring(pFrom + 1, pTo);
+
+                sourcecode += "<line type=\"ST\">\n<st><service>" + servnum + "</service>\n<segment>" + segnum + "</segment>\n</st>\n</line>\n";
+            }
+            if (command.indexOf("FIFO") != -1) {
+                command = command.replace("FIFO(", "");
+                command = command.replace(")", "");
+                var items = command.split(" + ");
+                var totalitem = command.split(" + ").length;
+
+                sourcecode += "<line type=\"FIFO\">\n";
+
+                for (var i = 0; i < totalitem; i++) {
+
+                    var params = items[i].split(",");
+                    var srv = params[0];
+                    var sgm = params[1];
+
+                    sourcecode += "<fifo>\n<service>" + srv + "</service>\n<segment>" + sgm + "</segment>\n</fifo>\n";
+                }
+
+                sourcecode += "</line>\n";
+            }
+            if (command.indexOf("Advance") != -1) {
+                command = command.replace("Advance(", "");
+                command = command.replace(")", "");
+
+                var items = command.split(" + ");
+                var totalitem = command.split(" + ").length;
+
+                sourcecode += "<line type=\"Advance\">\n";
+
+                for (var i = 0; i < totalitem; i++) {
+
+                    var params = items[i].split(",");
+                    var cnt = params[0].replace("|", "");
+                    var srv = params[1].replace("|", "");
+                    var sgm = params[2].replace("|", "");
+
+                    sourcecode += "<ad>\n<service>" + srv + "</service>\n<segment>" + sgm + "</segment>\n<count>" + cnt + "</count>\n</ad>\n";
+                }
+
+                sourcecode += "</line>\n";
+            }
+            if (command.indexOf("AP") != -1) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(")");
+                var appointmentNumber = command.substring(pFrom + 1, pTo);
+
+                sourcecode += "<line type=\"APPOINTMENT\">\n<argument>" + appointmentNumber + "</argument>\n</line>\n";
+            }
+        });
+
+        sourcecode += "</xml>";
+        $("#txtCode").html(sourcecode);
+    }
+
+    //Check Action Function
+    function CheckAction() {
+        if ($("#cmbMacroType").val() == "TT") {
+            $("#Term").show();
+            $("#SerSeg").hide();
+            $("#DivAdvance").hide();
+            $('#appointmentList').hide();
+        }
+        else if ($("#cmbMacroType").val() == "AP") {
+            $('#appointmentList').show();
+            $("#Term").hide();
+            $("#SerSeg").hide();
+            $("#DivAdvance").hide();
+        }
+        else {
+            if ($("#cmbMacroType").val() == "Advance") {
+                $("#DivAdvance").show();
+                $("#Term").hide();
+                $("#SerSeg").hide();
+                $('#appointmentList').hide();
+            }
+            else {
+                $("#SerSeg").show();
+                $("#Term").hide();
+                $("#DivAdvance").hide();
+                $('#appointmentList').hide();
+            }
+        }
+    }
+
+    //GoDesigner Function
+    function GoDesigner() {
+        $("#DesignTab").show();
+        $("#CodeTab").hide();
+
+        $("#btnGoSourceCode").removeClass("active");
+        $("#btnGoDesigner").addClass("active");
+    }
+
+    //GoSource Function
+    function GoSourceCode() {
+        $("#DesignTab").hide();
+        $("#CodeTab").show();
+
+        DecodeFormula();
+
+        $("#btnGoSourceCode").addClass("active");
+        $("#btnGoDesigner").removeClass("active");
+    }
+
+    //Save Macro
+    function SaveMacro() {
+        GoSourceCode();
+        $("#form1").submit();
+    }
+</script>
+
+
+<div class="row">
+    <div class="col-xs-12 col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+        <div class="card">
+            <div class="card-header">
+                Macro Panel
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <form action="~/Macro/CreateMacro" method="post" id="form1" name="form1">
+                        <div class="col-md-12">
+                            <input type="text" name="txtMacroName" id="txtMacroName" class="form-control" placeholder="Macro Name" />
+                        </div>
+                        <div class="col-md-12">
+                            <ul class="nav nav-tabs">
+                                <li role="presentation" class="active" id="btnGoDesigner"><a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a></li>
+                                <li role="presentation" id="btnGoSourceCode"><a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a></li>
+                            </ul>
+                        </div>
+                        <div id="DesignTab">
+                            <div class="col-md-12 text-center" id="MacroDesign" style="border:solid 1px #CCC;">
+                                <p class="NoFormula">No macro formula to show. You can add macro formula using form below.</p>
+                            </div>
+                        </div>
+                        <div id="CodeTab" style="display:none;">
+                            <div class="col-md-12 text-center" id="MacroArea" style="border:solid 1px #CCC;">
+                                <p class="NoFormula">No macro formula to show. You can add macro formula using form below.</p>
+                            </div>
+                            <div class="col-md-12">
+                                <textarea name="txtCode" id="txtCode" class="form-control" style="width:100%; display:none;"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-12 text-right" style="margin-top:10px;">
+                            <input type="submit" value="Save" class="btn btn-primary" onclick="DecodeFormula();" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-xs-12 col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1">
+        <div class="card">
+            <div class="card-header">
+                Macro Panel
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select name="cmbMacroType" id="cmbMacroType" class="select2" onchange="CheckAction();">
+                            <option value="TT">Transfer To Terminal</option>
+                            <option value="ST">Transfer To Service</option>
+                            <option value="FIFO">First in First Out</option>
+                            <option value="Advance">Advance Macro</option>
+                            <option value="AP">Appointment</option>
+                        </select>
+                    </div>
+                    <div id="SerSeg" style="display:none;" class="col-xs-12 col-md-7 col-lg-7">
+                        <div class="col-xs-12 col-md-6 col-lg-6">
+                            <select name="cmbService" id="cmbService" class="select2 select-change" style="width:100%;">
+                                @{
+                                    for (int i = 0; i < servicelist.Count; i++)
+                                    {
+                                        <option value="@servicelist[i].ServiceID">@servicelist[i].ServiceName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-12 col-md-6 col-lg-6">
+                            <select name="cmbSegment" id="cmbSegment" class="select2" style="width:100%;">
+                                @{
+                                    foreach (var segment in segmentlist.Where(segment => segment.ServiceID == servicelist[0].ServiceID))
+                                    {
+                                        <option value="@segment.SegmentID">@segment.SegmentName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div id="appointmentList" style="display:none;" class="col-xs-12 col-md-7 col-lg-7">
+                        <select name="cmbAppointment" id="cmbAppointment" class="select2" style="width:100%;">
+                            @{
+                                foreach (var appoint in appointmentList.Where(appointment => appointment.IsActive == true))
+                                {
+                                    <option value="@appoint.AppointmentID">@appoint.ApointmentName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-xs-12 col-md-7 col-lg-7" id="Term">
+                        <div class="col-md-12">
+                            <select name="cmbTerminal" id="cmbTerminal" class="select2" style="width:100%;">
+                                <option value="00">To Myself (00)</option>
+                                @{
+                                    foreach (qmTerminal item in terminallist)
+                                    {
+                                        <option value="@item.TerminalID">@item.TerminalName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-7 col-lg-7" id="DivAdvance" style="display:none;">
+                        <div class="col-md-2">
+                            <select name="cmbAdvCount" id="cmbAdvCount" class="select2" style="width:100%;">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <select name="cmbAdvService" id="cmbAdvService" class="select2 select-change" style="width:100%;">
+                                @{
+
+                                    for (int i = 0; i < servicelist.Count; i++)
+                                    {
+                                        <option value="@servicelist[i].ServiceID">@servicelist[i].ServiceName</option>
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <select name="cmbAdvSegment" id="cmbAdvSegment" class="select2" style="width:100%;">
+                                @{
+
+                                    foreach (var segment in segmentlist.Where(segment => segment.ServiceID == servicelist[0].ServiceID))
+                                    {
+                                        <option value="@segment.SegmentID">@segment.SegmentName</option>
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-right">
+                        <a href="javascript:AddFormula();" class="btn btn-warning"><span class="fa fa-plus"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    //Select Segments Through ServiceID
+    $(function () {
+        $('.select-change').change(function () {
+            var selectId = $(this).attr('id');
+            var text = "";
+
+            $.ajax({
+                type: "POST",
+                url: "/AutoTransferRoute/Segments",
+                data: "id=" + $(this).val(),
+                dataType: "JSON",
+                success: function (result) {
+                    text = "";
+
+                    for (var i = 0; i < result.length; i++) {
+                        text += '<option value="' + result[i].SegmentID + '">' + result[i].SegmentName + '</option>'
+                    }
+
+                    if (selectId == "cmbAdvService") {
+                        var segmentAppend = $('#cmbAdvSegment');
+                        segmentAppend.html("");
+                        segmentAppend.append(text);
+                    }
+                    else if (selectId == "cmbService") {
+                        var segmentAppend = $('#cmbSegment');
+                        segmentAppend.html("");
+                        segmentAppend.append(text);
+                    }
+
+                }
+            })
+        });
+    })
+
+</script>

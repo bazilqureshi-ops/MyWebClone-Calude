@@ -1,0 +1,391 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmTerminal
+@{
+    ViewBag.Title = "Edit Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    qmTerminal terminal = ViewBag.data;
+
+    List<qmBranch> branches = ViewBag.branch;
+    List<qmMacro> macros = ViewBag.macro;
+    List<qmTransferRuleGroup> rulez = ViewBag.rulez;
+    List<qmStatus> statuses = ViewBag.status;
+}
+
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<script>
+    var NumberOfError = 0;
+    function ValidateForm(formid){
+        var Elements = ["data_BranchID",
+            "data_MacroID",
+            "terminal_TerminalName",
+            "terminal_TerminalLocation",
+            "terminal_IPAddress",
+            "terminal_Floor",
+            "terminal_TerminalNumber",
+            "data_TransferRuleGroupID",
+            "data_NextCallStatusID",
+            "data_RecallStatusID",
+            "data_ParkStatusID",
+            "data_TransferStatusID",
+            "data_NoShowStatusID",
+            "data_CloseStatusID"];
+
+        NumberOfError = 0;
+
+        Elements.forEach(CheckBlank);
+
+        if (NumberOfError === 0) {
+            $("#" + formid).submit();
+        }
+    }
+
+    function CheckBlank(item, index) {
+        if ($("#" + item).val() === "" || $("#" + item).val() === "0" || $("#" + item).val() == undefined || $("#" + item).val() == null) {
+            $("#" + item).css("border", "solid 1px #C00");
+            $("#" + item).attr("placeholder", "This field is mandatory");
+            NumberOfError++;
+        }
+    }
+</script>
+
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Terminal Management
+            </div>
+            <div class="card-body">
+                <!--using (Html.BeginForm(null,null,FormMethod.Post, new { name = "Form1", id = "Form1" }))-->
+                <form action="~/Terminal/EditTerminal?TerminalID=@(terminal.TerminalID)" method="post" name="Form1" id="Form1">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Branch</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_BranchID" id="data_BranchID">
+                                            @{
+                                                foreach (var item in branches)
+                                                {
+                                                    if (item.BranchID == terminal.BranchID)
+                                                    {
+                                                        <option value="@item.BranchID" selected="selected">@item.BranchName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.BranchID">@item.BranchName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Macro</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_MacroID" id="data_MacroID">
+                                            @{
+                                                foreach (var item in macros)
+                                                {
+                                                    if (item.MacroID == terminal.MacroID)
+                                                    {
+                                                        <option value="@item.MacroID" selected="selected">@item.MacroName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.MacroID">@item.MacroName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Terminal Name</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => terminal.TerminalName, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Terminal Location</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => terminal.TerminalLocation, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">I.P. Address</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => terminal.IPAddress, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Floor</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => terminal.Floor, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Terminal Number</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => terminal.TerminalNumber, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Transfer Rule</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_TransferRuleGroupID" id="data_TransferRuleGroupID">
+                                            @{
+                                                foreach (var item in rulez)
+                                                {
+                                                    if (item.RuleGroup == terminal.TransferRuleGroupID)
+                                                    {
+                                                        <option value="@item.RuleGroup" selected="selected">@item.RuleName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.RuleGroup">@item.RuleName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Next Call Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_NextCallStatusID" id="data_NextCallStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.NextCallStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Re-Call Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_RecallStatusID" id="data_RecallStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.RecallStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Park Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_ParkStatusID" id="data_ParkStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.ParkStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Transfer Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_TransferStatusID" id="data_TransferStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.TransferStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Now Show Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_NoShowStatusID" id="data_NoShowStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.NoShowStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Close Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_CloseStatusID" id="data_CloseStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.CloseStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Ready Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_ReadyStatusID" id="data_ReadyStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.ReadyStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Break Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_BreakStatusID" id="data_BreakStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.BreakStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Exit Status</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_ExitStatusID" id="data_ExitStatusID">
+                                            @{
+                                                foreach (var item in statuses)
+                                                {
+                                                    if (item.StatusID == terminal.ExitStatusID)
+                                                    {
+                                                        <option value="@item.StatusID" selected="selected">@item.StatusName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.StatusID">@item.StatusName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../Terminal" class="btn btn-default">Cancel</a>
+                                    <button type="button" onclick="ValidateForm('Form1');" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    string CalledMessage = ViewBag.BagMessage;
+}
+<script>
+    signalRHub.server.send('@(CalledMessage)').fail(function (e) {
+        alert(e.message);
+    });
+</script>
+@{
+    <p>&nbsp;</p>
+    <h2 class="text-center" style="font-size:64px;"><i class="fa fa-remove"></i></h2>
+    <p>
+        <b>@(Localization.Translate(LanguageCode,"TicketClosed"))</b><br />
+        <i>&nbsp;</i>
+    </p>
+    <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+    <p>&nbsp;</p>
+}

@@ -1,0 +1,8 @@
+﻿
+<h1>QMagic RESTFUL API</h1>
+<p><i>Please authenticate yourself and start receiving data from QMagic.</i></p>
+<p><b>Name :</b> QMagic API</p>
+<p><b>Server :</b>  @(System.Environment.MachineName)</p>
+<p><b>User Agent :</b>  @(HttpContext.Current.Request.UserAgent)</p>
+<p><b>IP Address : </b> @(Request.ServerVariables["REMOTE_ADDR"])</p>
+<p><b>X-FORWARDED-FOR : </b> @(Request.ServerVariables["X_FORWARDED_FOR"])</p>

@@ -1,0 +1,20 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List<qmTerminal> onlineterminals = ViewBag.terminals;
+    List<qmUser> onlineusers = ViewBag.users;
+
+    int i = 0;
+    foreach (qmTerminal item in onlineterminals)
+    {
+        <tr>
+            <td>@item.TerminalNumber</td>
+            <td>@item.TerminalName</td>
+            <td>@item.TerminalLocation</td>
+            <td>@onlineusers[i].FullName</td>
+        </tr>
+
+        i++;
+    }
+}

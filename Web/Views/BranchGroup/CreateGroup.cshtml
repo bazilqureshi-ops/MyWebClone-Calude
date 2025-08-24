@@ -1,0 +1,51 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmBranchGroup
+@{
+    ViewBag.Title = "EditBranch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Branch Management
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm())
+                {
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Group Name</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => model.GroupName, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../BranchGroup" class="btn btn-default">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

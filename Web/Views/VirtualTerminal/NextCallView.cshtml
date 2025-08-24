@@ -1,0 +1,131 @@
+﻿@using Emse.QMagic.Web.Models;
+@{ 
+    Layout = null;
+
+    qmTicket ticket = ViewBag.ticket;
+    qmTerminal terminal = ViewBag.terminal;
+    //string TerminalID = ViewBag.terminalid.ToString();
+    string WaitingCount = ViewBag.toplambekleyen;
+    string ServiceName = ViewBag.service;
+    string SegmentName = ViewBag.segment;
+    string MacroName = ViewBag.macro;
+}
+
+@{ 
+<div class="col-md-6">
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Terminal Number
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @{
+            if (terminal != null)
+            {
+                <label>@terminal.TerminalName</label>
+            }
+        }
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Ticket Number
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px; font-size:24px;" id="InfoBoxTicketNumber">
+        <b>@ticket.TicketPrefix @ticket.TicketNumber</b>
+        <input type="hidden" name="hiddenTicketID" id="hiddenTicketID" value="@(ticket.TicketID)" />
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Segment
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @SegmentName
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Service Name
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @ServiceName
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Ticket Notes
+    </div>
+    <div class="col-md-5">
+        <input type="text" class="form-control" name="txtTicketNote" id="txtTicketNote" placeholder="Not Defined" value="@ticket.TicketNote" />
+    </div>
+    <div class="col-md-2">
+        <a href="javascript:SendTicketNote();" class="btn btn-default"><span class="fa fa-check"></span></a>
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Teller Name
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @{
+            if (Session["MagicUser"] != null)
+            {
+                qmUser user = new qmUser();
+                using (QMagicEntities db = new QMagicEntities())
+                {
+                    string UserID = Convert.ToString(HttpContext.Current.Session["MagicUser"].ToString());
+
+                    user = db.qmUser.Find(Convert.ToInt32(UserID));
+                }
+
+                @user.FullName
+            }
+        }
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Waiting Time
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @{ 
+            DateTime nw = DateTime.Now;
+            TimeSpan asd = nw - Convert.ToDateTime(ticket.PrintTime);
+            int ihour = asd.Hours;
+            string shour = "";
+            if(ihour < 10)
+            {
+                shour = "0" + ihour;
+            }
+            else
+            {
+                shour = "" + ihour;
+            }
+
+            int iminute = asd.Minutes;
+            string sminute = "";
+            if (iminute < 10)
+            {
+                sminute = "0" + sminute;
+            }
+            else
+            {
+                sminute = "" + iminute;
+            }
+        }
+        @shour : @sminute
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Process Time
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;" id="ProcessTimeString">
+        <time>00:00:00</time>
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Number of Waiting
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @WaitingCount
+    </div>
+    <div class="col-md-5" style="padding-top:10px; padding-bottom:10px;">
+        Macro Name
+    </div>
+    <div class="col-md-7" style="padding-top:10px; padding-bottom:10px;">
+        @MacroName
+    </div>
+</div>
+}
+
+<script>
+    seconds = 0, minutes = 0, hours = 0;
+    timer();
+</script>

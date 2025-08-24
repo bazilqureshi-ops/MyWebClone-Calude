@@ -1,0 +1,41 @@
+﻿@{
+    Layout = null;
+
+    int Return = ViewBag.ReturnType;
+    int TicketID = ViewBag.TicketID;
+    int TerminalID = ViewBag.TerminalID;
+
+    if (Return == 1)
+    {
+        string Message = "TicketParked(" + TicketID + "," + TerminalID + ")[" + DateTime.Now.ToString() + "]";
+
+        <script>
+            signalRHub.server.send("@(Message)").fail(function (e) {
+                alert(e.message);
+            });
+        </script>
+
+
+        <table width='100%' height='180'>
+            <tr>
+                <td align='center' valign='center'>
+                    <p>&nbsp;</p>
+                    <p><img src='../assets/images/bell.png' height='66' /></p>
+                    <p style='font-size:24px; font-family:"Segoe UI"; font-weight:lighter;'>Ticket Parked.</p>
+                </td>
+            </tr>
+        </table>
+    }
+    else
+    {
+        <table width='100%' height='180'>
+            <tr>
+                <td align='center' valign='center'>
+                    <p>&nbsp;</p>
+                    <p><img src='../assets/images/deletecontrol.png' height='66' /></p>
+                    <p style='font-size:24px; font-family:"Segoe UI"; font-weight:lighter;'>Ticket couldn't parked. Please check it again a while.</p>
+                </td>
+            </tr>
+        </table>
+    }
+}

@@ -1,0 +1,210 @@
+﻿@{
+    Layout = null;
+    List<FileInfo> files = ViewBag.filelist;
+}
+
+<script src="~/Scripts/jquery-3.6.0.js"></script>
+<link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+<link rel="stylesheet" href="~/Content/bootstrap-theme.min.css" />
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Content/fonts/fas.css" rel="stylesheet" />
+<script>
+    $(document).ready(function () {
+        var w_height = $(document).height();
+        $("#BrowserContainer").height(w_height - 150);
+        $("#UploadContainer").height(w_height - 150);
+    });
+
+    let playorder = [];
+
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var ListPlay = "";
+
+    function SelectPlaylist() {
+        var referer = getParameterByName('reff');
+        this.opener.document.getElementById("" + referer).value = ListPlay;
+        this.close();
+    }
+
+    function SelectItem(theURL, indx) {
+        var element = $("#item_" + indx);
+
+        if (element.css("border") == "3px solid rgb(41, 174, 73)") {
+            element.css("border", "solid 1px #CCC");
+            var whatreplace = "'" + location.protocol + "//" + location.host + theURL + "';";
+            var reped = ListPlay.replace(whatreplace, "");
+            ListPlay = reped;
+        }
+        else {
+            ListPlay += "'" + location.protocol + '//' + location.host + theURL + "';";
+            element.css("border", "solid 3px #29ae49");
+        }
+    }
+
+    function ClickItem(indx) {
+        var element = $("#item_" + indx);
+
+        if (element.hasClass("NonSelectedVideo")) {
+            playorder.push(indx);
+            element.addClass("SelectedVideo");
+            element.removeClass("NonSelectedVideo");
+        }
+        else {
+            playorder.splice(playorder.indexOf(indx), 1);
+            element.addClass("NonSelectedVideo");
+            element.removeClass("SelectedVideo");
+            element.children(".OrderBadge").hide();
+        }
+
+        ListPlay = "";
+
+        for (let i = 0; i < playorder.length; i++) {
+            $("#badge_" + playorder[i]).html(i + 1);
+            $("#badge_" + playorder[i]).show();
+            var theURL = $("#item_" + playorder[i]).attr("vidurl");
+            ListPlay += "'" + location.protocol + "//" + location.host + theURL + "';";
+        }
+    }
+
+    function SelectUpload() {
+        $("#BrowserContainer").hide();
+        $("#UploadContainer").show();
+        $(".browse-link").removeClass("active");
+        $(".upload-link").addClass("active");
+    }
+
+    function SelectBrowser() {
+        $("#BrowserContainer").show();
+        $("#UploadContainer").hide();
+        $(".upload-link").removeClass("active");
+        $(".browse-link").addClass("active");
+    }
+</script>
+
+<style>
+    .selecteditem {
+        border: solid 3px #29ae49;
+    }
+
+    .notselected {
+        border: solid 1px #CCC;
+        cursor: pointer;
+        margin: 5px;
+        align: left;
+    }
+
+    .SelectedVideo {
+        border: solid 3px #29ae49;
+        margin: 10px;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+    }
+
+        .SelectedVideo:hover {
+            border: solid 3px #4cff00;
+        }
+
+    .NonSelectedVideo {
+        border: solid 3px #FFF;
+        margin: 10px;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+    }
+
+    .OrderBadge {
+        background-color: #C00;
+        font-family: "Segoe UI";
+        font-weight: lighter;
+        color: #FFF;
+        text-align: center;
+        padding: 5px;
+        border-radius: 16px;
+        position: absolute;
+        margin-left: -36px;
+        margin-top: 10px;
+        z-index: 1453;
+        width: 32px;
+        height: 32px;
+    }
+
+    .nav-link {
+        color: #FFF;
+    }
+    .nav-link:hover{
+        color:#CCC;
+        border:solid 1px transparent;
+    }
+</style>
+
+<body style="background-image:url(../../assets/images/pattern1.png); background-size:cover; background-color:#29ae49;">
+    <div class="container" style="margin-top:30px;">
+        <div class="row justify-content-md-center">
+            <div class="col-md-10 col-md-offset-1">
+                <ul class="nav nav-tabs justify-content-center">
+                    <li class="nav-item active">
+                        <a href="javascript:SelectBrowser();" class="nav-link active browse-link"><i class="fa fa-folder"></i> Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="javascript:SelectUpload();" class="nav-link upload-link"><i class="fa fa-upload"></i> Upload</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <div class="col-md-10 col-md-offset-1" id="BrowserContainer" style="overflow-y:scroll; overflow-x:hidden; border:solid 1px #CCC; border-top:none; background-color:#FFF;">
+                <div class="row">
+                    <div class="col-md-12" id="ListOfVideos">
+                        @{
+                            int indx = 0;
+                            foreach (FileInfo item in files)
+                            {
+                                indx++;
+                                <div style="width: 200px; float: left;" class="NonSelectedVideo" align="left" onClick="ClickItem('@(indx)');" id="item_@(indx)" vidurl="/Upload/Video/@item.Name">
+                                    <video oncanplay="this.muted=true" style="width:100%;">
+                                        <source src="~/Upload/Video/@(item.Name)" type="video/mp4">
+                                    </video>
+                                    <span class="OrderBadge" id="badge_@(indx)" style="display:none;">0</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="col-md-12 text-center">
+                        <p>&nbsp;</p>
+                        <input type="button" onclick="SelectPlaylist();" class="btn btn-primary" value="Confirm Playlist" />
+                    </div>
+                </div>
+            </div>
+            @{
+                string refferer = Request.QueryString["reff"];
+            }
+            <div class="col-md-10 col-md-offset-1" id="UploadContainer" style="display:none; overflow-y:scroll; overflow-x:hidden; border:solid 1px #CCC; border-top:none; background-color:#FFF;">
+                <div class="container">
+                    <div class="row justify-content-md-center">
+                        <div class="col-md-6 col-md-offset-3">
+                            <form class="navbar-form navbar-left text-center" method="post" action="@Url.Action("VideoBrowser", "DigitalSignageDesigner", new { reff=refferer })" enctype="multipart/form-data">
+                                <p>&nbsp;</p>
+                                <p>Select file from your computer to upload to the server.</p>
+                                <div class="form-group">
+                                    <input type="file" name="file" id="file" class="form-control">
+                                </div>
+                                <p>&nbsp;</p>
+                                <p><input type="submit" class="btn btn-default" value="Upload" /></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>

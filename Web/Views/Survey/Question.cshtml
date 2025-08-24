@@ -1,0 +1,167 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmSurvey
+@{
+    ViewBag.Title = "Questions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    qmSurvey Survey = ViewBag.Survey;
+    List<qmSurveyQuestion> Questions = ViewBag.Questions;
+    List<qmSurveyAnswer> Answers = ViewBag.Answers;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    function AddQuestion(branchid) {
+        $.post("../Survey/CreateQuestion?SurveyID=" + branchid, {}, function (data) {
+
+            swal({
+                title: "Create Question",
+                text: data,
+                icon: "info",
+                buttons: true,
+                dangerMode: false,
+                content: data
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        $("#PostQuestion").submit();
+                    } else {
+                        swal({
+                            title: "Nothing changed",
+                            icon: "success"
+                        });
+                    }
+                });
+
+            $(".swal-text").html(data);
+        });
+    }
+
+    function RemoveQuestion(QuestionID) {
+        swal({
+            title: "Are you sure want to delete this record?",
+            text: "If you delete this record all the data generated from that record also will be deleted. Do you want to proceed?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    window.location = "../Survey/RemoveQuestion?QuestionID=" + QuestionID;
+                } else {
+                    swal({
+                        title: "Nothing changed",
+                        icon: "success"
+                    });
+                }
+            });
+    }
+</script>
+
+<style>
+    .selected {
+        background-color: #666;
+        color: #fff;
+    }
+</style>
+
+<div class="row">
+    <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <a href="javascript:AddQuestion(@(Survey.SurveyID));" class="btn btn-primary"><i class="fa fa-plus"></i> Add Question</a>
+                </div>
+            </div>
+            <div class="card-body no-padding">
+                <table class="datatable table table-striped primary" cellspacing="0" width="100%" id="QuestionsTable">
+                    <thead>
+                        <tr>
+                            <td>#</td>
+                            <td>Type</td>
+                            <td align="left" class="text-left">Question</td>
+                            <td>Edit</td>
+                            <td>Delete</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (qmSurveyQuestion question in Questions)
+                            {
+                                <tr id="question_@(question.SurveyQuestionID)">
+                                    <td>
+                                        @(question.OrderNumber)
+                                    </td>
+                                    <td>
+                                        @{
+                                            if (question.IsImage == true)
+                                            {
+                                                <i class="fa fa-image" style="font-size:24px;" alt="Image View"></i>
+                                            }
+                                            else if (question.IsCommentary == true)
+                                            {
+                                                <i class="fa fa-comment" style="font-size:24px;" alt="Commertary View"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa fa-file-text" style="font-size:24px;" alt="Text View"></i>
+                                            }
+
+
+}
+                                    </td>
+                                    <td align="left" class="text-left">
+                                        @{
+                                            if (question.IsImage == true)
+                                            {
+                                                <img src="@(question.ImageURL)" style="max-height:40px;" />
+                                            }
+                                            else
+                                            {
+                                                @(question.Question)
+                                            }
+                                        }
+                                    </td>
+                                    <td width="30"><a href="~/Survey/EditQuestion?QuestionID=@(question.SurveyQuestionID)" class="btn btn-default"><i class="fa fa-edit"></i></a></td>
+                                    <td width="30"><a href="#" class="btn btn-danger" onclick="RemoveQuestion(@(question.SurveyQuestionID));"><i class="fa fa-remove"></i></a></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    $(function () {
+        $("#QuestionsTable").sortable({
+            items: 'tr',
+            cursor: 'pointer',
+            axis: 'y',
+            dropOnEmpty: false,
+            start: function (e, ui) {
+                ui.item.addClass("selected");
+            },
+            stop: function (e, ui) {
+                ui.item.removeClass("selected");
+                $('#QuestionsTable>tbody>tr').each(function (index, tr) {
+                    var questionid = tr.getAttribute("id");
+                    questionid = questionid.replace("question_","");
+
+                    $.post("ChangeQuestionOrder", { QuestionID: questionid, OrderNumber: index }, function (data) {
+                        if (data.includes("OK++")) {
+                            $(tr).find("td:eq(0)").html(index);
+                            //alert("SET!");
+                        }
+                    });
+                });
+            }
+        });
+    });
+</script>

@@ -1,0 +1,14 @@
+﻿@{
+    Layout = null;
+
+    if (ViewBag.Message == "NONE")
+    {
+        <span>NONE</span>
+    }
+    else
+    {
+        <span>OK++</span>
+        <service>@(ViewBag.TransferredTo)</service>
+        <name>@(ViewBag.SegmentName)</name>
+    }
+}

@@ -1,0 +1,81 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Digital Signage Selection";
+    //Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
+    List<qmBranch> branchlist = ViewBag.branches;
+
+    string Message = ViewBag.Message;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QMagic Management Studio</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+    <link rel="icon" href="~/assets/qmagic.ico">
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+</head>
+<body>
+
+    <script>
+    $(document).ready(function () {
+        $(document).on('change', "#lstBranch", function () {
+            var branchid = $(this).val();
+            $.get('@Url.Action("GetSignages", "DigitalSignage")', { BranchID: branchid }, function (data, status) {
+                $("#lstDS").html(data);
+            });
+        });
+
+        $(document).on('change', "#lstDS", function () {
+            $("#BtnSubmit").removeClass("btn-disabled");
+            $("#BtnSubmit").addClass("btn-primary");
+
+            $("#form1").attr("action","ShowDisplay");
+        });
+    });
+    </script>
+
+    <div class="row">
+        <div class="col-md-8" style="margin-top:100px;">
+            <form name="form1" id="form1" action="#" method="post">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h2>Digital Signage Not Found</h2>
+                        <p>Please assign this device as a digital signage in QMagic Management Studio.</p>
+
+                        <select name="lstBranch" id="lstBranch" class="select2">
+                            <option value="0">Select Branch</option>
+                            @{ 
+                                foreach (qmBranch item in branchlist)
+                                {
+                                    <option value="@(item.BranchID)">@(item.BranchName)</option>
+                                }
+                            }
+                        </select><br />
+
+                        <select name="lstDS" id="lstDS" class="select2">
+                            @{ 
+                                if(ViewBag.selectedds != null)
+                                {
+                                    qmDigitalSignage term = ViewBag.selectedds;
+                                    <option value="@(term.DigitalSignageID)">@(term.DigitalSignageName)</option>
+
+                                    <script>
+                                        $("#form1").attr("action", "ShowDisplay");
+                                        $("#form1").submit();
+                                    </script>
+                                }
+                            }
+                        </select><br />
+
+                        <p>Detected IP Address : @(Message)</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    </body>
+</html>

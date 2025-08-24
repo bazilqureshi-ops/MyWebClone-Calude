@@ -1,0 +1,179 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = null;
+
+    string Name = "NULL";
+    bool AskPin = false;
+    qmUser User = new qmUser();
+    if (ViewBag.Name != null)
+    {
+        Name = ViewBag.Name;
+        AskPin = ViewBag.AskPin;
+        User = ViewBag.User;
+    }
+    if (ViewBag.User != null)
+    {
+        Response.Redirect("../");
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Welcome to QMagic!</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <style>
+        body {
+            background-image: url(../../assets/wallpaper.jpg);
+            background-size: cover;
+        }
+
+        .mainpanel {
+            background-color: #F7FAFC;
+            opacity: 0.95;
+            border-radius: 10px;
+            box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+            min-height:680px;
+        }
+        .btn{
+            padding:10px;
+            min-width:100px;
+        }
+    </style>
+    <script>
+        function NextStep(StepID) {
+            switch (StepID) {
+                case 2:
+                    var previous = StepID - 1;
+                    $("#Step" + previous).fadeOut(function () {
+                        $("#Step" + StepID).fadeIn();
+                    });
+                    break;
+                case 3:
+                    if ($("#txtFullName").val() != "") {
+                        var previous = StepID - 1;
+                        $("#Step" + previous).fadeOut(function () {
+                            $("#Step" + StepID).fadeIn();
+                        });
+                    }
+                    else {
+                        alert("Your name cannot be empty!");
+                    }
+                    break;
+                case 4:
+                    if ($("#txtPIN").val() == $("#txtConfirmPIN").val() && $("#txtPIN").val() != "") {
+                        var fname = $("#txtFullName").val();
+                        var fpin = $("#txtPIN").val();
+                        $.post("LDAP/CreateUser", { LDAPID: "@(Name)", Name: fname, PIN: fpin }, function (data) {
+                            if (data.includes("OK++")) {
+                                var previous = StepID - 1;
+                                $("#Step" + previous).fadeOut(function () {
+                                    $("#Step" + StepID).fadeIn();
+                                });
+                            }
+                            else {
+                                alert("Something went wrong. Try again later.");
+                            }
+                        });
+                    }
+                    else {
+                        alert("PIN codes are not matching. Please check and try to continue again.");
+                    }
+                    break;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container align-middle">
+        <div class="row justify-content-md-center align-middle">
+            <div class="col col-md-10 mainpanel d-flex align-items-center">
+                <div class="container" id="Step1">
+                    <div class="row">
+                        <div class="col-7 text-center justify-content-center">
+                            <img src="~/assets/active-directory.png" style="margin-left:-100px;" width="360" />
+                        </div>
+                        <div class="col-5">
+                            <h2>Welcome to QMagic!</h2>
+                            <p>Welcome to the QMagic Web Terminal application. Your organization seems turned on the Active Directory Integration system. In this way, we are detecting you are trying to reach the QMagic Terminal very first time. We have to figure out some points first.</p>
+                            <p>Let's get started?</p>
+                        </div>
+                    </div>
+                    <div class="row d-flex justify-content-end">
+                        <div class="col">
+                            <p>&nbsp;</p>
+                            <button class="btn btn-primary float-end" onclick="NextStep(2);">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container" id="Step2" style="display:none;">
+                    <div class="row">
+                        <div class="col-7 text-center justify-content-center">
+                            <img src="~/assets/active-directory.png" style="margin-left:-100px;" width="360" />
+                        </div>
+                        <div class="col-5">
+                            <h2>Who's going to use this application?</h2>
+                            <p>You'll use this name to sign in to your terminal.</p>
+                            <p>Active Directory User : @(Name)</p>
+                            <p>Enter your name<br />
+                                <input type="text" class="form-control" placeholder="" value="" id="txtFullName" />
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row d-flex justify-content-end">
+                        <div class="col">
+                            <p>&nbsp;</p>
+                            <button class="btn btn-primary float-end" onclick="NextStep(3);">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container" id="Step3" style="display:none;">
+                    <div class="row">
+                        <div class="col-7 text-center justify-content-center">
+                            <img src="~/assets/active-directory.png" style="margin-left:-100px;" width="360" />
+                        </div>
+                        <div class="col-5">
+                            <h2>Create a PIN</h2>
+                            <p>What takes seconds to create and gives you fast and secure sign-in? A Windows Active Directory PIN! It only works on your terminal, so it stays off the web.</p>
+                            <p><input type="text" inputmode="numeric" pattern="[0-9\s]{13,19}" class="form-control" placeholder="New PIN" value=""  id="txtPIN" /></p>
+                            <p><input type="text" inputmode="numeric" pattern="[0-9\s]{13,19}" class="form-control" placeholder="Confirm PIN" value="" id="txtConfirmPIN" /></p>
+                        </div>
+                    </div>
+                    <div class="row d-flex justify-content-end">
+                        <div class="col">
+                            <p>&nbsp;</p>
+                            <button class="btn btn-primary float-end" onclick="NextStep(4);">Create PIN</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="container" id="Step4" style="display:none;">
+                    <div class="row">
+                        <div class="col-7 text-center justify-content-center">
+                            <img src="~/assets/active-directory.png" style="margin-left:-100px;" width="360" />
+                        </div>
+                        <div class="col-5">
+                            <h2>All Set!</h2>
+                            <p>Thank you for your patient. Your account has been created. Now you can get start using QMagic Web Terminal.</p>
+                        </div>
+                    </div>
+                    <div class="row d-flex justify-content-end">
+                        <div class="col">
+                            <p>&nbsp;</p>
+                            <a href="~/" class="btn btn-primary float-end">Start Using</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

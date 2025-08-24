@@ -1,0 +1,314 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model UserViewModel
+
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-12">
+
+        @if (!string.IsNullOrEmpty(ViewBag.Error))
+        {
+
+            var user = ViewBag.Entity;
+
+            <div class="alert-danger" style="margin-bottom: 10px;">
+                <label style="padding: 10px">
+                    @if (Model.User.UserID > 0)
+                    {
+                        @ViewBag.Error
+                    }
+                    else
+                    {
+                        @ViewBag.Error <a href="/user/EditUser?id=@user.UserID">here.</a>
+                    }
+                </label>
+            </div>
+
+        }
+
+        <div class="card">
+            <div class="card-header">
+                User Management
+            </div>
+            <div class="card-body">
+
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a data-toggle="tab" href="#userSetting">
+                            <span class="fa fa-user"></span>
+                            User Settings
+                        </a>
+                    </li>
+
+                    <li>
+                        <a data-toggle="tab" href="#branches">
+                            <span class="fa fa-code-fork"></span>
+                            Branches
+                        </a>
+                    </li>
+                </ul>
+
+                <form action="~/User/Save" method="post">
+                    @Html.HiddenFor(user => user.OldUserName)
+                    @Html.HiddenFor(user => user.OldPassword)
+                    @Html.HiddenFor(user => user.User.UserID)
+                    @Html.HiddenFor(user => user.User.IsDeleted)
+                    @Html.HiddenFor(user => user.User.CreatedUserID)
+                    @Html.HiddenFor(user => user.User.CreationDate)
+
+
+                    <div class="tab-content" style="padding-bottom: 3%;">
+
+                        <div id="userSetting" class="tab-pane fade in active">
+                            <div class="row" style="padding-top: 25px;">
+                                <div class="col-xs-12">
+
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Username</label>
+                                                <div class="col-md-9">
+                                                    @Html.EditorFor(model => model.User.Username, new { htmlAttributes = new { @class = "form-control" } })
+                                                    <label class="text-danger">
+                                                        @Html.ValidationMessageFor(user => user.User.Username)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Password</label>
+                                                <div class="col-md-9">
+                                                    @if (Model.User.UserID > 0)
+                                                    {
+                                                        @Html.EditorFor(model => model.User.Password, new { htmlAttributes = new { @class = "form-control", @type = "password" } })
+                                                    }
+                                                    else
+                                                    {
+                                                        @Html.EditorFor(model => model.User.Password, new { htmlAttributes = new { @class = "form-control" } })
+
+                                                    }
+
+                                                    <label class="text-danger">
+                                                        @Html.ValidationMessageFor(user => user.User.Password)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Full Name</label>
+                                                <div class="col-md-9">
+                                                    @Html.EditorFor(model => model.User.FullName, new { htmlAttributes = new { @class = "form-control" } })
+                                                    <label class="text-danger">
+                                                        @Html.ValidationMessageFor(user => user.User.FullName)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Gender</label>
+                                                <div class="col-md-9" style="min-height: 64px;">
+                                                    @if (Model.User.UserID == 0)
+                                                    {
+                                                        <label><input type="radio" value="1" id="male" />Male</label>
+                                                        <label><input type="radio" value="0" id="female" />Female</label>
+                                                        <input type="hidden" name="User.Gender" id="gender" value="@Model.User.Gender" />
+                                                    }
+                                                    else
+                                                    {
+                                                        if (Model.User.Gender == true)
+                                                        {
+                                                            <label><input type="radio" value="1" id="male" checked="checked" />Male</label>
+                                                            <label><input type="radio" value="0" id="female" />Female</label>
+                                                            <input type="hidden" name="User.Gender" id="gender" value="true" />
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <label><input type="radio" value="1" id="male" />Male</label>
+                                                            <label><input type="radio" value="0" id="female" checked="checked" />Female</label>
+                                                            <input type="hidden" name="User.Gender" id="gender" value="false" />
+
+                                                        }
+                                                    }
+
+                                                    <label class="text-danger">
+                                                        @Html.ValidationMessageFor(user => user.User.Gender)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">E-Mail</label>
+                                                <div class="col-md-9">
+                                                    @Html.EditorFor(model => model.User.EMail, new { htmlAttributes = new { @class = "form-control" } })
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Phone</label>
+                                                <div class="col-md-9">
+                                                    @Html.EditorFor(model => model.User.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">Corporate Number</label>
+                                                <div class="col-md-9">
+                                                    @Html.EditorFor(model => model.User.CorporateNumber, new { htmlAttributes = new { @class = "form-control" } })
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">@Html.LabelFor(model => model.User.ProfilePicture, new { htmlAttributes = new { @class = "form-control", @style = "max-width:50px; display:none;" } })</label>
+                                                <div class="col-md-9" style="min-height: 64px;">
+                                                    <button type="button" id="uploadImage" class="btn btn-default"> Upload / Browse Profile Gallery </button>
+                                                    <input type="hidden" name="User.ProfilePicture" id="User.ProfilePicture" value="@Model.User.ProfilePicture" />
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" id="roleRow">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-md-3 control-label">User Role</label>
+                                                <div class="col-md-9">
+
+                                                    @if (Model.Roles.Any())
+                                                    {
+                                                        @Html.DropDownListFor(user => user.User.UserRoleID, Model.Roles, new { @class = "select2" })
+                                                    }
+
+                                                    <label class="text-danger">
+                                                        @Html.ValidationMessageFor(user => user.User.UserRoleID)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="branches" class="tab-pane fade">
+                            <div class="row" style="padding-top: 25px;">
+                                <div class="col-xs-12">
+
+                                    <div class="row col-xs-12 col-md-12">
+                                        <div class="form-group col-xs-3 col-md-3">
+                                            <label class="col-md-12 control-label">Branches :</label>
+                                        </div>
+
+                                        <div class="form-group col-xs-9 col-md-9">
+                                            @for (int i = 0; i < Model.BranchDefinitions.Count(); i++)
+                                            {
+
+
+                                                <div class="col-md-4">
+                                                    <label style="font-size:16px;">
+                                                        @Html.EditorFor(x => Model.BranchDefinitions[i].Checked, new { @class = "userRoleLi" })
+
+                                                        @Html.DisplayFor(x => Model.BranchDefinitions[i].Name)
+                                                    </label>
+                                                </div>
+
+                                                @Html.HiddenFor(x => Model.BranchDefinitions[i].Name)
+                                                @Html.HiddenFor(x => Model.BranchDefinitions[i].Id)
+
+
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../User" class="btn btn-default">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var windowedBody;
+
+        $('#uploadImage').click(function () {
+            windowedBody = window.open('/User/ImageBrowser?reff=User.ProfilePicture', 'Browser', 'width=1100,height=750');
+
+        });
+
+        window.addEventListener('message',
+            event => {
+
+
+            });
+
+        $('#male').click(function () {
+            $(this).prop('checked', true);
+            $('#female').prop('checked', false);
+            $('#gender').val(true);
+            //$("input[name='" + name + "'][value='" + value + "']").prop('checked', true);
+        });
+
+        $('#female').click(function () {
+            $(this).prop('checked', true);
+            $('#male').prop('checked', false);
+            $('#gender').val(false);
+
+            //$("input[name='" + name + "'][value='" + value + "']").prop('checked', true);
+        });
+
+    });
+
+
+</script>

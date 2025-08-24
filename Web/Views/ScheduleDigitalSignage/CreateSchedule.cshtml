@@ -1,0 +1,119 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmScheduleDS
+@{
+    ViewBag.Title = "Create Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmScreenDesign> designs = ViewBag.data;
+    designs = designs.Where(x => x.DesignType == 2).ToList();
+    List<qmDigitalSignage> dss = ViewBag.dss;
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-8 col-xs-offset-2">
+        <div class="card">
+            <div class="card-header">
+                Terminal Management
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm())
+                {
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Schedule Name</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => model.ScheduleName, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Start Date</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => model.StartDate, new { htmlAttributes = new { @class = "form-control datetime" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">End Date</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control datetime" } })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Apply Profile</label>
+                                    <div class="col-md-9">
+                                        <select class="select2" name="data_StartScreenDesignID">
+                                            @{
+                                                foreach (var item in designs)
+                                                {
+                                                    <option value="@item.ScreenDesignID">@item.DesignName</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Digital Signage(s)</label>
+                                    <div class="col-md-10">
+                                        <select class="select2" multiple="multiple" size="5" name="data_DigitalSignage">
+                                            @{
+                                                foreach (qmDigitalSignage item in dss)
+                                                {
+                                                    <option value="@item.DigitalSignageID">@item.DigitalSignageName</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../ScheduleDigitalSignage" class="btn btn-default">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                                                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.datetime').datetimepicker({
+            locale: 'ru',
+            format:"YYYY-MM-DD HH:mm:ss"
+        });
+
+        $('.date').datetimepicker({
+            locale: 'ru',
+            format: "YYYY-MM-DD"
+        });
+
+        $('.time').datetimepicker({
+            locale: 'ru',
+            format: "HH:mm"
+        });
+    });
+</script>

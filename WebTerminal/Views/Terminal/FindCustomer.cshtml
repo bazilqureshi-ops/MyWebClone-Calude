@@ -1,0 +1,31 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = null;
+    List<qmCustomer> customers = ViewBag.Result;
+}
+
+<table width="100%" border="1" style="margin-top:20px;" class="table">
+    <thead>
+        <tr style="font-weight:bold;">
+            <td>Name</td>
+            <td>Surname</td>
+            <td>Qatar ID</td>
+            <td>HC ID</td>
+            <td>Phone</td>
+            <td>Select</td>
+        </tr>
+    </thead>
+    @{ 
+        foreach (qmCustomer customer in customers)
+        {
+        <tr>
+            <td>@(customer.Name)</td>
+            <td>@(customer.Surname)</td>
+            <td>@(customer.UniqueID)</td>
+            <td>@(customer.HCID)</td>
+            <td>@(customer.Phone)</td>
+            <td><button class="btn btn-primary" data-bs-dismiss="modal" onclick="AssignCustomer(@(customer.CustomerID));"><i class="fa fa-square-check"></i></button></td>
+        </tr>
+        }
+    }
+</table>

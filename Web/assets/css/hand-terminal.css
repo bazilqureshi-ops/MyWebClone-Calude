@@ -1,0 +1,85 @@
+﻿@media screen and (max-width: 1280px) and (max-height: 840px) {
+	.app-form {
+		padding-top: 0 !important;
+	}
+
+	.app-block {
+		width: 650px;
+		height: 800px;
+	}
+
+	.app-brand > img {
+		width: 300px;
+		height: 300px;
+	}
+
+	.form-header {
+		margin-bottom: 0 !important;
+	}
+
+	.loader-container {
+		height: 250px;
+	}
+
+	.input-group {
+		height: 3em;
+	}
+
+	.fa-user {
+		font-size: 3em;
+	}
+
+	.fa-key {
+		font-size: 2.25em;
+	}
+
+	input.form-control {
+		min-height: 3em;
+		font-size: 1.5em;
+		padding-top: 5px;
+		padding-bottom: 5px;
+	}
+
+	label {
+		font-size: 1.4em;
+	}
+
+		label > span {
+			margin-left: 10px;
+		}
+
+		label > #chkRemember {
+			transform: scale(1.8);
+		}
+
+	.btn-success {
+		font-size: 1.4em;
+		font-weight: bold;
+	}
+
+	#navbar, #sidebar {
+		display: none;
+	}
+
+	#MainContainer {
+		padding-left: 0;
+		padding-top: 10px;
+	}
+
+	.fa-television {
+		display: none;
+	}
+
+	#sidebar {
+		display: none;
+	}
+
+	#MainContainer {
+		padding-top:10px;
+		padding-left:0px;
+	}
+
+	.ctrlbutton {
+		min-height:55px;
+	}
+}

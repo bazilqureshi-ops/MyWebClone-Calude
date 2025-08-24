@@ -1,0 +1,8 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmUser user = ViewBag.user;
+    string message = ViewBag.message;
+}
+
+<b>@(user.FullName) : </b>@(message)<br />

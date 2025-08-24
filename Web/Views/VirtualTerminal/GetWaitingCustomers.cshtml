@@ -1,0 +1,23 @@
+﻿@using Emse.QMagic.Web.Models;
+@{ 
+    List<qmTicket> customs = ViewBag.data;
+    List<qmService> services = ViewBag.service;
+    List<qmSegment> segment = ViewBag.segment;
+    Layout = null;
+}
+
+@{
+    int i = 0;
+    foreach (qmTicket item in customs.Take(10))
+    {
+        <tr>
+            <td>@item.TicketPrefix @item.TicketNumber</td>
+            <td>@segment[i].SegmentName</td>
+            <td>@services.Where(x=>x.ServiceID == item.ServiceID).FirstOrDefault().ServiceName</td>
+            <td>@item.PrintTime.ToString()</td>
+            <td><a href="javascript:ManualCall(@item.TicketID);" class="btn btn-default"><i class="fa fa-child" aria-hidden="true"></i> Manual Call</a></td>
+        </tr>
+
+        i++;
+    }
+}

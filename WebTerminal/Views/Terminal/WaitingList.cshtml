@@ -1,0 +1,87 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    List<qmTicket> WaitingList = ViewBag.WaitingList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+
+    List<int> SegmentDist = WaitingList.Select(o => o.SegmentID).Distinct().ToList();
+    int ServiceCount = SegmentDist.Count();
+
+    int Serv = ServiceList.Count();
+
+    if (WaitingList.Count < 1)
+    {
+        <p style="font-size:24px;">
+            <i class="fa fa-laugh"></i><br />
+            @(Localization.Translate(LanguageCode, "ThereIsNoWaitingInYourQueue"))
+        </p>
+    }
+
+}
+
+<script>
+    $("#TotalWaitingBadge").html(@(WaitingList.Distinct().Count()));
+    waitingCount = @(WaitingList.Distinct().Count());
+</script>
+
+<div class="accordion accordion-flush" id="myQueueAccordion">
+    @{
+        foreach (int SegmentGroupID in SegmentDist)
+        {
+            qmSegment SelectedSegment = SegmentList.Where(x => x.SegmentID == SegmentGroupID).FirstOrDefault();
+            qmService SelectedService = ServiceList.Where(x => x.ServiceID == SelectedSegment.ServiceID).FirstOrDefault();
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse_@(SegmentGroupID)" id="flush-header_@(SegmentGroupID)" aria-expanded="false" aria-controls="flush-collapse_@(SegmentGroupID)" onclick="SetOpenAccordion(@(SegmentGroupID), this);">
+                        <i class="fa fa-circle-check" style="margin-right:10px;"></i> <span style="margin-right:50px;">@(SelectedService.ServiceName)</span> <span style="margin-right:50px;">@(SelectedSegment.SegmentName)</span> <span class="badge bg-secondary" style="margin-left:10px;">@(WaitingList.Where(x=>x.SegmentID == SelectedSegment.SegmentID).Distinct().Count())</span>
+                    </button>
+                </h2>
+                <div id="flush-collapse_@(SegmentGroupID)" class="accordion-collapse collapse" data-bs-parent="#myQueueAccordion">
+                    <div class="accordion-body" style="max-height:400px; overflow-y:scroll;">
+                        <table width="100%" height="100%" border="0" cellpadding="10" cellspacing="5">
+                            <tr style="border-bottom:solid 1px #CCC; font-weight:bold;">
+                                <td>@(Localization.Translate(LanguageCode, "Ticket"))</td>
+                                <td>@(Localization.Translate(LanguageCode, "Service"))</td>
+                                <td>@(Localization.Translate(LanguageCode, "PrintTime"))</td>
+                                <td>@(Localization.Translate(LanguageCode, "WaitingTime"))</td>
+                            </tr>
+                            @{
+                                foreach (qmTicket ticket in WaitingList.Where(x => x.SegmentID == SelectedSegment.SegmentID).Distinct().ToList())
+                                {
+                                    long NowTick = DateTime.Now.Ticks;
+                                    long PrintTick = ticket.PrintTime.Ticks;
+                                    long DifferenceTick = NowTick - PrintTick;
+                                    TimeSpan Difference = TimeSpan.FromTicks(DifferenceTick);
+
+                                    <tr>
+                                        <td style="font-weight:bold;">@(ticket.TicketPrefix)@(ticket.TicketNumber)</td>
+                                        <td>@(SelectedService.ServiceName)</td>
+                                        <td>@(ticket.PrintTime.Hour):@(ticket.PrintTime.Minute):@(ticket.PrintTime.Second)</td>
+                                        <td>@(Difference.Hours):@(Difference.Minutes):@(Difference.Seconds)</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                var SegmentGroupID = @(SegmentGroupID);
+                if (OpenedAccordion != null && OpenedAccordion != "" && OpenedAccordion == SegmentGroupID) {
+                    $("#flush-header_" + SegmentGroupID).attr("aria-expanded", "true");
+                    $("#flush-header_" + SegmentGroupID).removeClass("collapsed");
+                    $("#flush-collapse_" + SegmentGroupID).removeClass("collapse");
+                }
+            </script>
+        }
+    }
+</div>

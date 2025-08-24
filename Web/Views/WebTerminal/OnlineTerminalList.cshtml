@@ -1,0 +1,47 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Virtual Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmTerminal> OnlineTerminals = ViewBag.OnlineTerminals;
+    List<qmUser> UserList = ViewBag.UserList;
+    List<qmBranch> Branches = ViewBag.Branches;
+    List<qmTerminalConnection> ConnectionInfo = ViewBag.ConnectionInfo;
+
+    int BranchID = ViewBag.BranchID;
+
+    Layout = null;
+}
+<div class="card card-mini" style="border-style:none;">
+    <div class="card-body no-padding table-responsive" style="min-height:450px;">
+        <table class="table card-table">
+            <thead>
+                <tr>
+                    <th>Branch</th>
+                    <th>Terminal</th>
+                    <th>Location</th>
+                    <th>User Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (qmTerminalConnection item in ConnectionInfo)
+                    {
+                        qmTerminal terminal = OnlineTerminals.Where(x => x.TerminalID == item.TerminalID).FirstOrDefault();
+                        qmBranch branch = Branches.Where(x => x.BranchID == terminal.BranchID).FirstOrDefault();
+
+                        if (terminal.BranchID == BranchID)
+                        {
+                            <tr>
+                                <td>@(branch.BranchName)</td>
+                                <td>@(terminal.TerminalName)</td>
+                                <td>@(terminal.TerminalLocation)</td>
+                                <td>@(UserList.Where(x => x.UserID == item.UserID).FirstOrDefault().FullName)</td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

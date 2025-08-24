@@ -1,0 +1,19 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List<qmTerminal> onlineterminals = ViewBag.terminals;
+    List<qmUser> onlineusers = ViewBag.users;
+
+    int i = 0;
+    foreach (qmTerminal item in onlineterminals)
+    {
+        <tr>
+            <td onclick="TransferToTerminal(@item.TerminalID);" align="left" class="MnItem">
+            @item.TerminalName
+            </td>
+        </tr>
+
+        i++;
+    }
+}

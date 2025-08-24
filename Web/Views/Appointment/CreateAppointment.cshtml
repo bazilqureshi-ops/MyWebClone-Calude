@@ -1,0 +1,206 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+	Layout = null;
+	if (ViewBag.Retturn != null)
+	{
+		bool rett = ViewBag.Retturn;
+
+		if (rett)
+		{
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+				<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+				<link rel="icon" href="~/assets/qmagic.ico">
+				<script src="~/Scripts/jquery-3.1.1.js"></script>
+			</head>
+			<body style="background-color:#FFFFFF;">
+
+				<div class="row" style="margin-top:30px;">
+					<div class="col-md-8 col-md-offset-2">
+						<div class="panel panel-default">
+							<div class="panel-body" id="MainArea">
+								<center>
+									<span class="fa fa-check" style="color:#4cff00; font-weight:bold; font-size:64px;"></span><br />
+									<p>Appointment successfully saved. You can close this window now.</p>
+								</center>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</body>
+		</html>
+	}
+	else
+	{
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+			<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+			<link rel="icon" href="~/assets/qmagic.ico">
+			<script src="~/Scripts/jquery-3.1.1.js"></script>
+		</head>
+		<body style="background-color:#FFFFFF;">
+
+			<div class="row" style="margin-top:30px;">
+				<div class="col-md-8 col-md-offset-2">
+					<div class="panel panel-default">
+						<div class="panel-body" id="MainArea">
+							<center>
+								<span class="fa fa-remove" style="color:#ff0000; font-weight:bold; font-size:64px;"></span><br />
+								<p>Unable to reach appointment service right now. Please check appointment details and try again later.</p>
+							</center>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</body>
+	</html>
+}
+}
+else
+{
+qmAppointment Appointment = ViewBag.Appointment;
+List<qmAppointment> Schedule = ViewBag.ListAppointment;
+DateTime appDate = ViewBag.appDate;
+List<qmCustomer> Customers = ViewBag.ListCustomer;
+List<qmBranch> Branches = ViewBag.Branches;
+qmBranch Branch = ViewBag.Branch;
+List<qmAutoTransferRule> ATRs = ViewBag.ATRs;
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+	<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+	<link href="/Content/bootstrap-datetimepicker.css" rel="stylesheet" />
+	<link rel="icon" href="~/assets/qmagic.ico">
+
+</head>
+<body style="background-color:#FFFFFF;">
+	<form name="form1" id="form1" action="" method="post">
+		<script src="/Scripts/jquery-3.3.1.js"></script>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="col-xs-12">
+					<div class="col-xs-3">
+						Branch :
+					</div>
+					<div class="col-xs-9">
+						<select name="BranchCreate" id="BranchCreate" class="select2">
+							@{
+								foreach (qmBranch item in Branches)
+								{
+									if (Branch.BranchID == item.BranchID)
+									{
+										<option value="@(item.BranchID)" selected="selected">@(item.BranchName)</option>
+									}
+									else
+									{
+										<option value="@(item.BranchID)">@(item.BranchName)</option>
+									}
+								}
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="col-xs-12">
+					<div class="col-xs-3">
+						Appointment :
+					</div>
+					<div class="col-xs-9">
+						<select name="AppointmentCreate" id="AppointmentCreate" class="select2">
+							@{
+								foreach (qmAppointment item in Schedule)
+								{
+									if (item.AppointmentID == Appointment.AppointmentID)
+									{
+										<option value="@(item.AppointmentID)" selected="selected">@(item.ApointmentName)</option>
+									}
+									else
+									{
+										<option value="@(item.AppointmentID)">@(item.ApointmentName)</option>
+									}
+								}
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="col-xs-12">
+					<div class="col-xs-3">
+						Date and Time :
+					</div>
+					<div class="col-xs-9">
+						<input type="text" disabled="disabled"  class="form-control" value="@appDate"/>
+						<input type="hidden" name="DateTimeCreate" id="DateTimeCreate" value="@appDate" />
+					</div>
+				</div>
+
+
+
+				<div class="col-xs-12">
+					<div class="col-xs-3">
+						Customer :
+					</div>
+					<div class="col-xs-9">
+						<select name="CustomerCreate" id="CustomerCreate" class="select2">
+							@{
+								foreach (qmCustomer item in Customers)
+								{
+									<option value="@(item.CustomerID)">@(item.Name) @(item.Surname) [@(item.UniqueID)]</option>
+								}
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="col-xs-12">
+					<div class="col-xs-3">
+						ATR :
+					</div>
+					<div class="col-xs-9">
+						<select name="ATRCreate" id="ATRCreate" class="select2">
+							<option value="0">No Route</option>
+							@{
+								foreach (qmAutoTransferRule item in ATRs)
+								{
+									<option value="@(item.AutoTransferRuleID)">@(item.AutoTransferName)</option>
+								}
+							}
+						</select>
+					</div>
+				</div>
+
+				<div class="col-xs-12">
+					<div class="col-xs-12">
+						Notes :
+					</div>
+					<div class="col-xs-12">
+						<textarea name="NoteCreate" id="NoteCreate" class="form-control"></textarea>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</form>
+
+	<script type="text/javascript" src="~/assets/js/vendor.js"></script>
+	<script type="text/javascript" src="~/assets/js/app.js"></script>
+	
+</body>
+</html>
+
+
+
+
+
+
+
+}
+}

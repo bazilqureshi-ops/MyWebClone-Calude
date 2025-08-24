@@ -1,0 +1,115 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Counter Display";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmCounterDisplay> displays = ViewBag.display;
+    List<qmInterface> interfaces = ViewBag.interfaces;
+}
+
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    function DeleteRecord(recordid) {
+        swal({
+            title: "Are you sure want to delete this record?",
+            text: "If you delete this record all the data generated from that record also will be deleted. Do you want to proceed?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    window.location = "../Hardware/DeleteCounterDisplay?CounterDisplayID=" + recordid;
+                } else {
+                    swal({
+                        title: "Nothing changed",
+                        icon: "success"
+                    });
+                }
+            });
+    }
+
+    $(document).ready(function () {
+        if ("@(ViewBag.returncode)" == 99) {
+            swal({
+                title: "Invalid License Key!",
+                text: "Your license key is not covering this action. Please contact with your local QMagic partner to extend your license.",
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+            });
+        }
+    });
+
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Counter Display Management
+            </div>
+            <div class="card-body no-padding">
+                <table class="datatable table table-striped primary" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Comm. Protocol</th>
+                            <th>Interface</th>
+                            <th>Fake ID</th>
+                            <th>Display ID</th>
+                            <th>Model</th>
+                            <th>Scroll Message</th>
+                            <th width="200">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int i = 0;
+                            foreach (qmCounterDisplay item in displays)
+                            {
+                                <tr>
+                                    <td>@item.Protocol</td>
+                                    <td>@(interfaces.Where(x=>x.InterfaceID == item.InterfaceID).FirstOrDefault().InterfaceName)</td>
+                                    <td>@item.FakeID</td>
+                                    <td>@item.DisplayID</td>
+                                    <td>@item.Model</td>
+                                    <td>@item.ScrollMessage</td>
+                                    <td>
+                                        <a href="../Hardware/EditCounterDisplay?CounterDisplayID=@item.CounterDisplayID" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                        <a href="javascript:DeleteRecord(@(item.CounterDisplayID));" class="btn btn-danger"><span class="fa fa-remove"></span></a>
+                                    </td>
+                                </tr>
+
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="btn-floating" id="help-actions">
+    <div class="btn-bg"></div>
+    <button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+        <i class="icon fa fa-plus"></i>
+        <span class="help-text">Shortcut</span>
+    </button>
+    <div class="toggle-content">
+        <ul class="actions">
+            <li><a href="~/Hardware/CreateCounterDisplay">Create Counter Display</a></li>
+        </ul>
+    </div>
+</div>

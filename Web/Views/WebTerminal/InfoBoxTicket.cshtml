@@ -1,0 +1,975 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    int theneed = 0;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+
+    string noticketwaiting = "NO TICKET WAITING";
+    switch (LanguageCode)
+    {
+        case "AR":
+            noticketwaiting = "لا تذكرة الانتظار";
+            break;
+        case "TR":
+            noticketwaiting = "BEKLEYEN YOK";
+            break;
+        case "FR":
+            noticketwaiting = "pas de billet en attente";
+            break;
+        case "PK":
+            noticketwaiting = "کوئی ٹکٹ انتظار نہیں";
+            break;
+        case "IN":
+            noticketwaiting = "टिकट वेटिंग नहीं";
+            break;
+        case "PH":
+            noticketwaiting = "walang tiket na naghihintay";
+            break;
+        default:
+            noticketwaiting = "NO TICKET WAITING";
+            break;
+    }
+
+    qmTicket ticket = new qmTicket
+    {
+        TicketPrefix = noticketwaiting,
+        TicketNumber = 999
+    };
+    qmService service = new qmService
+    {
+        ServiceName = "No service"
+    };
+    qmSegment segment = new qmSegment();
+    ticket = ViewBag.Ticket;
+    if (ticket != null && ticket.TicketID != 0)
+    {
+        if (ticket.TicketPrefix != "NO CUSTOMER")
+        {
+            service = ViewBag.Service;
+            segment = ViewBag.Segment;
+        }
+        else
+        {
+            theneed = 1;
+        }
+    }
+    else
+    {
+        theneed = 1;
+    }
+    qmTerminal terminal = ViewBag.Terminal;
+    qmMacro macro = ViewBag.Macro;
+    qmUser user = new qmUser();
+    qmTicket lastcalled = ViewBag.LastCalled;
+    qmCustomer customer = new qmCustomer();
+    customer.Name = "No";
+    customer.Surname = "Customer";
+    customer.UniqueID = "n/a";
+    using (QMagicEntities db = new QMagicEntities())
+    {
+        string UserID = "";
+        if (HttpContext.Current.Session["MagicUser"] != null)
+        {
+            UserID = HttpContext.Current.Session["MagicUser"].ToString();
+        }
+        else
+        {
+            if (HttpContext.Current.Session["HISUSER"] != null)
+            {
+                UserID = HttpContext.Current.Session["HISUSER"].ToString();
+            }
+        }
+        user = db.qmUser.Find(Convert.ToInt32(UserID));
+        qmCustomer cust = db.qmCustomer.Find(ticket.CustomerID);
+        if (cust != null)
+        {
+            customer = cust;
+        }
+    }
+    TimeSpan WaitingTime = TimeSpan.Zero;
+    if (lastcalled != null)
+    {
+        DateTime EndTicketTime = Convert.ToDateTime(ticket.PrintTime);
+        DateTime CallingTime = Convert.ToDateTime(ticket.CallingTime);
+        WaitingTime = CallingTime.Subtract(EndTicketTime);
+    }
+}
+
+<style>
+    .inside-box {
+        -moz-box-shadow: inset 0 0 10px #FFFFFF;
+        -webkit-box-shadow: inset 0 0 10px #FFFFFF;
+        box-shadow: inset 0 0 10px #FFFFFF;
+    }
+</style>
+
+@{
+    if (theneed == 0)
+    {
+        <table width="100%" height="180" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+                <td rowspan="3" align="center" valign="middle" style="background-color:#138F69; color:#FFF; font-size:32px; font-weight:bold; border-radius:5px;" class="inside-box" id="AreaTicketNumber">@(ticket.TicketPrefix) @(ticket.TicketNumber)</td>
+                <td align="right" class="text-right"><b>
+                    @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Servis")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Service")
+                                    break;
+                            }
+                        }: </b></td>
+                <td align="left" style="padding-left:5px;" class="text-left">@(service.ServiceName)</td>
+
+                <td align="right" class="text-right"><b>
+                    @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Yol")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Route")
+                                    break;
+                            }
+                        }: </b></td>
+                <td align="left" style="padding-left:5px;" class="text-left">
+                    @{
+                        if (ticket.AutoTransferRuleID != null)
+                        {
+                            <span><i class="fa fa-check"></i> Yes</span>
+                        }
+                        else
+                        {
+                            <span><i class="fa fa-remove"></i> No</span>
+                        }
+                }
+            </td>
+
+            <td align="right" class="text-right"><b>
+                @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Basım")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Print")
+                                    break;
+                            }
+                        } : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">@(ticket.PrintTime.Hour.ToString()):@(ticket.PrintTime.Minute.ToString()):@(ticket.PrintTime.Second.ToString())</td>
+        </tr>
+        <tr>
+            <td align="right" class="text-right"><b>
+                @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Segment")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Segment")
+                                    break;
+                            }
+                        }: </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">@(segment.SegmentName)</td>
+
+            <td align="right" class="text-right"><b>@{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Randevu")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Appointment")
+                                    break;
+                            }
+                        } : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">
+                @{
+                    if (ticket.AppointmentID != null)
+                    {
+                        <span><i class="fa fa-check"></i> Yes</span>
+                    }
+                    else
+                    {
+                        <span><i class="fa fa-remove"></i> No</span>
+                    }
+                }
+            </td>
+            <td align="right" class="text-right"><b>@{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Bekleme")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Waiting")
+                                    break;
+                            }
+                        } : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">@(WaitingTime.Hours.ToString()):@(WaitingTime.Minutes.ToString()):@(WaitingTime.Seconds.ToString())</td>
+        </tr>
+        <tr>
+            <td align="right" class="text-right"><b>@{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Makro")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Macro")
+                                    break;
+                            }
+                        } : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">@(macro.MacroName)</td>
+
+            <td align="right" class="text-right"><b>
+                @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Basılmış")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Printed")
+                                    break;
+                            }
+                        }: </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">
+                @{
+                    if (ticket.IsPrinted != null)
+                    {
+                        <span><i class="fa fa-check"></i> Yes</span>
+                    }
+                    else
+                    {
+                        <span><i class="fa fa-remove"></i> No</span>
+                    }
+                }
+            </td>
+
+            <td align="right" class="text-right"><b>@{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Geçen Süre")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Elapsed")
+                                    break;
+                            }
+                        } : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left" valign="middle"><label id="ProcessTime">00:00:00</label></td>
+        </tr>
+        <tr>
+            <td colspan="7">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td valign="middle" width="100"><b>
+                            @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Notlar")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Ticket Note")
+                                    break;
+                            }
+                        }:</b></td>
+                        <td valign="middle">
+                            <input type="text" name="txtTicketNote" id="txtTicketNote" class="form-control" align="left" value="@(ticket.TicketNote)" width="100%" style="margin-top:10px;" />
+                        </td>
+                        <td valign="middle" width="100">
+                            <a href="javascript:SendTicketNote();" class="btn btn-default" style="margin-left:5px;">
+                                <span class="fa fa-check"></span> @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Label("تذكره")
+                                            break;
+                                        case "TR":
+                                            @Html.Label("Notu Kaydet")
+                                            break;
+                                        case "FR":
+                                            @Html.Label("Billet")
+                                            break;
+                                        case "PK":
+                                            @Html.Label("ٹکٹ")
+                                            break;
+                                        case "IN":
+                                            @Html.Label("टिकट")
+                                            break;
+                                        case "PH":
+                                            @Html.Label("Tiket")
+                                            break;
+                                        default:
+                                            @Html.Label("Save Note")
+                                            break;
+                                    }
+                                }
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <hr style="margin-top:-10px;" />
+
+    <table width="100%" height="40" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Müşteri")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Customer")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Kimlik")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Unique ID")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("E-Posta")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("E-Mail")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Telefon")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Phone")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Cihazlar")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Device")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Düzenle")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Edit")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+        </tr>
+        <tr>
+            <input type="hidden" name="arCustomerID" id="arCustomerID" />
+            <td class="text-center" id="arCustomerName">@(customer.Name) @(customer.Surname)</td>
+            <td class="text-center" id="arUniqueID">@(customer.UniqueID)</td>
+            <td class="text-center" id="arMail">@(customer.EMail)</td>
+            <td class="text-center" id="arPhone">@(customer.Phone)</td>
+            <td class="text-center" id="arDevice">
+                @{
+                    if (customer.DeviceToken != null || customer.DeviceToken2 != null)
+                    {
+                        <span class="fa fa-mobile-phone" style="font-size:32px; color:#333;"></span>
+                    }
+                    else
+                    {
+                        <span>@{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Cihaz Bulunamadı.")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("No Device Found")
+                                    break;
+                            }
+                        }</span>
+                    }
+                }
+            </td>
+            <td class="text-center"> <button class="btn btn-default" value="Select Customer" align="center" onclick="ShowCustomerSelect();"><span class="fa fa-users"></span></button> </td>
+        </tr>
+    </table>
+
+    <script>
+            $("#InfoTicketID").val("@(ticket.TicketID)");
+            $("#InfoServiceID").val("@(ticket.ServiceID)");
+            $("#InfoSegmentID").val("@(segment.SegmentID)");
+            timer();
+
+            var btn = $(".ctrlbutton");
+            btn.prop('disabled', true);
+            setTimeout(function () {
+                btn.prop('disabled', false);
+            }, 15000);
+    </script>
+}
+else
+{
+    <table width="100%" height="180" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+            <td rowspan="3" align="center" valign="middle" style="background-color:#138F69; color:#FFF; font-size:32px; font-weight:bold; border-radius:5px;" class="inside-box" id="AreaTicketNumber">NO TICKET</td>
+            <td align="right" class="text-right"><b>Service : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Route : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Print : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">--:--:--</td>
+        </tr>
+        <tr>
+            <td align="right" class="text-right"><b>Segment : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Appointment : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Waiting : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">--:--:--</td>
+        </tr>
+        <tr>
+            <td align="right" class="text-right"><b>Macro : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Printed : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left">---</td>
+
+            <td align="right" class="text-right"><b>Elapsed : </b></td>
+            <td align="left" style="padding-left:5px;" class="text-left" valign="middle"><label id="ProcessTime">00:00:00</label></td>
+        </tr>
+        <tr>
+            <td colspan="7">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td valign="middle" width="100"><b>Ticket Note :</b></td>
+                        <td valign="middle">
+                            <input type="text" name="txtTicketNote" id="txtTicketNote" class="form-control disabled" align="left" value="@(ticket.TicketNote)" width="100%" style="margin-top:10px;" />
+                        </td>
+                        <td valign="middle" width="100">
+                            <a href="#" class="btn btn-default disabled" style="margin-left:5px;"><span class="fa fa-check"></span> Save Note</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <hr style="margin-top:-10px;" />
+
+    <table width="100%" height="40" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td class="text-center">
+                <b>
+                    @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("تذكره")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Müşteri")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Billet")
+                                    break;
+                                case "PK":
+                                    @Html.Label("ٹکٹ")
+                                    break;
+                                case "IN":
+                                    @Html.Label("टिकट")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Tiket")
+                                    break;
+                                default:
+                                    @Html.Label("Customer")
+                                    break;
+                            }
+                        }
+                 </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Kimlik")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Unique ID")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("E-Posta")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("E-Mail")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Telefon")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Phone")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Cihaz")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Device")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+            <td class="text-center">
+                <b>
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("تذكره")
+                                break;
+                            case "TR":
+                                @Html.Label("Düzenle")
+                                break;
+                            case "FR":
+                                @Html.Label("Billet")
+                                break;
+                            case "PK":
+                                @Html.Label("ٹکٹ")
+                                break;
+                            case "IN":
+                                @Html.Label("टिकट")
+                                break;
+                            case "PH":
+                                @Html.Label("Tiket")
+                                break;
+                            default:
+                                @Html.Label("Edit")
+                                break;
+                        }
+                    }
+                </b>
+            </td>
+        </tr>
+        <tr>
+            <input type="hidden" name="arCustomerID" id="arCustomerID" />
+            <td class="text-center" id="arCustomerName">---</td>
+            <td class="text-center" id="arUniqueID">---</td>
+            <td class="text-center" id="arMail">---</td>
+            <td class="text-center" id="arPhone">---</td>
+            <td class="text-center" id="arDevice">---</td>
+            <td class="text-center"> <button class="btn btn-default disabled" value="Select Customer" align="center" onclick="#"><span class="fa fa-users"></span></button> </td>
+        </tr>
+    </table>
+
+    <script>
+        var btn = $(".ctrlbutton");
+        btn.prop('disabled', true);
+        $("#btnNextCall").prop("disabled", false);
+    </script>
+}
+}

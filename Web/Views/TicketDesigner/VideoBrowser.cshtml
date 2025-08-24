@@ -1,0 +1,115 @@
+﻿@{
+    Layout = null;
+    List<FileInfo> files = ViewBag.filelist;
+}
+
+<script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function () {
+        var w_height = $(document).height();
+        $("#BrowserContainer").height(w_height-100);
+        $("#UploadContainer").height(w_height-100);
+    });
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var ListPlay = "";
+
+    function SelectPlaylist() {
+        var referer = getParameterByName('reff');
+        this.opener.document.getElementById("" + referer).value = ListPlay;
+        this.close();
+    }
+
+    function SelectItem(theURL, indx) {
+        var element = $("#item_" + indx);
+
+        if (element.css("border") == "3px solid rgb(41, 174, 73)") {
+            element.css("border", "solid 1px #CCC");
+            var whatreplace = "'" + location.protocol + '//' + location.host + theURL + "';";
+            var reped = ListPlay.replace(whatreplace, "");
+            ListPlay = reped;
+        }
+        else {
+                ListPlay += "'" + location.protocol + '//' + location.host + theURL + "';";
+                element.css("border", "solid 3px #29ae49");
+        }
+    }
+
+    function SelectUpload() {
+        $("#BrowserContainer").hide();
+        $("#UploadContainer").show();
+        $("#TabBrowser").removeClass("active");
+        $("#TabUpload").addClass("active");
+    }
+
+    function SelectBrowser() {
+        $("#BrowserContainer").show();
+        $("#UploadContainer").hide();
+        $("#TabUpload").removeClass("active");
+        $("#TabBrowser").addClass("active");
+    }
+</script>
+
+<style>
+    .selecteditem {
+        border: solid 3px #29ae49;
+    }
+    .notselected {
+        border: solid 1px #CCC;
+        cursor: pointer;
+        margin: 5px;
+        align: left;
+    }
+</style>
+
+<body style="background-image:url(../../assets/images/pattern1.png); background-size:cover; background-color:#29ae49;">
+    <div class="col-md-10 col-md-offset-1" style="margin-top:20px; padding:0px;">
+        <ul class="nav nav-tabs nav-justified">
+            <li role="presentation" class="active" id="TabBrowser"><a href="javascript:SelectBrowser();"><span class="glyphicon glyphicon-globe"></span> Browser</a></li>
+            <li role="presentation" id="TabUpload"><a href="javascript:SelectUpload();"><span class="glyphicon glyphicon-cloud-upload"></span> Upload</a></li>
+        </ul>
+    </div>
+
+    <div class="col-md-10 col-md-offset-1" id="BrowserContainer" style="overflow-y:scroll; overflow-x:hidden; border:solid 1px #CCC; border-top:none; background-color:#FFF;">
+        <div class="row">
+            <div class="col-md-12" id="ListOfVideos">
+                @{
+                        int indx = 0;
+                        foreach (FileInfo item in files)
+                        {
+                            indx++;
+                            <video width="200" class="notselected" align="left" onClick="SelectItem('/Upload/Video/@item.Name', '@(indx)');" id="item_@(indx)" controls> <source src="~/Upload/Video/@(item.Name)" type="video/mp4"></video>
+
+                            //<img src="~/Upload/Video/@(item.Name)" width="200" class="notselected" align="left" onClick="SelectItem('/Upload/Video/@item.Name', '@(indx)');" id="item_@(indx)" />
+                        }
+                }
+            </div>
+            <div class="col-md-12 text-right">
+                <input type="button" onclick="SelectPlaylist();" class="btn btn-primary" value="OK" />
+            </div>
+        </div>
+    </div>
+    @{
+        string refferer = Request.QueryString["reff"];
+    }
+    <div class="col-md-10 col-md-offset-1" id="UploadContainer" style="display:none; overflow-y:scroll; overflow-x:hidden; border:solid 1px #CCC; border-top:none; background-color:#FFF;">
+        <form class="navbar-form navbar-left" method="post" action="@Url.Action("VideoBrowser", "TicketDesigner", new { reff=refferer })" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="file" id="file" class="form-control">
+            </div>
+            <input type="submit" class="btn btn-default" value="Upload" />
+        </form>
+    </div>
+</body>

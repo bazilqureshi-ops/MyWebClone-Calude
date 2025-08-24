@@ -1,0 +1,24 @@
+﻿@using Emse.QMagic.Web.Domain.Helpers
+@using Emse.QMagic.Web.Domain.Viewmodels
+@model SearchViewModel
+
+
+@{
+    if (Model.ModuleDefinitions.Count > 0)
+    {
+        foreach (var viewModel in Model.ModuleDefinitions)
+        {
+            <a href="@viewModel.qmModule.ModulePath" class="search-link">
+                <div class="autocomplete-suggestion" data-index="@viewModel.qmModule.ModuleID">
+                    @Html.Raw(viewModel.qmModule.ModuleName.Replace(Model.SearchKey, "<strong style='color='red''>" + Model.SearchKey + "</strong>")
+                        .Replace(StringHelpers.UppercaseFirst(Model.SearchKey), "<strong style='color='red''>" + StringHelpers.UppercaseFirst(Model.SearchKey) + "</strong>")
+                        .Replace(Model.SearchKey.ToLower(), "<strong style='color='red''>" + Model.SearchKey.ToLower() + "</strong>")
+                        .Replace(Model.SearchKey.ToUpper(), "<strong style='color='red''>" + Model.SearchKey.ToUpper() + "</strong>")
+                        .Replace(StringHelpers.UppercaseFirst(Model.SearchKey.ToLower()), "<strong style='color='red''>" + StringHelpers.UppercaseFirst(Model.SearchKey.ToLower()) + "</strong>")
+                        .Replace(StringHelpers.UppercaseFirst(Model.SearchKey.ToUpper()), "<strong style='color='red''>" + StringHelpers.UppercaseFirst(Model.SearchKey.ToUpper()) + "</strong>")
+                        )
+                </div>
+            </a>
+        }
+    }
+}

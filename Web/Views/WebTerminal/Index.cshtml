@@ -1,0 +1,1247 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Virtual Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+    List<qmTicket> WaitingList = ViewBag.WaitingList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+    qmTerminal LoginTerminal = ViewBag.LoginTerminal;
+    List<qmTerminal> TransferTerminal = ViewBag.TerminalTransfer;
+    List<qmSegment> TransferService = ViewBag.ServiceTransfer;
+    List<qmStatus> Statuses = ViewBag.Statuses;
+    string Segments = ViewBag.Segments;
+    List<qmTerminalConnection> tco = ViewBag.tco;
+    List<qmUser> userlist = ViewBag.userlist;
+    List<qmBranch> branches = ViewBag.branches;
+    List<qmTerminal> allterminals = ViewBag.allterminals;
+    bool Maintenance = ViewBag.Maintenance;
+    List<qmAutoTransferRule> ATRs = ViewBag.ATRs;
+
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+}
+@{
+    qmTicket autofillticket = null;
+    if (ViewBag.AutoFillTicket != null)
+    {
+        autofillticket = ViewBag.AutoFillTicket;
+    }
+}
+
+
+@section scripts{
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/SignalR/Hubs"></script>
+    <script>
+        var loginuserID = "@(HttpContext.Current.Session["MagicUser"].ToString())";
+        var terminalID = "@(LoginTerminal.TerminalID)";
+        var commasegment = "@(Segments)";
+        var SegmentList = commasegment.split(",");
+        var mymacroid = "@(LoginTerminal.MacroID)";
+
+        $(document).ready(function () {
+            MyVotebookID = "@(ViewBag.RelatedVotebook)";
+            IsVotebookEnabled = @(ViewBag.IsVotebookEnabled.ToString().ToLower());
+        });
+    </script>
+    <style>
+        .MnItem {
+            height: 23px;
+            padding: 5px;
+            padding-bottom: 10px;
+            padding-top: 10px;
+            width: 100%;
+            border-bottom: dotted 1px #CCC;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+            .MnItem:hover {
+                background-color: #F5F5F5;
+            }
+
+
+        .blurbg {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            margin: 0px;
+            padding: 0px;
+            left: 0px;
+            top: 0px;
+            background-image: url(../assets/images/blur.png);
+            display: none;
+            z-index: 999998;
+        }
+
+        .normal-shadow {
+            -webkit-box-shadow: 3px 3px 5px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+            -moz-box-shadow: 3px 3px 5px 6px #ccc; /* Firefox 3.5 - 3.6 */
+            box-shadow: 3px 3px 5px 6px #ccc; /* Opera 10.5, IE 9, Firefox 4+, Chrome 6+, iOS 5 */
+        }
+
+        .popupwindow {
+            display: none;
+            margin-top: 20px;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            position: absolute;
+            z-index: 1450;
+            border: solid 2px #CCC;
+        }
+
+        .ekselect {
+            border: solid 1px #CCCC;
+            padding: 12px;
+        }
+    </style>
+    <script src="~/Scripts/WebTerminal.js"></script>
+    <link href="~/assets/css/designer.css" rel="stylesheet" />
+
+    <link href="~/assets/css/hand-terminal.css" rel="stylesheet" />
+    <link href="~/assets/jquery-ui/jquery-ui.css" rel="stylesheet" />
+    <script src="~/assets/jquery-ui/jquery-ui.js"></script>
+
+    <link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+    <script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+    @{
+        if (autofillticket != null)
+        {
+            <script>
+                var bckp = "@(autofillticket.TicketID)";
+                if (bckp != null) {
+                    BackupCall = bckp;
+                }
+
+                $(document).ready(function () {
+                    if (BackupCall != null) {
+                        //ManualCall(BackupCall);
+                    }
+                });
+            </script>
+        }
+
+<script>
+            $(document).ready(function () {
+                SetEndStatuses('@(Statuses.Where(x=>x.StatusID == LoginTerminal.CloseStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.CloseStatusID).FirstOrDefault().StatusColor)');
+                SetNextCallStatuses('@(Statuses.Where(x=>x.StatusID == LoginTerminal.NextCallStatusID).FirstOrDefault().StatusName)', '@(Statuses.Where(x=>x.StatusID == LoginTerminal.NextCallStatusID).FirstOrDefault().StatusColor)');
+
+                SetReadyStatus('@(Statuses.Where(x=>x.StatusID == LoginTerminal.ReadyStatusID).FirstOrDefault().StatusName)', '@(Statuses.Where(x=>x.StatusID == LoginTerminal.ReadyStatusID).FirstOrDefault().StatusColor)', @(Statuses.Where(x=>x.StatusID == LoginTerminal.ReadyStatusID).FirstOrDefault().StatusID));
+
+                SetExitStatus('@(Statuses.Where(x=>x.StatusID == LoginTerminal.ExitStatusID).FirstOrDefault().StatusName)', '@(Statuses.Where(x=>x.StatusID == LoginTerminal.ExitStatusID).FirstOrDefault().StatusColor)', @(Statuses.Where(x=>x.StatusID == LoginTerminal.ExitStatusID).FirstOrDefault().StatusID));
+            });
+</script>
+    }
+
+
+}
+
+
+
+<div id="TerminalLoadingMain" style="width: 100%;
+        height: 100%;
+        z-index: 1453;
+        position: fixed;
+        background-image: url('../assets/images/pattern1.png');
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        left:0px; top:0px;" valign="center" class="@(Maintenance == true ? "LongLoad" : "")">
+
+    <img src="~/assets/images/loading2.gif" style="top:50%; margin-top:50%;" />
+    <h2 id="loadinf">This will take more time...</h2>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="StatusChange" id="StatusChanger">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("حالات")
+                                break;
+                            case "TR":
+                                @Html.Label("Durumlar")
+                                break;
+                            case "FR":
+                                @Html.Label("Status")
+                                break;
+                            case "PK":
+                                @Html.Label("حیثیت")
+                                break;
+                            case "IN":
+                                @Html.Label("स्थितियों")
+                                break;
+                            case "PH":
+                                @Html.Label("Katayuan")
+                                break;
+                            default:
+                                @Html.Label("Statuses")
+                                break;
+                        }
+                    }
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div id="StatusList">
+                        <table width="100%" border="0">
+                            @{
+                                foreach (qmStatus item in Statuses)
+                                {
+                                    <tr>
+                                        <td onclick="SetStatus('@(LoginTerminal.TerminalID)','@(item.StatusName)','@(item.StatusColor)');" align="left" class="MnItem">
+                                            @item.StatusName
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+                <div id="Loader3" class="text-center">
+                    <br /><br /><img src="~/assets/images/loading.gif" /><br />
+                    <p>
+                        @{
+                            switch (LanguageCode)
+                            {
+                                case "AR":
+                                    @Html.Label("الرجاء الانتظار أثناء إعداد رسالة الحالة")
+                                    break;
+                                case "TR":
+                                    @Html.Label("Lütfen durum mesajı güncellenirken bekleyin...")
+                                    break;
+                                case "FR":
+                                    @Html.Label("Veuillez attendre pendant la définition du message d’état...")
+                                    break;
+                                case "PK":
+                                    @Html.Label("حالت پیغام سیٹ کرنے کے دوران انتظار کریں...")
+                                    break;
+                                case "IN":
+                                    @Html.Label("स्टेटस मैसेज सेट करते समय इंतजार करें...")
+                                    break;
+                                case "PH":
+                                    @Html.Label("Mangyaring maghintay habang nagseset ng mensahe ng katayuan...")
+                                    break;
+                                default:
+                                    @Html.Label("Please wait while setting status message...")
+                                    break;
+                            }
+                        }
+                    </p><br /><br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("اغلاق")
+                                break;
+                            case "TR":
+                                @Html.Label("Kapat")
+                                break;
+                            case "FR":
+                                @Html.Label("Proche")
+                                break;
+                            case "PK":
+                                @Html.Label("بند")
+                                break;
+                            case "IN":
+                                @Html.Label("बंद करना")
+                                break;
+                            case "PH":
+                                @Html.Label("Isara")
+                                break;
+                            default:
+                                @Html.Label("Close")
+                                break;
+                        }
+                    }
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<!--FivtiveTicketModal-->
+
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="FictiveTicketModal" id="FictiveTicketModal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">
+                    Services
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+
+                    <div class="col-md-12">
+                        <div class="col-md-6">
+                            Branch
+                            <select name="genBranch" id="genBranch" class="designer-select ekselect form-control">
+                                @{
+                                    foreach (qmBranch item in branches)
+                                    {
+
+                                        if (item.BranchID == LoginTerminal.BranchID)
+                                        {
+                                            <option value="@(item.BranchID)" selected="selected">@(item.BranchName) (This)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@(item.BranchID)">@(item.BranchName)</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            Automatic Ticket Routing
+                            <select name="genATR" id="genATR" class="designer-select ekselect form-control">
+                                <option value="">No Routing</option>
+                                @{
+                                    foreach (qmAutoTransferRule item in ATRs)
+                                    {
+                                        <option value="@(item.AutoTransferRuleID)">@(item.AutoTransferName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="margin-top:20px;">
+                        <div class="col-xs-6 col-md-6">
+                            Service
+                            <select name="genService" id="genService" class="designer-select ekselect form-control">
+                                @{
+                                    foreach (qmService item in ServiceList)
+                                    {
+                                        <option value="@(item.ServiceID)">@(item.ServiceName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-xs-6 col-md-6">
+                            Segment
+                            <select name="genSegment" id="genSegment" class="designer-select ekselect form-control">
+                                <option value="0" ServiceID="99999999" class="SegmentItem">Select Service First</option>
+                                @{
+                                    foreach (qmSegment item in SegmentList)
+                                    {
+                                        <option value="@(item.SegmentID)" ServiceID="@(item.ServiceID)" class="SegmentItem">@(item.SegmentName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-center" style="margin-top:20px;">
+                        <button class="btn btn-default" onclick="ToggleGeneratorCustomerSelector();" id="FictiveCustomerInfo" custID="">No Customer Selected</button>
+                    </div>
+                    <div class="col-md-12" style="margin-top:20px; display:none;" id="genCustomerSelectorDiv">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="genCustomerSearch" name="genCustomerSearch" placeholder="Name, surname, phone number or e-mail address" />
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary" onclick="SearchFictiveCustomer();"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-md-2">
+                            <a class="btn btn-primary" href="~/Customer/CreateCustomer" target="_blank"><i class="fa fa-plus"></i></a>
+                        </div>
+                        <div class="col-md-12" id="genCustomerFind">
+                            <table width="100%" class="table card-table">
+                                <tr>
+                                    <td>Unique ID</td>
+                                    <td>Name Surname</td>
+                                    <td>E-Mail</td>
+                                    <td>Phone</td>
+                                    <td>Device</td>
+                                    <td>Action</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div id="GenerateResult" class="text-center" style="font-size: 20px; margin-left:200px; margin-top: -280px; border: dotted 1px #CCC; width: 448px; min-height:450px; background-color: #FFF; position: absolute; display: flex; align-items: center; justify-content: center;">
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="margin-right:30px;">
+                    @{
+                        switch (LanguageCode)
+                        {
+                            case "AR":
+                                @Html.Label("اغلاق")
+                                break;
+                            case "TR":
+                                @Html.Label("Kapat")
+                                break;
+                            case "FR":
+                                @Html.Label("Proche")
+                                break;
+                            case "PK":
+                                @Html.Label("بند")
+                                break;
+                            case "IN":
+                                @Html.Label("बंद करना")
+                                break;
+                            case "PH":
+                                @Html.Label("Isara")
+                                break;
+                            default:
+                                @Html.Label("Close")
+                                break;
+                        }
+                    }
+                </button>
+
+
+                <button class="btn btn-primary" id="btnStart1" onclick="GenerateTicket();"><i class="fa fa-tags"></i> Generate</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="ServiceTransfer" id="TerminalTransfer">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">Terminal Transfer</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div id="TransferList">
+                        <table width="100%" border="0">
+                            @{
+                                if (LoginTerminal.TransferStatusID != null)
+                                {
+                                    if (TransferTerminal.Count > 0)
+                                    {
+                                        foreach (qmTerminal item in TransferTerminal)
+                                        {
+                                            <tr>
+                                                <td onclick="TransferToTerminal(@(item.TerminalID), @(LoginTerminal.TerminalID), '@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusColor)');" align="left" class="MnItem">
+                                                    @item.TerminalName
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+                <div id="Loader1" class="text-center">
+                    <br /><br /><img src="~/assets/images/loading.gif" /><br />
+                    <p>Please wait while ticket transferring...</p><br /><br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="TerminalTransferAutoSelect(@(LoginTerminal.TerminalID), '@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusColor)');">Automatically Select</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="ServiceTransfer" id="ServiceTransfer">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">Service Transfer</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div id="ServiceList">
+                        <table width="100%" border="0">
+                            @{
+                                int i = 0;
+                                foreach (qmSegment item in TransferService)
+                                {
+                                    <tr>
+                                        <td onclick="TransferToService(@(item.SegmentID), @(LoginTerminal.TerminalID), '@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusColor)');" align="left" class="MnItem">
+                                            @(ServiceList.Where(x=>x.ServiceID == item.ServiceID).FirstOrDefault().ServiceName) / @(item.SegmentName)
+                                        </td>
+                                    </tr>
+
+                                    i++;
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+                <div id="Loader2" class="text-center">
+                    <br /><br /><img src="~/assets/images/loading.gif" /><br />
+                    <p>Please wait while ticket transferring...</p><br /><br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="ServiceTransferAutoSelect(@(LoginTerminal.TerminalID), '@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusColor)');">Automatically Select</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+
+<div class="modal fade bs-example-modal-lg" id="CustomerModal" tabindex="-1" role="dialog" aria-labelledby="CustomerModal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Customer Selection</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" placeholder="You can search by UniqueID, Name, Surname, Phone Number or E-Mail" name="txtCustomerSearchBox" id="txtCustomerSearchBox" />
+                        </div>
+                        <div class="col-md-2">
+                            <a href="javascript:SearchCustomer();" class="btn btn-primary"><span class="fa fa-search"></span></a>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card card-mini">
+                            <div class="card-body no-padding table-responsive" style="overflow-x:hidden;">
+                                <div class="row" id="CustomerSearchResults">
+                                    <table width="100%" class="table card-table">
+                                        <tr>
+                                            <td>Unique ID</td>
+                                            <td>Name Surname</td>
+                                            <td>E-Mail</td>
+                                            <td>Phone</td>
+                                            <td>Device</td>
+                                            <td>Action</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade bs-example-modal-lg" id="AppointmentModal" tabindex="-1" role="dialog" aria-labelledby="AppointmentModal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Appointments</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="AppointmentContent">
+                    <center>
+                        <img src="~/assets/images/loading.gif" /><br />
+                        <h4>
+                            @{
+                                switch (LanguageCode)
+                                {
+                                    case "AR":
+                                        @Html.Label("الرجاء الانتظار أثناء تحميل المواعيد")
+                                        break;
+                                    case "TR":
+                                        @Html.Label("Randevu listesi getirilirken lütfen bekleyin...")
+                                        break;
+                                    case "FR":
+                                        @Html.Label("S’il vous plaît attendre pendant le chargement des rendez-vous ...")
+                                        break;
+                                    case "PK":
+                                        @Html.Label("ملاقات لوڈنگ کے دوران انتظار کریں")
+                                        break;
+                                    case "IN":
+                                        @Html.Label("कृपया इंतजार करते हुए नियुक्तियों लोड हो रहा है...")
+                                        break;
+                                    case "PH":
+                                        @Html.Label("Mangyaring maghintay habang naglo-load ang mga appointment...")
+                                        break;
+                                    default:
+                                        @Html.Label("Please wait while appointments loading...")
+                                        break;
+                                }
+                            }
+                        </h4>
+                    </center>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<span class="fa fa-television" onclick="ToggleScreen();" style="position:absolute; left:5px; top:5px; z-index:999999;"></span>
+
+
+
+<div class="row" style="display:block;">
+    <div class="col-md-3 col-lg-3 col-xs-3" style="margin-right:0px; padding-right:0px;">
+        <div class="card card-mini">
+            <div class="card-header">
+                <b>@(LoginTerminal.TerminalName)</b>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12" style="padding:0px; margin:0px;">
+                        <div class="btn-group-vertical" role="group" aria-label="..." style="width:100%;">
+                            <button id="btnNextCall" class="btn btn-primary ctrlbutton" style="width:100%;" onclick="NextCall('@(Statuses.Where(x=>x.StatusID == LoginTerminal.NextCallStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.NextCallStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-arrow-right "></span>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Label("المكالمة التالية")
+                                            break;
+                                        case "TR":
+                                            @Html.Label("Sonraki Çağrı")
+                                            break;
+                                        case "FR":
+                                            @Html.Label("Prochain appel")
+                                            break;
+                                        case "PK":
+                                            @Html.Label("اگلی کال")
+                                            break;
+                                        case "IN":
+                                            @Html.Label("अगली कॉल")
+                                            break;
+                                        case "PH":
+                                            @Html.Label("Susunod na Tawag")
+                                            break;
+                                        default:
+                                            @Html.Label("Next Call")
+                                            break;
+                                    }
+                                }
+                            </button>
+                            <button id="btnRecall" class="btn btn-default ctrlbutton" style="width:100%;" onclick="ReCall('@(Statuses.Where(x=>x.StatusID == LoginTerminal.RecallStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.RecallStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-repeat "></span>
+                                <span class="d-none d-lg-block">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("اذكر")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Tekrar Çağır")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Rappeler")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("یاد")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("याद")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Paggunita")
+                                                break;
+                                            default:
+                                                @Html.Label("Recall")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnPark" class="btn btn-default ctrlbutton" style="width:100%;" onclick="ParkTicket('@(Statuses.Where(x=>x.StatusID == LoginTerminal.ParkStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.ParkStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-pause "></span>
+                                <span class="d-none d-lg-block d-xl-block">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("بارك")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Beklet")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Parc")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("پارک")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("पार्क")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Park")
+                                                break;
+                                            default:
+                                                @Html.Label("Park")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnTransfer" class="btn btn-default ctrlbutton" style="width:100%;" onclick="TerminalTransferList();">
+                                <span class="fa fa-exchange "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("نقل إلى المحطة الطرفية")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Terminal Transfer")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Transfert vers terminal")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("ٹرمینل کو منتقل کریں")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("टर्मिनल पर स्थानांतरण")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Paglipat sa Terminal")
+                                                break;
+                                            default:
+                                                @Html.Label("Terminal Transfer")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnTransferService" class="btn btn-default ctrlbutton" style="width:100%;" onclick="ServiceTransferList();">
+                                <span class="fa fa-exchange "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("التحويل إلى الخدمة")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Servis Transfer")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Transfert vers le service")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("سروس میں منتقل")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("सेवा में स्थानांतरण")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Paglipat sa Serbisyo")
+                                                break;
+                                            default:
+                                                @Html.Label("Service Transfer")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnHalas" class="btn btn-default ctrlbutton" style="width:100%;" onclick="Halas('@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.TransferStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-magic"></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("تحويل تلقائي")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Otomatik Transfer")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Transfert automatique")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("خودکار منتقلی")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("ऑटोमेटिक ट्रांसफर")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Awtomatikong Paglipat")
+                                                break;
+                                            default:
+                                                @Html.Label("Automatic Transfer")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnNoShow" class="btn btn-default ctrlbutton" style="width:100%;" onclick="NoShow('@(Statuses.Where(x=>x.StatusID == LoginTerminal.NoShowStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.NoShowStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-ban "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("لا يوجد عرض")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Gelen Yok")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Pas de spectacle")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("کوئی نمایش نہیں")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("कोई शो नहीं")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Walang Ipakita")
+                                                break;
+                                            default:
+                                                @Html.Label("No Show")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnClose" class="btn btn-default ctrlbutton" style="width:100%;" onclick="CloseTicket('@(Statuses.Where(x=>x.StatusID == LoginTerminal.CloseStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == LoginTerminal.CloseStatusID).FirstOrDefault().StatusColor)');">
+                                <span class="fa fa-won "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("اغلاق")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Kapat")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Proche")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("بند")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("बंद करना")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Isara")
+                                                break;
+                                            default:
+                                                @Html.Label("Close")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <hr />
+                            <button id="btnBreak" class="btn btn-default" style="width:100%;" onclick="BreakTime(@(LoginTerminal.TerminalID));">
+                                <span class="fa fa-beer "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("اغلاق")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Mola")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Proche")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("بند")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("बंद करना")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Isara")
+                                                break;
+                                            default:
+                                                @Html.Label("Break")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnBusy" class="btn btn-default" style="width:100%;" onclick="StatusList();">
+                                <span class="fa fa-user-times "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("تعيين الحالة")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Durum Belirle")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("État de l’ensemble")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("حالت سیٹ کریں")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("सेट स्टेटस")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Magset ng Katayuan")
+                                                break;
+                                            default:
+                                                @Html.Label("Set Status")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnAppointment" class="btn btn-default" style="width:100%;" onclick="AppointmentWindow();">
+                                <span class="fa fa-users "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("جدول المواعيد")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Randevu Çizelgesi")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Horaire des rendez-vous")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("تعین ملاقات میقات بندی")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("नियुक्ति कार्यक्रम")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Iskedyul ng Appointment")
+                                                break;
+                                            default:
+                                                @Html.Label("Appointment Schedule")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                            <button id="btnFictiveTicket" class="btn btn-default" style="width:100%;" onclick="FictiveTicketWindow();">
+                                <span class="fa fa-ticket "></span>
+                                <span class="hidden-xs hidden-sm">
+                                    @{
+                                        switch (LanguageCode)
+                                        {
+                                            case "AR":
+                                                @Html.Label("تذكرة وهمية")
+                                                break;
+                                            case "TR":
+                                                @Html.Label("Fiktif Bilet")
+                                                break;
+                                            case "FR":
+                                                @Html.Label("Billet fictif")
+                                                break;
+                                            case "PK":
+                                                @Html.Label("فیکٹیو ٹکٹ")
+                                                break;
+                                            case "IN":
+                                                @Html.Label("फिक्टिव टिकट")
+                                                break;
+                                            case "PH":
+                                                @Html.Label("Fictive Ticket")
+                                                break;
+                                            default:
+                                                @Html.Label("Fictive Ticket")
+                                                break;
+                                        }
+                                    }
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12" style="margin:0px; padding:0px; margin-top:10px;">
+            <div class="card card-mini">
+                <div class="card-body" id="StatisticBox">
+                    <p><span class="fa fa-times"></span> Waiting : <b>0</b></p>
+                    <p><span class="fa fa-pause"></span> Parked  : <b>0</b></p>
+                </div>
+                <input type="hidden" id="InfoTicketID" name="InfoTicketID" />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9 col-lg-9 col-xs-9" style="margin-left:0px; padding-right:0px; padding-left:5px;">
+        <div class="col-md-12">
+            <div class="card card-mini" style="background-color:#F5F5F5;">
+                <div class="card-body">
+                    <div class="row" id="InfoBox" style="min-height:140px;">
+                        <table width='100%' height='180'>
+                            <tr>
+                                <td align='center' valign="center">
+                                    <p>&nbsp;</p>
+                                    <p><img src='../assets/images/bell.png' height='66' /></p>
+                                    <p style='font-size:24px; font-family:"Segoe UI"; font-weight:lighter;'>
+                                        @{
+                                            switch (LanguageCode)
+                                            {
+                                                case "AR":
+                                                    @Html.Raw("مرحبا بكم في محطة افتراضية. يمكنك البدء بـ الاتصال التالي.")
+                                                    break;
+                                                case "TR":
+                                                    @Html.Raw("Sanal Terminal uygulamasına hoş geldiniz. Sonraki Çağrı butonuyla başlayabilirsiniz.")
+                                                    break;
+                                                case "FR":
+                                                    @Html.Raw("Bienvenue dans le terminal virtuel. Vous pouvez commencer par l’appel suivant.")
+                                                    break;
+                                                case "PK":
+                                                    @Html.Raw("ورچوئل ٹرمینل میں خوش آمدید ۔ آپ اگلی کال کے ساتھ شروع کر سکتے ہیں ۔")
+                                                    break;
+                                                case "IN":
+                                                    @Html.Raw("वर्चुअल टर्मिनल में आपका स्वागत है। आप अगली कॉल के साथ शुरू कर सकते हैं।")
+                                                    break;
+                                                case "PH":
+                                                    @Html.Raw("Maligayang pagdating sa virtual terminal. Maaari kang magsimula sa Susunod na Tawag.")
+                                                    break;
+                                                default:
+                                                    @Html.Raw("Welcome to virtual terminal. You can start with Next Call.")
+                                                    break;
+                                            }
+                                        }
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12" style="margin-top:10px;">
+            <div class="card card-tab card-mini">
+                <div class="card-header" style="overflow:hidden;">
+                    <ul class="nav nav-tabs">
+                        <li class="tabsap active" style="min-width:200px;" id="TabSap1" onclick="SwitchTab(1);">
+                            <a href="javascript:NoNe();" role="tab" data-toggle="tab">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Raw("قائمة الانتظار")
+                                            break;
+                                        case "TR":
+                                            @Html.Raw("Bekleyenler")
+                                            break;
+                                        case "FR":
+                                            @Html.Raw("Liste d’attente")
+                                            break;
+                                        case "PK":
+                                            @Html.Raw("ویٹنگ فہرست")
+                                            break;
+                                        case "IN":
+                                            @Html.Raw("प्रतीक्षा सूची")
+                                            break;
+                                        case "PH":
+                                            @Html.Raw("Naghihintay ng Listahan")
+                                            break;
+                                        default:
+                                            @Html.Raw("Waiting List")
+                                            break;
+                                    }
+                                }
+                            </a>
+                        </li>
+                        <li class="tabsap" style="min-width:200px;" id="TabSap2" onclick="SwitchTab(2);">
+                            <a href="javascript:NoNe();" role="tab" data-toggle="tab">
+                                <i class="fa fa-thumb-tack" aria-hidden="true"></i>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Raw("قائمة متوقفة")
+                                            break;
+                                        case "TR":
+                                            @Html.Raw("Bekletilenler")
+                                            break;
+                                        case "FR":
+                                            @Html.Raw("Liste des stationnements")
+                                            break;
+                                        case "PK":
+                                            @Html.Raw("کھڑی فہرست")
+                                            break;
+                                        case "IN":
+                                            @Html.Raw("खड़ी सूची")
+                                            break;
+                                        case "PH":
+                                            @Html.Raw("Listahan ng Nakaparadang")
+                                            break;
+                                        default:
+                                            @Html.Raw("Parked")
+                                            break;
+                                    }
+                                }
+                            </a>
+                        </li>
+                        <li class="tabsap" style="min-width:200px;" id="TabSap3" onclick="SwitchTab(3);">
+                            <a href="javascript:NoNe();" role="tab" data-toggle="tab">
+                                <i class="fa fa-history" aria-hidden="true"></i>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Raw("التاريخ")
+                                            break;
+                                        case "TR":
+                                            @Html.Raw("Geçmiş")
+                                            break;
+                                        case "FR":
+                                            @Html.Raw("Histoire")
+                                            break;
+                                        case "PK":
+                                            @Html.Raw("تاریخ")
+                                            break;
+                                        case "IN":
+                                            @Html.Raw("इतिहास")
+                                            break;
+                                        case "PH":
+                                            @Html.Raw("Kasaysayan")
+                                            break;
+                                        default:
+                                            @Html.Raw("History")
+                                            break;
+                                    }
+                                }
+                            </a>
+                        </li>
+                        <li class="tabsap" style="min-width:200px;" id="TabSap4" onclick="SwitchTab(4);">
+                            <a href="#" role="tab" data-toggle="tab">
+                                <i class="fa fa-terminal" aria-hidden="true"></i>
+                                @{
+                                    switch (LanguageCode)
+                                    {
+                                        case "AR":
+                                            @Html.Raw("محطات")
+                                            break;
+                                        case "TR":
+                                            @Html.Raw("Terminaller")
+                                            break;
+                                        case "FR":
+                                            @Html.Raw("Bornes")
+                                            break;
+                                        case "PK":
+                                            @Html.Raw("ٹرمینلز")
+                                            break;
+                                        case "IN":
+                                            @Html.Raw("टर्मिनलों")
+                                            break;
+                                        case "PH":
+                                            @Html.Raw("Mga Terminal")
+                                            break;
+                                        default:
+                                            @Html.Raw("Terminals")
+                                            break;
+                                    }
+                                }
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content no-padding">
+                    <div class="tab-pane active" id="tab1" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        &nbsp;
+                    </div>
+                    <div class="tab-pane" id="tab2" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        &nbsp;
+                    </div>
+                    <div class="tab-pane" id="tab3" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        &nbsp;
+                    </div>
+                    <div class="tab-pane" id="tab4" style="padding:0px; max-height:450px; min-height:450px; overflow-y:scroll; overflow-x:hidden;">
+                        &nbsp;
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div id="ChatListWindow" class="chat-minimized-main">
+    <div class="row" onclick="ToggleMainChat();">
+        <div class="col-md-12" style="height:27px; padding-top:3px;">
+            <span class="fa fa-circle-o-notch"></span>
+            <b>
+                @{
+                    switch (LanguageCode)
+                    {
+                        case "AR":
+                            @Html.Raw("جميع زملاء العمل")
+                            break;
+                        case "TR":
+                            @Html.Raw("Çalışma Arkadaşlarım")
+                            break;
+                        case "FR":
+                            @Html.Raw("Tous les collègues")
+                            break;
+                        case "PK":
+                            @Html.Raw("تمام شریک کارکنوں")
+                            break;
+                        case "IN":
+                            @Html.Raw("सभी सहकर्मी")
+                            break;
+                        case "PH":
+                            @Html.Raw("Lahat ng Katrabaho")
+                            break;
+                        default:
+                            @Html.Raw("All Co-Workers")
+                            break;
+                    }
+                }
+            </b>
+        </div>
+    </div>
+    <div class="row" style="overflow-y:scroll; background-color:#FFFFFF; color:#000000; margin-left:-5px; margin-right:-5px; height:300px;" id="ListOfOnline">
+        <!--<div class="col-md-12" style="padding:0px;">
+            <input type="text" name="txtOnlineUserSearch" id="txtOnlineUserSearch" style="padding:5px; width:100%; border-style:none;" placeholder="Search..." />
+        </div>-->
+        <div class="col-md-12" style="padding:0px;">
+            <div class="list-group">
+                @{
+                    foreach (qmTerminalConnection item in tco)
+                    {
+                        qmTerminal itemterminal = allterminals.Where(x => x.TerminalID == Convert.ToInt32(item.TerminalID)).FirstOrDefault();
+                        qmUser itemuser = userlist.Where(x => x.UserID == Convert.ToInt32(item.UserID)).FirstOrDefault();
+                        qmBranch itembranch = branches.Where(x => x.BranchID == Convert.ToInt32(itemterminal.BranchID)).FirstOrDefault();
+
+                        <button type="button" class="list-group-item" onclick="OpenChatWindow(@(LoginTerminal.TerminalID), @(HttpContext.Current.Session["MagicUser"].ToString()), @(itemterminal.TerminalID), @(itemuser.UserID));">
+                            <img src="@(itemuser.ProfilePicture)" width="32" style="border-radius:16px; border:solid 1px #000; margin-right:10px;" align="left" />
+                            @(itemuser.FullName) <br />
+                            <span style="font-size:10px; font-style:italic;">@(itemterminal.TerminalName) (@(itembranch.BranchName))</span>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

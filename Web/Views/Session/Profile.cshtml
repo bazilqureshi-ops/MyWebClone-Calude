@@ -1,0 +1,134 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model ProfileViewModel
+
+<div class="row">
+	<div class="col-xs-12 col-md-12 col-lg-12">
+		<div class="card">
+			<div class="card-header">
+				User Management
+			</div>
+			<div class="card-body" style="padding-top: 25px;">
+				<form action="~/Session/EditProfile" method="post">
+					<div class="row">
+						<div class="col-xs-12">
+							<div class="col-xs-12" style="margin-bottom:5%; padding-top:5%">
+								<div class="row">
+									<div class="col-xs-3">
+										<img src="@Model.User.ProfilePicture" max-height="200" style="border:solid 1px #000; " />
+									</div>
+
+									<div class="row col-xs-9">
+										<div class="row">
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Full Name</label>
+													<div class="col-md-9">
+														@Html.EditorFor(user => Model.User.FullName, new { htmlAttributes = new { @class = "form-control" } })
+													</div>
+												</div>
+											</div>
+
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Gender</label>
+													<div class="col-md-9">
+														@{
+															if (Model.User.Gender == true)
+															{
+																<label><input type="radio" value="1" name="Gender" id="Gender" checked="checked" />Male</label>
+																<label><input type="radio" value="0" name="Gender" id="Gender" style="margin-left: 10px;" />Female</label>
+															}
+															else
+															{
+																<label><input type="radio" value="1" name="Gender" id="Gender" />Male</label>
+																<label><input type="radio" value="0" name="Gender" id="Gender" checked="checked" style="margin-left: 10px;" />Female</label>
+															}
+														}
+
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Profile Picture</label>
+													<div class="col-md-9" style="min-height:64px;">
+														@Html.EditorFor(user => user.User.ProfilePicture, new { htmlAttributes = new { @class = "form-control disabled", @style = "overflow:left; align:left;", @readonly = "readonly" } })
+													</div>
+												</div>
+											</div>
+											<div class="col-xs-6">
+												<a href="#" onclick="window.open('/User/ImageBrowser?ref=user_ProfilePicture', 'Browser', 'width=1100,height=750');" class="btn btn-default">Upload / Browse Profile Gallery</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row" style="margin-bottom: 5%">
+								<div class="card">
+
+									<div class="card-header">
+										<p>
+											<label class="h2 bold">Password</label>
+											<br />
+											We recommend updating your password periodically to prevent unauthorized access.
+										</p>
+									</div>
+
+									<div class="card-body">
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Old Password</label>
+													<div class="col-md-6">
+														@Html.EditorFor(user => Model.OldPassword, new { htmlAttributes = new { @class = "form-control", type = "password", autocomplete = "off" } })
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">New Password</label>
+													<div class="col-md-6">
+														<input type="password" name="User.Password" id="User.Password" class="form-control" value="" autocomplete="off" />
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Confirm Password</label>
+													<div class="col-md-6">
+														<input type="password" name="User.Password" id="User.Password" class="form-control" value="" autocomplete="off" />
+													</div>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+						</div>
+						<div class="form-footer text-right">
+							<div class="form-group">
+								<div class="col-md-9 col-md-offset-3">
+									<a href="../Home" class="btn btn-default">Cancel</a>
+									<button type="submit" class="btn btn-primary">Save</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

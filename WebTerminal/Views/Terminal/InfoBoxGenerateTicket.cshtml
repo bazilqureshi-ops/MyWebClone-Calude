@@ -1,0 +1,25 @@
+﻿@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    List<InfoGenerateDTO> GenerateDTO = ViewBag.InfoGenerate;
+}
+
+<table width="100%" border="0" cellpadding="5" cellspacing="0">
+    <tr style="border-bottom:solid 1px #000; font-weight:bold;">
+        <td>Service</td>
+        <td>Waiting</td>
+        <td>Served</td>
+        <td>User Name</td>
+    </tr>
+    @{ 
+        foreach (InfoGenerateDTO DTO in GenerateDTO)
+        {
+        <tr>
+            <td>@(DTO.Terminal.TerminalName)</td>
+            <td>@(DTO.Waiting)</td>
+            <td>@(DTO.Served)</td>
+            <td>@(DTO.User.FullName)</td>
+        </tr>
+        }
+    }
+</table>

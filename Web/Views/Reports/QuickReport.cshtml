@@ -1,0 +1,239 @@
+﻿@using System.Xml.Linq
+@using Emse.QMagic.Web.Domain.Viewmodels
+@model GenericReportViewModel
+
+<link href="~/assets/css/report.css" rel="stylesheet" />
+<link href="~/assets/css/Chart.min.css" rel="stylesheet" />
+
+<script src="~/assets/js/Chart.min.js"></script>
+<script src="~/Scripts/report.js"></script>
+<script src="~/Scripts/chartjs-label-plugin.min.js"></script>
+
+<div class="row">
+	<div class="col-xs-12 col-xs-offset-0">
+		<div class="card">
+			<div class="card-header">
+				<div class="bussines-info-box left">
+					<p>@Model.Report.ReportName</p>
+					<p>
+						@{
+							string branchList = "";
+							for (int i = 0; i < Model.Branches.Count; i++)
+							{
+								if (i == Model.Branches.Count - 1) { branchList += $"{Model.Branches[i].BranchName}"; }
+								else { branchList += $"{Model.Branches[i].BranchName}, "; }
+							}
+
+						}
+						@branchList
+					</p>
+				</div>
+
+				<div class="bussines-info-box right">
+
+					<p>@DateTime.Now.ToLongDateString() / @DateTime.Now.ToLongTimeString()</p>
+				</div>
+			</div>
+
+			<div class="card-body">
+				<form action="/Reports/ExportExcel" method="post" class="row" style="padding-left:10px; padding-right:10px;">
+
+					<!-- Button Container -->
+					<div class="row" id="button-area">
+						<button type="button" onClick="callPrint(document);" id="printpage" class="btn btn-danger"><i class="fa fa-print"></i> Print Page </button>
+						<span>&nbsp;</span>
+
+						<button type="submit" class="btn btn-danger"><i class="fa fa-file-excel-o"></i>  Export to Excel</button>
+
+						<button type="button" id="sign-report" class="btn btn-success" data-toggle="modal" data-target="#sign-report-modal"><i class="fa fa-pencil"></i> Sign Report </button>
+					</div>
+
+					<!-- Item Per Page & Search Input -->
+					<select id="item-per-page">
+						<option value="10">10</option>
+						<option value="25">25</option>
+						<option value="50">50</option>
+						<option value="100">100</option>
+					</select>
+					<input type="text" id="search-magic-table" name="search-magic-table" placeholder="type something to search" autocomplete="off" />
+
+					<table id="magic-table" border="1" class="magic-table col-xs-12 col-md-12 col-lg-12" cellspacing="0" width="100%">
+						<thead>
+							<tr>
+								@{
+
+									foreach (var item in XElement.Parse(Model.Report.ReportXaml).Elements("Items").Elements("Item"))
+									{
+
+										<th>@item.Element("Title").Value</th>
+										<input type="hidden" name="Data[0]" value="@item.Element("Title").Value" />
+									}
+
+								}
+							</tr>
+						</thead>
+
+						<tbody>
+
+							@{
+								if (Model.ReportDtos.Count > 0)
+								{
+									int elementCount = 1;
+
+									for (int i = 0; i < Model.ReportDtos.Count; i++)
+									{
+										<tr style="display:none;">
+											@foreach (var item in XElement.Parse(Model.Report.ReportXaml).Elements("Items").Elements("Item"))
+											{
+												if (item.Element("Title").Value == "Ticket Number")
+												{
+													<td>@Model.ReportDtos[i].TicketNumber</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].TicketNumber" />
+												}
+												else if (item.Element("Title").Value == "Branch Name")
+												{
+													<td>@Model.ReportDtos[i].BranchName</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].BranchName" />
+												}
+												else if (item.Element("Title").Value == "Service Name")
+												{
+													<td>@Model.ReportDtos[i].ServiceName</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].ServiceName" />
+												}
+												else if (item.Element("Title").Value == "Segment Name")
+												{
+													<td>@Model.ReportDtos[i].SegmentName</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].SegmentName" />
+												}
+												else if (item.Element("Title").Value == "Terminal Number")
+												{
+													<td>@Model.ReportDtos[i].TerminalNumber</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].TerminalNumber" />
+												}
+												else if (item.Element("Title").Value == "Teller Name")
+												{
+													<td>@Model.ReportDtos[i].TellerName</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].TellerName" />
+												}
+												else if (item.Element("Title").Value == "Visit Date")
+												{
+													<td>@Model.ReportDtos[i].VisitDate</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].VisitDate" />
+												}
+												else if (item.Element("Title").Value == "Print Time")
+												{
+													<td>@Model.ReportDtos[i].PrintTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].PrintTime" />
+												}
+												else if (item.Element("Title").Value == "Call Time")
+												{
+													<td>@Model.ReportDtos[i].CallTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].CallTime" />
+												}
+												else if (item.Element("Title").Value == "End Time")
+												{
+													<td>@Model.ReportDtos[i].EndTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].EndTime" />
+												}
+												else if (item.Element("Title").Value == "Waiting Time")
+												{
+													<td>@Model.ReportDtos[i].WaitingTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].WaitingTime" />
+												}
+												else if (item.Element("Title").Value == "Operation Time")
+												{
+													<td>@Model.ReportDtos[i].OperationTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].OperationTime" />
+												}
+												else if (item.Element("Title").Value == "Process Time")
+												{
+													<td>@Model.ReportDtos[i].ProcessTime</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].ProcessTime" />
+												}
+												else if (item.Element("Title").Value == "Customer Name")
+												{
+													<td>@Model.ReportDtos[i].CustomerName</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].CustomerName" />
+												}
+												else if (item.Element("Title").Value == "Customer Surname")
+												{
+													<td>@Model.ReportDtos[i].CustomerSurname</td>
+													<input type="hidden" name="Data[@elementCount)]" value="@Model.ReportDtos[i].CustomerSurname" />
+												}
+												else if (item.Element("Title").Value == "Customer Fullname")
+												{
+													<td>@Model.ReportDtos[i].CustomerFullname</td>
+													<input type="hidden" name="Data[@elementCount]" value="@Model.ReportDtos[i].CustomerFullname" />
+												}
+
+
+
+											}
+
+											@{
+												elementCount++;
+											}
+
+
+										</tr>
+
+
+
+									}
+								}
+							}
+
+
+						</tbody>
+					</table>
+
+					<!-- Page Count and Result Count Info's -->
+					<div class="row">
+						<div id="page-info-box">
+							Total Result: <span id="result-count">{ticket}</span>
+							/
+							Pages: <span id="page-count">{pages}</span>
+						</div>
+
+						<div id="button-container"></div>
+					</div>
+
+					<!-- Sign Report Modal -->
+					<div class="modal" tabindex="-1" role="dialog" id="sign-report-modal">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">Add Signer</h3>
+
+									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="modal-body">
+									<div class="row">
+										<input type="text" name="signer-name" class="form-control col-xs-6 col-md-6" placeholder="Replace this text with name" value="" />
+										<input type="text" name="signer-surname" class="form-control col-xs-6 col-md-6" placeholder="Replace this text with surname" value="" />
+										<input type="text" name="signer-job-title" class="form-control col-xs-6 col-md-12" placeholder="Replace this text with job title (optional)" value="" />
+
+										<button type="button" class="btn btn-primary" onclick="addSigner()">Add Signer</button>
+									</div>
+
+									<hr />
+
+									<ul id="signer-list">
+									</ul>
+								</div>
+
+								<div class="modal-footer">
+									<button type="button" class="btn btn-primary" onclick="saveSigners()">Save changes</button>
+									<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

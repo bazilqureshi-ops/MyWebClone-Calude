@@ -1,0 +1,66 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Transfer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<qmTransferRuleGroup> group = ViewBag.rulegroup;
+    List<qmTransferRule> rules = ViewBag.rules;
+}
+
+<script>
+    function DeleteItem(itemid) {
+        var r = confirm("Do you really want to delete this bundle? If there are rules in this bundle will delete with this.");
+        if (r == true) {
+            window.location = "../Rule/DeleteTransferRule?RuleID=" + itemid;
+        }
+    }
+</script>
+
+<div class="row">
+    <div class="col-xs-6 col-xs-offset-3">
+        <div class="card">
+            <div class="card-header">
+                Transfer Management
+            </div>
+            <div class="card-body no-padding">
+                <table class="datatable table table-striped primary" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Rule Name</th>
+                            <th>Command Count</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (qmTransferRuleGroup item in group)
+                            {
+                                <tr>
+                                    <td>@item.RuleName</td>
+                                    <td>@rules.Where(x=>x.TransferRuleGroupID == item.RuleGroup).Count().ToString()</td>
+                                    <td style="max-width:80px;">
+                                        <a href="../Rule/EditTransferRule?RuleID=@item.RuleGroup" class="btn btn-default"><span class="fa fa-pencil"></span></a>
+                                        <a href="javascript:DeleteItem(@item.RuleGroup);" class="btn btn-danger"><span class="fa fa-remove"></span></a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="btn-floating" id="help-actions">
+    <div class="btn-bg"></div>
+    <button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+        <i class="icon fa fa-plus"></i>
+        <span class="help-text">Shortcut</span>
+    </button>
+    <div class="toggle-content">
+        <ul class="actions">
+            <li><a href="~/Rule/CreateTransferRule">Create Rule</a></li>
+        </ul>
+    </div>
+</div>

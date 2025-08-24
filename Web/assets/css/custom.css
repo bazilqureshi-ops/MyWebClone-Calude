@@ -1,0 +1,35 @@
+﻿.chat-minimized-main
+{
+    position:fixed;
+    bottom:-300px;
+    right:20px;
+    width:250px;
+    height:330px;
+    border:solid 1px #CCC;
+    background-color:#F5F5F5;
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    font-size:12px;
+    padding:6px;
+    cursor:pointer;
+    z-index:1450;
+}
+
+.chat-maximized-main {
+    background-color: #29C75F;
+    color: #FFFFFF;
+    border-color: #156831;
+}
+
+
+.PrivateChatWindow {
+    background-color: #29C75F;
+    padding: 5px;
+    border-radius: 5px;
+    position:fixed;
+    z-index: 1450;
+    right: 280px;
+    bottom: 0px;
+    width:250px;
+    height:350px;
+}

@@ -1,0 +1,12 @@
+﻿@{
+    Layout = null;
+    string status = ViewBag.Message;
+    string wher = ViewBag.Wher;
+    string ids = ViewBag.TID+"";
+
+    if(status == "OK++")
+    {
+        @("OK++("+wher+","+ids+")")
+        @(wher)
+    }
+}

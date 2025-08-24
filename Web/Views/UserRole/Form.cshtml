@@ -1,0 +1,178 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model UserRoleViewModel
+
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+	<form action="~/UserRole/Save" method="post">
+		<div class="col-xs-12 col-md-4 col-md-offset-1">
+			@if (!string.IsNullOrEmpty(ViewBag.Error))
+			{
+
+				var userRole = ViewBag.Entity;
+
+				<div class="alert-danger" style="margin-bottom: 10px;">
+					<label style="padding: 10px">
+						@ViewBag.Error <a href="/UserRole/EditUserRole?id=@userRole.UserRoleID">here.</a>
+					</label>
+				</div>
+
+			}
+
+			<div class="card">
+				<div class="card-header">
+					@if (Model.UserRole.UserRoleID > 0)
+					{
+						<label>
+							User Role Edit
+						</label>
+					}
+					else
+					{
+						<label>
+							Create a User Role
+						</label>
+					}
+				</div>
+				@Html.HiddenFor(model => model.UserRole.UserRoleID)
+				@Html.HiddenFor(model => model.UserRole.AuthorizedUser)
+				@Html.HiddenFor(model => model.UserRole.CreateTime)
+				@Html.HiddenFor(model => model.OldUserRoleName)
+
+				<div class="card-body">
+					<div class="row ">
+						<div class="col-md-12">
+							<label class="col-md-4 control-label">User Role Name</label>
+
+							<div class="col-md-8">
+								@Html.EditorFor(userRole => userRole.UserRole.UserRoleName, new { htmlAttributes = new { @class = "form-control" } })
+								<label class="text-danger">
+									@Html.ValidationMessageFor(userRole => userRole.UserRole.UserRoleName)
+								</label>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="col-xs-12 col-md-6">
+			<div class="card">
+				<div class="card-header">
+					<label>Modules</label>
+				</div>
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row">
+
+								@for (int i = 0; i < Model.Modules.Count(); i++)
+								{
+
+									var module = Model.Modules[i];
+
+									<div class="counter">
+										<ul class="col-xs-12">
+
+											<div class="col-md-6">
+												<label style="font-size:16px;">
+													@Html.EditorFor(x => Model.Modules[i].Checked, new { @class = "userRoleLi" })
+
+													@Html.DisplayFor(x => Model.Modules[i].Name)
+												</label>
+											</div>
+
+											@Html.HiddenFor(x => Model.Modules[i].Name)
+											@Html.HiddenFor(x => Model.Modules[i].Id)
+
+											@foreach (var altModule in Model.AltModules.Where(mod => mod.UpModuleId == module.Id))
+											{
+												<li class="userRoleLi">
+
+													<div class="col-xs-12 col-md-12">
+														<label style="font-size: 16px;">
+
+															@Html.EditorFor(x => Model.AltModules[altModule.QueryNumber].Checked)
+
+															@Html.DisplayFor(x => Model.AltModules[altModule.QueryNumber].Name)
+														</label>
+													</div>
+
+													@Html.HiddenFor(x => Model.AltModules[altModule.QueryNumber].Name)
+													@Html.HiddenFor(x => Model.AltModules[altModule.QueryNumber].Id)
+													@Html.HiddenFor(x => Model.AltModules[altModule.QueryNumber].UpModuleId)
+													@Html.HiddenFor(x => Model.AltModules[altModule.QueryNumber].QueryNumber)
+
+												</li>
+											}
+
+										</ul>
+									</div>
+
+								}
+							</div>
+							<div class="row" style="padding-top: 5%;">
+								<div class="col-md-12 text-right">
+									<a href="/UserRole" class="btn btn-default">Cancel</a>
+									<input type="submit" class="btn btn-primary" value="Save" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+
+<script>
+	$(document).ready(function () {
+		$('input').click(function () {
+			sayi = 0;
+
+			var checkBoxes = $(this).parentsUntil('.counter').find('.check-box');
+
+			checkBoxes.each(function (index) {
+				if ($(this).prop('checked') && index !== 0) {
+					sayi++;
+				}
+			});
+
+			if ($(this).attr("id").startsWith("Modules_")) {
+				if ($(this).prop('checked') === false && sayi > 0) {
+					checkBoxes.each(function (index) {
+						$(this).prop('checked', false);
+					});
+				}
+
+				if ($(this).prop('checked') && sayi == 0) {
+					checkBoxes.each(function (index) {
+						$(this).prop('checked', true);
+					});
+				}
+				
+			}
+			else if ($(this).attr("id").startsWith("AltModules_")){
+				if (sayi == 0) {
+					checkBoxes.eq(0).prop('checked', false);
+				}
+
+				if (sayi > 0 && checkBoxes.eq(0).prop('checked') == false) {
+					checkBoxes.eq(0).prop('checked', true);
+
+				}
+			}
+			
+		});
+	});
+</script>

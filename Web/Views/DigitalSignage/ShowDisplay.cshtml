@@ -1,0 +1,1066 @@
+﻿@using Emse.QMagic.Web.Models;
+@using System.Xml.Linq;
+@using System.Text;
+@{
+    ViewBag.Title = "CEO Technology LLC - Digital Signage Display";
+    Layout = null;
+    int dsid = ViewBag.DigitalSignageID;
+    List<string> terminals = ViewBag.TerminalList;
+    List<qmScheduleDS> schedules = ViewBag.Schedules;
+    qmScreenDesign design = ViewBag.ScreenDesign;
+    List<qmTerminal> TerminalList = ViewBag.ListOfTerminals;
+    List<qmService> ServiceList = ViewBag.ListOfServices;
+
+    foreach (qmScheduleDS item in schedules)
+    {
+        if (DateTime.Now > item.StartDate && DateTime.Now < item.EndDate)
+        {
+            using (QMagicEntities db = new QMagicEntities())
+            {
+                qmScreenDesign des = db.qmScreenDesign.Find(item.StartScreenDesignID);
+                design = des;
+            }
+        }
+    }
+    string sourcecode = design.DesignSource;
+
+    string WillDingDong = XElement.Parse(sourcecode).Element("Page").Attribute("DingDong").Value;
+    string ReadTicket = XElement.Parse(sourcecode).Element("Page").Attribute("ReadTicket").Value;
+    string ReadFloor = XElement.Parse(sourcecode).Element("Page").Attribute("ReadFloor").Value;
+    string Language1 = XElement.Parse(sourcecode).Element("Page").Attribute("Language1").Value;
+    string Language2 = XElement.Parse(sourcecode).Element("Page").Attribute("Language2").Value;
+    string ArabicTime = XElement.Parse(sourcecode).Element("Page").Attribute("ArabicTranslation").Value;
+
+
+    int CounterCount = 0;
+    int TicketCount = 0;
+    int TimerCount = 0;
+    int RSSID = 0;
+    int RSSRefleshTime = 0;
+    int ArabicTranslationTime = Convert.ToInt32(ArabicTime);
+
+    string ItemDataSource = "", ItemRowName = "", ItemRowMap = "", RSSItemID = "";
+    int ItemRowCount = 0, ItemRefleshTime = 0;
+
+    string sdate = "";
+    string edate = "";
+    foreach (qmScheduleDS item in schedules)
+    {
+        sdate += item.StartDate.Year + "-" + item.StartDate.Month + "-" + item.StartDate.Day + " " + item.StartDate.ToString("HH:mm:ss");
+        edate += item.EndDate.Year + "-" + item.EndDate.Month + "-" + item.EndDate.Day + " " + item.EndDate.ToString("HH:mm:ss");
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QMagic Digital Signage</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="~/assets/qmagic.ico">
+    <script src="~/Scripts/jquery331.js"></script>
+    <link href="../../Scripts/video-js.css" rel="stylesheet">
+
+    <script>
+        var CallerIDAvailable = false;
+    </script>
+
+</head>
+@{
+    foreach (XElement level1Element in XElement.Parse(sourcecode).Elements("Page").Elements("Control"))
+    {
+        if (level1Element.Attribute("type").Value == "Label")
+        {
+            string ItemID, ItemName, ItemText, ItemPosX, ItemPosY, ItemWidth, ItemHeight, ItemAction, ItemParameter, ItemFont, ItemColor, ItemBold, ItemItalic, ItemUnderline, ItemAlign, ItemValign;
+            int ItemSize = 8;
+
+            ItemID = level1Element.Element("Identifier").Value;
+            ItemName = level1Element.Element("Name").Value;
+            ItemText = level1Element.Element("Text").Value;
+            ItemPosX = level1Element.Element("PositionX").Value;
+            ItemPosY = level1Element.Element("PositionY").Value;
+            ItemWidth = level1Element.Element("Width").Value;
+            ItemHeight = level1Element.Element("Height").Value;
+            ItemAction = level1Element.Element("Action").Value;
+            ItemParameter = level1Element.Element("Parameter").Value;
+            ItemFont = level1Element.Element("Font").Value.ToString().Replace("\"", "");
+            ItemSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+            //ItemSize = ItemSize * 2;
+            ItemColor = level1Element.Element("Color").Value;
+            ItemBold = level1Element.Element("Bold").Value;
+            ItemItalic = level1Element.Element("Italic").Value;
+            ItemUnderline = level1Element.Element("Underline").Value;
+            ItemAlign = level1Element.Element("Align").Value;
+            ItemValign = level1Element.Element("Valign").Value;
+
+            //float willtop = (ItemSize / 4);
+            //willtop = willtop - (willtop / 2);
+
+            string fontprops = "";
+            if (ItemBold == "true")
+            {
+                fontprops += "font-weight:bold; ";
+            }
+            if (ItemItalic == "true")
+            {
+                fontprops += "font-style:italic; ";
+            }
+            if (ItemUnderline == "true")
+            {
+                fontprops += "font-decoration:underline; ";
+            }
+
+            qmTerminal termik = TerminalList.Where(x => x.TerminalID == Convert.ToInt32(ItemParameter)).FirstOrDefault();
+
+            if (ItemAction == "CounterNumber")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; @(fontprops) font-size:@(ItemSize)px; color:@ItemColor;" class="counternumber" id="c_@ItemParameter">0</span>
+                </div>
+
+                CounterCount++;
+            }
+
+            if (ItemAction == "TicketNumber")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" class="ticketnumber" id="t_@ItemParameter">0</span>
+                </div>
+
+                TicketCount++;
+            }
+
+            if (ItemAction == "Status")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="status_@(ItemParameter)" class="statusitem"></span>
+                </div>
+
+            }
+
+            if (ItemAction == "StaticCounter")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="sc_@ItemParameter">@(termik.TerminalNumber)</span>
+                </div>
+            }
+
+            if (ItemAction == "StaticTicket")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="st_@ItemParameter">0</span>
+                </div>
+            }
+
+            if (ItemAction == "TerminalName")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="tn_@ItemParameter">-</span>
+                </div>
+            }
+
+            if (ItemAction == "TerminalLocation")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="tl_@ItemParameter">-</span>
+                </div>
+            }
+
+            if (ItemAction == "StaticTerminalName")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="stn_@ItemParameter">@(termik.TerminalName)</span>
+                </div>
+            }
+
+            if (ItemAction == "ServiceName")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="sn_@ItemParameter">&nbsp;</span>
+                </div>
+            }
+
+            if (ItemAction == "TellerName")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="teller_@ItemParameter">&nbsp;</span>
+                </div>
+            }
+
+            if (ItemAction == "Static")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="static_@ItemParameter">@(ItemText)</span>
+                </div>
+            }
+
+            if (ItemAction == "StaticStatus")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="sstatus_@ItemParameter" tid="@(termik.TerminalID)" class="statusitem">-</span>
+                </div>
+            }
+
+            if (ItemAction == "StaticFloor")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="sfloor_@ItemParameter">@(termik.Floor)</span>
+                </div>
+
+            }
+
+            if (ItemAction == "Floor")
+            {
+                <div style="position:absolute; left:@ItemPosX%; top:@ItemPosY%; width:@(ItemWidth)%; height:@(ItemHeight)%; overflow:hidden; text-align:@(ItemAlign); vertical-align:@(ItemValign);">
+                    <span style="font-family:'@(ItemFont)'; font-size:@(ItemSize)px; @(fontprops) color:@ItemColor;" id="floor_@ItemParameter">1</span>
+                </div>
+            }
+        }
+
+        if (level1Element.Attribute("type").Value == "MediaElement")
+        {
+            string ItemID = level1Element.Element("Identifier").Value;
+            string VideoURL = level1Element.Element("BackgroundImage").Value;
+            string WillBeSeperated = VideoURL.Replace("'", "");
+            char seperator = ';';
+            List<string> playlist = WillBeSeperated.Split(seperator).ToList();
+
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            if (VideoURL.Contains(".m3u8"))
+            {
+                <video id='hls-stream' class="video-js vjs-default-skin" style="position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%; overflow:hidden; background-color:#000;" preload="auto" autoplay>
+                    <source type="application/x-mpegURL" src="@Html.Raw(VideoURL)">
+                </video>
+
+                <script src="../../Scripts/video.js"></script>
+                <script src="../../Scripts/videojs-contrib-hls.js"></script>
+                <script>
+                    var player = videojs('hls-stream');
+                    player.play();
+
+                    $("#hls-stream_html5_api").css("position", "absolute");
+                    $("#hls-stream_html5_api").css("width", "100%");
+                    $("#hls-stream_html5_api").css("height", "100%");
+                    $("#hls-stream_html5_api").css("top", "0");
+                    $("#hls-stream_html5_api").css("left", "0");
+                </script>
+            }
+            else
+            {
+                <video id="Video@(ItemID)" style="position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;" preload="metadata" playlist="@Html.Raw(VideoURL)" src="@Html.Raw(VideoURL)" nowplaying="0" onended="NextPlay('Video@(ItemID)')" autoplay muted></video>
+            }
+        }
+
+        if (level1Element.Attribute("type").Value == "ScrollText")
+        {
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            string ItemFont = level1Element.Element("Font").Value;
+            int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+            ItemFontSize = ItemFontSize * 2;
+            string ForeColor = level1Element.Element("Color").Value;
+            string ItemText = level1Element.Element("Text").Value;
+
+            int TickRate = Convert.ToInt32(level1Element.Element("TickRate").Value);
+            int TickPercentage = Convert.ToInt32(level1Element.Element("TickPercentage").Value);
+
+            if (level1Element.Element("RightToLeft").Value == "True")
+            {
+                <marquee direction="right" behavior="scroll" scrolldelay="@(TickRate)" scrollamount="@(TickPercentage)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</marquee>
+            }
+            else
+            {
+                <marquee direction="left" behavior="scroll" scrolldelay="@(TickRate)" scrollamount="@(TickPercentage)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</marquee>
+            }
+        }
+
+        if (level1Element.Attribute("type").Value == "DateTime")
+        {
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            string ItemFont = level1Element.Element("Font").Value;
+            int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+            //ItemFontSize = ItemFontSize * 2;
+            string ForeColor = level1Element.Element("Color").Value;
+
+            if (level1Element.Element("ShowDate").Value == "true")
+            {
+                if (level1Element.Element("ShowTime").Value == "true")
+                {
+                    <span class="DateTimer" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortDateString()) @(DateTime.Now.ToShortTimeString())</span>
+                }
+                else
+                {
+                    <span class="Dater" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortDateString()))</span>
+                }
+            }
+            else
+            {
+                if (level1Element.Element("ShowTime").Value == "True")
+                {
+                    <span class="Timer" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortTimeString())</span>
+                }
+                else
+                {
+                    <span class="Noner" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">---</span>
+                }
+            }
+
+            TimerCount++;
+        }
+
+        if (level1Element.Attribute("type").Value == "RSSFeed")
+        {
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+            RSSItemID = level1Element.Element("Identifier").Value;
+
+            RSSID = Convert.ToInt32(RSSItemID);
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            string ItemFont = level1Element.Element("Font").Value;
+            int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+            string ForeColor = level1Element.Element("Color").Value;
+
+            ItemDataSource = level1Element.Element("DataSource").Value;
+            ItemRowCount = Convert.ToInt32(level1Element.Element("RowCount").Value);
+            ItemRowName = level1Element.Element("RowName").Value;
+            ItemRefleshTime = Convert.ToInt32(level1Element.Element("RefleshTime").Value);
+            ItemRowMap = level1Element.Element("RowMap").Value;
+
+            string AutoRSSScroll = level1Element.Element("AutoScroll").Value;
+
+            RSSRefleshTime = ItemRefleshTime;
+
+            <div id="@(RSSItemID)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">
+                <img src="~/assets/images/loading2.gif" />
+            </div>
+
+            <script>
+                $.get("RSSFeeder", {ItemDataSource:"@(ItemDataSource)", ItemRowMap:"@Html.Raw(ItemRowMap.Replace("&gt;",">"))", ItemRowCount:"@(ItemRowCount)", ItemRowName:"@(ItemRowName)"}, function (data) {
+                    $("#@(RSSItemID)").html(data);
+            });
+            </script>
+        }
+
+        if (level1Element.Attribute("type").Value == "WaitingList")
+        {
+            string ItemID = level1Element.Element("Identifier").Value;
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            string LineBG = level1Element.Element("BackgroundImage").Value;
+
+            string BranchID = level1Element.Element("BranchID").Value;
+
+            string WillBeSeperated = level1Element.Element("WaitingList").Value;
+            char seperator = ',';
+            List<string> RowNames = WillBeSeperated.Split(seperator).ToList();
+
+            int ItemCount = Convert.ToInt32(level1Element.Element("Length").Value);
+            int BorderThickness = Convert.ToInt32(level1Element.Element("BorderThickness").Value);
+            bool ShowBorders = Convert.ToBoolean(level1Element.Element("ShowBorder").Value);
+            int MacroID = Convert.ToInt32(level1Element.Element("Macro").Value);
+
+            string ItemFont = level1Element.Element("Font").Value;
+            string ItemFontSize = level1Element.Element("Size").Value;
+            string ForeColor = level1Element.Element("Color").Value;
+
+            <div style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">
+                <table border="@(BorderThickness)" width="%100" style="width:100%; border:solid @(BorderThickness)px #@(ForeColor);" id="Waiting_@(ItemID)" macro="@(MacroID)" itemcount="@(ItemCount)" class="WaitingTable"></table>
+            </div>
+
+            <script>
+                $(document).ready(function(){
+                    setInterval(function () {
+                        LoadWaitingList(@(MacroID), "Waiting_@(ItemID)", @(ItemCount), @(BranchID));
+                    }, 1000);
+				});
+            </script>
+        }
+
+        if (level1Element.Attribute("type").Value == "CallerImage")
+        {
+            string ItemID = level1Element.Element("Identifier").Value;
+            string ItemPosX = level1Element.Element("PositionX").Value;
+            string ItemPosY = level1Element.Element("PositionY").Value;
+
+            string ItemWidth = level1Element.Element("Width").Value;
+            string ItemHeight = level1Element.Element("Height").Value;
+
+            <img style="position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;" id="@(ItemID)" class="CallerImage" src="" />
+
+            <script>
+                CallerIDAvailable = true;
+            </script>
+        }
+    }
+}
+<body style="background-image:url(@XElement.Parse(sourcecode).Element("Page").Attribute("BackgroundImage").Value); background-size:cover; overflow:hidden;">
+
+    <audio id="SoundOfAnnouncer" style="position:absolute; left:0px; top:0px; z-index:1453;" controls autoplay>
+        <source src="~/Voice/English/dingdong.wav" type="audio/wav">
+        <source src="~/Voice/English/dingdong.wav" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="../../signalr/hubs"></script>
+    <script>
+        var TicketCount = 0;
+        var CounterCount = 0;
+        var isPlaying = false;
+        var Announcements = [];
+        var RefreshWaitingList = false;
+
+        var TokenRefresher;
+
+        var PlaybackPhrases = [];
+
+        function in_array(needle, haystack) {
+            var length = haystack.length;
+            for (var i = 0; i < length; i++) {
+                if (haystack[i] == needle) return true;
+            }
+            return false;
+        }
+
+        function SetVariables(Counter, Ticket) {
+            CounterCount = Counter;
+            TicketCount = Ticket;
+        }
+
+        function LoadWaitingList(MacroID, HTMLID, length, brchid) {
+            $.get("GetWaitingList/", { Macro: MacroID, Length: length, BranchID: brchid }, function (donut) {
+                $("#" + HTMLID).html("");
+                $("#" + HTMLID).html(donut);
+            });
+        }
+
+        function NextPlay(PlayerID) {
+            var playlist = $("#" + PlayerID).attr("playlist");
+            playlist = playlist.replace(/'/g, "");
+            playlist = playlist.split(";");
+            var nowplaying = $("#" + PlayerID).attr("nowplaying");
+
+            if (nowplaying < playlist.length-2) {
+                nowplaying++;
+                $("#" + PlayerID).attr("nowplaying", nowplaying);
+                $("#" + PlayerID).attr("src", playlist[nowplaying]);
+                document.getElementById(PlayerID).play();
+            }
+            else {
+                nowplaying = 0;
+                $("#" + PlayerID).attr("nowplaying", nowplaying);
+                $("#" + PlayerID).attr("src", playlist[nowplaying]);
+                document.getElementById(PlayerID).play();
+            }
+        }
+
+        var openerdate = new Date();
+        $(document).ready(function () {
+            openerdate = new Date();
+            var signalrhub = $.connection.comHub;
+            $.connection.hub.start().done(function () {
+                var connectionID = $.connection.hub.id;
+                $.get("OpenConnection/", { ConnectionID: connectionID, DigitalSignageID:@(dsid) }, function (data) {
+                    data = data.replace(/\s/g, '');
+                });
+            });
+
+            $.connection.hub.disconnected(function () {
+                console.log('Connection disconnected');
+                alert("disconnected");
+            });
+
+            var RSSReflesh = @(RSSRefleshTime);
+
+            var terminaller = [@foreach (string item in terminals)
+            {
+                string aytim = "'" + item.ToString() + "', ";
+
+                @Html.Raw(aytim)
+            }];
+
+            SetVariables(@(CounterCount),@(TicketCount));
+            timer();
+            /*var aplayer = document.getElementById("SoundOfAnnouncer");
+            aplayer.addEventListener("canplay", function () {
+                aplayer.pause();
+                aplayer.resume().then(() => {
+                    aplayer.play();
+                });
+            }, false);*/
+
+            $("body").children("video").each(function () {
+                if ($(this).attr("id") != "hls-stream") {
+                    var PlayerID = $(this).attr("id");
+                    var playlist = $("#" + PlayerID).attr("playlist");
+                    var playlist = playlist.replace(/'/g, "");
+                    playlist = playlist.split(";");
+                    $("#" + PlayerID).attr("src", playlist[0].replace("'", ""));
+                    document.getElementById(PlayerID).play();
+                }
+            });
+
+            document.getElementById('SoundOfAnnouncer').addEventListener('ended', AnnouncerStopped, false);
+
+            signalrhub.client.SendMessage = function (command) {
+                if (command.includes("TicketCalled") || command.includes("CalledManually")) {
+                    var pFrom = command.indexOf("(");
+                    var pTo = command.indexOf(",");
+                    var ticketid = command.substring(pFrom + 1, pTo);
+                    var ticketNumber = "";
+
+                    pFrom = command.indexOf(",");
+                    pTo = command.indexOf(")");
+                    var terminalID = command.substring(pFrom + 1, pTo);
+                    var terminalNumber = "";
+
+                    if (CallerIDAvailable) {
+                        $.get("GetCallerImage/", { TerminalID: terminalID }, function (data) {
+                            $(".CallerImage").attr("src", data.replace(/(?:\r\n|\r|\n)/g, ''));
+                        });
+                    }
+
+
+                    if (ticketid != "" && ticketid != "0") {
+                        $.get("GetTicketNumber/", { TicketID: ticketid }, function (data) {
+                            ticketNumber = data.replace(/(?:\r\n|\r|\n)/g, '');
+
+                            if (typeof ticketNumber !== "undefined" && ticketNumber !== "") {
+
+                                $.get("GetTerminalByID/", { TerminalID: terminalID }, function (donut) {
+                                    terminalNumber = donut.replace(/(?:\r\n|\r|\n)/g, '');
+
+                                    if (in_array(terminalID, terminaller)) {
+                                        var annopart = 0;
+                                        for (var i = TicketCount; i > 1; i--) {
+                                            var oldticket = $("#t_" + (i - 1)).html();
+                                            $("#t_" + i).html("" + oldticket);
+
+                                            var oldcounter = $("#c_" + (i - 1)).html();
+                                            $("#c_" + i).html("" + oldcounter);
+
+                                            var oldservice = $("#sn_" + (i - 1)).html();
+                                            $("#sn_" + i).html("" + oldservice);
+
+                                            var oldteller = $("#teller_" + (i - 1)).html();
+                                            $("#teller_" + i).html("" + oldteller);
+
+                                            var olstatus = $("#status_" + (i - 1)).html();
+                                            $("#status_" + i).html("" + olstatus);
+
+                                            var oldstatuscolor = $("#status_" + (i - 1)).css("color");
+                                            $("#status_" + i).css("color", oldstatuscolor);
+
+                                            var oldstatustid = $("#status_" + (i - 1)).attr("tid");
+                                            $("#status_" + i).attr("tid", oldstatustid);
+
+                                            var oldfloor = $("#floor_" + (i - 1)).html();
+                                            $("#floor_" + i).html("" + oldfloor);
+
+                                            var oltermname = $("#tn_" + (i - 1)).html();
+                                            $("#tn_" + i).html("" + oltermname);
+                                        }
+
+                                        $("#t_1").html("" + ticketNumber);
+                                        $("#c_1").html("" + terminalNumber);
+                                        $("#status_1").attr("tid", terminalID);
+
+                                        // STATIC TICKET FUNCTIONS //
+
+
+                                        $("#st_" + terminalID).html("" + ticketNumber);
+
+                                        $.get("GetServiceByID/", { TicketID: ticketid }, function (servicedonut) {
+                                            servicename = servicedonut;
+                                            $("#sn_1").html("" + servicename);
+                                        });
+
+                                        if ($("#teller_1").length) {
+                                            $.get("GetTellerNameByID/", { TerminalID: terminalID }, function (tellerdonut) {
+                                                tellername = tellerdonut;
+                                                $("#teller_1").html("" + tellername);
+                                            });
+                                        }
+
+                                        if ($("#tn_1").length) {
+                                            $.get("GetTerminalNameByID/", { TerminalID: terminalID }, function (tellerdonut) {
+                                                tName = tellerdonut;
+                                                $("#tn_1").html("" + tName);
+                                            });
+                                        }
+
+                                        /////////////////////////////
+
+                                        var blinker = setInterval(function () {
+                                            $("#t_1").fadeOut(function () {
+                                                $(this).fadeIn();
+                                            });
+                                            $("#c_1").fadeOut(function () {
+                                                $(this).fadeIn();
+                                            });
+                                            $("#st_" + terminalID).fadeOut(function () {
+                                                $(this).fadeIn();
+                                            });
+                                            $("#tn_1").fadeOut(function () {
+                                                $(this).fadeIn();
+                                            });
+                                        }, 500);
+
+                                        setTimeout(function () {
+                                            clearInterval(blinker);
+                                        }, 9000);
+
+                                        ticketNumber = ticketNumber.replace(/(?:\r\n|\r|\n)/g, '');
+                                        var ticketPrefix = ticketNumber.substring(0, 1);
+                                        var ticketInteger = ticketNumber.substring(1, 4);
+                                        var floornumber = "";
+
+                                        $.get("GetFloorNumber/", { TerminalID: terminalID }, function (floordonut) {
+                                            floornumber = floordonut.replace(/(?:\r\n|\r|\n)/g, '');
+
+                                            $("#floor_1").html("" + floornumber);
+
+                                            Announcer(ticketPrefix, ticketInteger, terminalNumber, floornumber, "@(WillDingDong)", "@(ReadTicket)", "@(ReadFloor)", "@(Language1)", "@(Language2)");
+                                        });
+                                    }
+                                });
+
+                            }
+                        });
+                    }
+                }
+
+
+                if (command.includes("SetStatus")) {
+                    var pFrom = command.indexOf("(");
+                    var pTo = command.indexOf(",");
+                    var terminalID = command.substring(pFrom + 1, pTo);
+
+                    pFrom = command.indexOf('"');
+                    pTo = command.indexOf('"', pFrom+1);
+                    var StatusMessage = command.substring(pFrom + 1, pTo);
+
+                    pFrom = command.indexOf(",", pFrom);
+                    pTo = command.indexOf(")");
+                    var SetColor = command.substring(pFrom + 1, pTo);
+
+                    StatusMessage = StatusMessage.replace(/"/g, "").trim();
+
+                    $(".statusitem").each(function () {
+                        if ($(this).attr("tid") === terminalID) {
+                            $(this).html(StatusMessage);
+                            $(this).css("color", "#" + SetColor);
+                            return false;
+                        }
+                    });
+                }
+
+                if (command.includes("PrintTicket")) {
+                    //. WaitingTable
+                }
+
+                if (command.includes("RestartDigitalSignage")) {
+                    var pFrom = command.indexOf("(");
+                    var pTo = command.indexOf(")");
+                    var deviceID = command.substring(pFrom + 1, pTo);
+
+                    if (deviceID == "@(dsid)") {
+						alert("Restarting...");
+                        //window.location.reload(true);
+                    }
+                }
+            };
+
+
+            if (@(ArabicTranslationTime) > 0) {
+                ArabicTranslate();
+            }
+        });
+
+
+        var rakamlanguage = "tr";
+
+        function ArabicTranslate() {
+            var saniye = "@(ArabicTranslationTime)" + "000";
+            setTimeout(function () { ArabicTranslate(); }, saniye);
+
+            if (rakamlanguage == "tr") {
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/0/g, "٠");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/1/g, "١");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/2/g, "٢");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/3/g, "٣");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/4/g, "٤");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/5/g, "٥");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/6/g, "٦");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/7/g, "٧");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/8/g, "٨");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/9/g, "٩");
+                    $(this).text(text);
+                });
+
+
+                rakamlanguage = "ar";
+            }
+            else {
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٠/g, "0");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/١/g, "1");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٢/g, "2");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٣/g, "3");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٤/g, "4");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٥/g, "5");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٦/g, "6");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٧/g, "7");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٨/g, "8");
+                    $(this).text(text);
+                });
+
+                $("span, label").each(function () {
+                    var text = $(this).text();
+                    text = text.replace(/٩/g, "9");
+                    $(this).text(text);
+                });
+
+                rakamlanguage = "tr";
+            }
+        }
+
+        function AnnouncerStopped(e) {
+            if (PlaybackPhrases.length > 0) {
+                $("#SoundOfAnnouncer").attr("src", PlaybackPhrases.shift());
+                document.getElementById("SoundOfAnnouncer").play();
+                isPlaying = true;
+            }
+            else {
+                isPlaying = false;
+            }
+        }
+
+        function UrlExists(url) {
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url, false);
+            http.send();
+            return http.status != 404;
+        }
+
+        function Announcer(TicketPrefix, TicketInteger, TerminalNumber, FloorNumber, DingDong, ReadTicket, ReadFloor, Language1, Language2) {
+            if (DingDong == "True") {
+                PlaybackPhrases.push("../../Voice/English/dingdong.wav");
+            }
+            var stableurl = "../../Voice/@(Language1)/";
+            var stable2url = "../../Voice/@(Language2)/";
+            if (ReadTicket == "True") {
+                if (UrlExists(stableurl + "ticket_number.wav")) {
+                    PlaybackPhrases.push(stableurl + "ticket_number.wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+                if (UrlExists(stableurl + "letter/" + TicketPrefix + ".wav")) {
+                    PlaybackPhrases.push(stableurl + "letter/" + TicketPrefix + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+                if (UrlExists(stableurl + "number/" + TicketInteger + ".wav")) {
+                    PlaybackPhrases.push(stableurl + "number/" + TicketInteger + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+                if (UrlExists(stableurl + "please_proceed.wav")) {
+                    PlaybackPhrases.push(stableurl + "please_proceed.wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+                if (UrlExists(stableurl + "number/" + TerminalNumber + ".wav")) {
+                    PlaybackPhrases.push(stableurl + "number/" + TerminalNumber + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+            }
+            if (ReadFloor == "True") {
+                if (UrlExists(stableurl + "floor/" + FloorNumber + ".wav")) {
+                    PlaybackPhrases.push(stableurl + "floor/" + FloorNumber + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stableurl + "error.wav");
+                }
+            }
+            if (Language2 != "") {
+                if (UrlExists(stable2url + "ticket_number.wav")) {
+                    PlaybackPhrases.push(stable2url + "ticket_number.wav");
+                }
+                else {
+                    PlaybackPhrases.push(stable2url + "error.wav");
+                }
+                if (UrlExists(stable2url + "letter/" + TicketPrefix + ".wav")) {
+                    PlaybackPhrases.push(stable2url + "letter/" + TicketPrefix + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stable2url + "error.wav");
+                }
+                if (UrlExists(stable2url + "number/" + TicketInteger + ".wav")) {
+                    PlaybackPhrases.push(stable2url + "number/" + TicketInteger + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stable2url + "error.wav");
+                }
+                if (UrlExists(stable2url + "please_proceed.wav")) {
+                    PlaybackPhrases.push(stable2url + "please_proceed.wav");
+                }
+                else {
+                    PlaybackPhrases.push(stable2url + "error.wav");
+                }
+                if (UrlExists(stable2url + "number/" + TerminalNumber + ".wav")) {
+                    PlaybackPhrases.push(stable2url + "number/" + TerminalNumber + ".wav");
+                }
+                else {
+                    PlaybackPhrases.push(stable2url + "error.wav");
+                }
+                if (ReadFloor == "True") {
+                    if (UrlExists(stable2url + "floor/" + FloorNumber + ".wav")) {
+                        PlaybackPhrases.push(stable2url + "floor/" + FloorNumber + ".wav");
+                    }
+                    else {
+                        PlaybackPhrases.push(stable2url + "error.wav");
+                    }
+                }
+            }
+
+            if (DingDong == "True") {
+                if (isPlaying == false) {
+                    $("#SoundOfAnnouncer").attr("src", PlaybackPhrases.shift());
+                    document.getElementById("SoundOfAnnouncer").play();
+                    isPlaying = true;
+                }
+            }
+        }
+
+        function Rearanger(dtstring) {
+            var datertimer = dtstring.split(' ');
+            var datee = datertimer[0];
+            var timee = datertimer[1];
+            if (timee != null) {
+                timee = timee.split(':');
+            }
+
+            datee = datee.split('-');
+
+            var retdate = date[2] + "-" + date[1] + "-" + date[0];
+
+            return retdate + " " + time;
+        }
+
+        function RSSReflesh() {
+            $("#@(RSSItemID)").html("<img src='~/assets/images/loading2.gif' />");
+            $.get("RSSFeeder", {ItemDataSource:"@(ItemDataSource)", ItemRowMap:"@Html.Raw(ItemRowMap.Replace("&gt;",">"))", ItemRowCount:"@(ItemRowCount)", ItemRowName:"@(ItemRowName)"}, function (data) {
+                $("#@(RSSItemID)").html(data);
+            });
+        }
+
+
+        function CheckReload(){
+            var sdate = "@(sdate)";
+            var edate = "@(edate)";
+
+            var start_dates = sdate.split(/;/g);
+            var end_dates = edate.split(/;/g);
+
+            if (sdate != "" && edate != "") {
+                for (var i = 0; i < start_dates.length; i++) {
+                    var currentdate = new Date();
+
+                    var datertimer = start_dates[i].split(' ');
+                    var datee = datertimer[0];
+                    var timee = datertimer[1];
+
+                    sdatee = datee.split('-');
+                    stimee = timee.split(':');
+
+                    datertimer = end_dates[i].split(' ');
+                    datee = datertimer[0];
+                    timee = datertimer[1];
+
+                    edatee = datee.split('-');
+                    etimee = timee.split(':');
+
+                    var montlar = currentdate.getMonth() + 1;
+
+                    var curdt = currentdate.getFullYear() + "-" + montlar + "-" + currentdate.getDate() + " " + currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
+
+                    datertimer = curdt.split(' ');
+                    datee = datertimer[0];
+                    timee = datertimer[1];
+
+                    cdatee = datee.split('-');
+                    ctimee = timee.split(':');
+
+                    /*alert("SetYear : " + sdatee[0] + " CurrentYear : " + cdatee[0] + "\n" +
+                        "SetMonth : " + sdatee[1] + " Current Month : " + cdatee[1] + "\n" +
+                        "SetDay : " + sdatee[2] + " CurrentDay : " + cdatee[2] + "\n" +
+                        "SetHour : " + stimee[0] + " CurrentHour : " + ctimee[0] + "\n" +
+                        "SetMinute : " + stimee[1] + " CurrentMinute : " + ctimee[1]);*/
+
+
+
+                    if (sdatee[0] == cdatee[0] && sdatee[1] == cdatee[1] && sdatee[2] == cdatee[2] && stimee[0] == ((ctimee[0] < 10) ? '0' + ctimee[0] : '' + ctimee[0]) && stimee[1] == ((ctimee[1] < 10) ? '0' + ctimee[1] : '' + ctimee[1])) {
+                        alert("Time is up");
+                        window.location.href = "/DigitalSignage/SelectSignage";
+                    }
+
+                    if (edatee[0] == cdatee[0] && edatee[1] == cdatee[1] && edatee[2] == cdatee[2] && etimee[0] == ((ctimee[0] < 10) ? '0' + ctimee[0] : '' + ctimee[0]) && etimee[1] == ((ctimee[1] < 10) ? '0' + ctimee[1] : '' + ctimee[1])) {
+                        alert("Time is up");
+                        window.location.href = "/DigitalSignage/SelectSignage";
+                    }
+                }
+            }
+        }
+        var rsses = 0;
+        function add() {
+
+            var currentdate = new Date();
+            var datetime = ((currentdate.getDate() < 10) ? '0' + currentdate.getDate() : '' + currentdate.getDate()) + "."
+                + (((currentdate.getMonth() + 1) < 10) ? '0' + (currentdate.getMonth() + 1) : '' + (currentdate.getMonth() + 1)) + "."
+                + ((currentdate.getFullYear() < 10) ? '0' + currentdate.getFullYear() : '' + currentdate.getFullYear()) + " "
+                + ((currentdate.getHours() < 10) ? '0' + currentdate.getHours() : '' + currentdate.getHours()) + ":"
+                + ((currentdate.getMinutes() < 10) ? '0' + currentdate.getMinutes() : '' + currentdate.getMinutes());
+
+            var date = ((currentdate.getDate() < 10) ? '0' + currentdate.getDate() : '' + currentdate.getDate()) + "."
+                + (((currentdate.getMonth() + 1) < 10) ? '0' + (currentdate.getMonth() + 1) : '' + (currentdate.getMonth() + 1)) + "."
+                + ((currentdate.getFullYear() < 10) ? '0' + currentdate.getFullYear() : '' + currentdate.getFullYear());
+
+            var time = ((currentdate.getHours() < 10) ? '0' + currentdate.getHours() : '' + currentdate.getHours()) + ":"
+                + ((currentdate.getMinutes() < 10) ? '0' + currentdate.getMinutes() : '' + currentdate.getMinutes());
+
+            $(".DateTimer").html(datetime + "");
+            CheckReload();
+        }
+
+        function timer() {
+            t = setInterval(add, 30000);
+        }
+
+        function stopTimer() {
+            clearInterval(t);
+            seconds = 0; minutes = 0; hours = 0;
+
+        }
+
+
+
+    </script>
+
+</body>
+</html>

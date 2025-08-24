@@ -1,0 +1,30 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    qmTicket Ticket = ViewBag.Ticket;
+    qmService Service = ViewBag.Service;
+    qmSegment Segment = ViewBag.Segment;
+    qmBranch Branch = ViewBag.Branch;
+    qmCustomer Customer = ViewBag.Customer;
+}
+
+<center>
+    <p style="font-size:16px;">@(Branch.BranchName)</p>
+    <p style="font-size:56px; font-weight:bold;">@(Ticket.TicketPrefix) @(Ticket.TicketNumber)</p>
+    <p style="font-size:16px;">@(Service.ServiceName)</p>
+    <p style="font-size:16px;">@(Segment.SegmentName)</p>
+    <p style="font-size:16px;">@(Customer.Name) @(Customer.Surname)</p>
+    <a href="javascript:CloseTicketPreviewMiniModal();">Close</a>
+</center>
+
+<script>
+    $(document).ready(function () {
+        signalRHub.server.send("PrintTicket(@(Ticket.TicketPrefix)@(Ticket.TicketNumber),@(Ticket.ServiceID),@(Ticket.SegmentID),@(Ticket.BranchID)) - DIAGNOSING...").fail(function (e) {
+            alert(e.message);
+        });
+    });
+
+    function CloseTicketPreviewMiniModal() {
+        $("#GenerateResult").hide();
+    }
+</script>

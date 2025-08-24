@@ -1,0 +1,103 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmInterface
+@{
+    ViewBag.Title = "Edit Interface";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    qmInterface sinterface = ViewBag.data;
+    string branch = ViewBag.branch;
+    List<qmBranch> branches = ViewBag.branches;
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card">
+            <div class="card-header">
+                Interface Management
+            </div>
+            <div class="card-body">
+                <form action="~/Hardware/EditInterface?InterfaceID=@sinterface.InterfaceID" method="post">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Branch</label>
+                                    <div class="col-md-9">
+                                        <select name="BranchID" id="BranchID" class="select2">
+                                            @{
+                                                foreach (qmBranch item in branches)
+                                                {
+                                                    if (branch == item.BranchName)
+                                                    {
+                                                        <option value="@item.BranchID" selected="selected">@item.BranchName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.BranchID">@item.BranchName</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Interface Name</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => sinterface.InterfaceName, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">IP Address</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => sinterface.IPAddress, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Portocol</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => sinterface.Protocol, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">Line Number</label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => sinterface.LineNumber, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="form-footer text-right">
+                            <div class="form-group">
+                                <div class="col-md-9 col-md-offset-3">
+                                    <a href="../Hardware/Interface" class="btn btn-default">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,223 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Edit Transfer Rulle";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+    List<qmService> servicelist = ViewBag.service;
+    List<qmSegment> segmentlist = ViewBag.segment;
+    List<qmTerminal> terminallist = ViewBag.terminal;
+
+    qmTransferRuleGroup rule = ViewBag.rule;
+    List<qmTerminal> TerminalLister = ViewBag.TerminalList;
+    List<qmSegment> ServiceList = ViewBag.ServiceList;
+    List<qmBranch> branches = ViewBag.branches;
+}
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<script>
+    function CheckAction() {
+        if ($("#cmbMacroType").val() == "TT") {
+            $("#Term").show();
+            $("#SerSeg").hide();
+        }
+        else {
+            $("#SerSeg").show();
+            $("#Term").hide();
+        }
+    }
+
+    function AddFormula() {
+        if ($("#cmbMacroType").val() == "TT") {
+            var termid = $("#cmbTerminal").val();
+            var termname = $("#cmbTerminal :selected").text();
+
+            $("#TerminalList").append('<option value="' + termid + '">' + termname + '</option>');
+        }
+        if ($("#cmbMacroType").val() == "ST") {
+            var servid = $("#cmbService").val();
+            var segid = $("#cmbSegment").val();
+
+            var servnm = $("#cmbService :selected").text();
+            var segnm = $("#cmbSegment :selected").text();
+
+            $("#SegmentList").append('<option value="' + segid + '">' + servnm + ' / ' + segnm + '</option>');
+        }
+    }
+    function SavePage() {
+        $('#SegmentList option').prop('selected', true);
+        $('#TerminalList option').prop('selected', true);
+
+        $("#form1").submit();
+    }
+
+    function RemoveFromService() {
+        $("#SegmentList option:selected").remove();
+    }
+
+    function RemoveFromTerminal() {
+        $("#TerminalList option:selected").remove();
+    }
+</script>
+
+
+<div class="row">
+    <div class="col-xs-8 col-xs-offset-2">
+        <div class="card">
+            <div class="card-header">
+                Transfer Rule Panel
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <form action="~/Rule/EditTransferRule?RuleID=@(rule.RuleGroup)" method="post" id="form1" name="form1">
+                        <div class="col-md-12">
+                            <input type="text" name="txtMacroName" id="txtMacroName" class="form-control" placeholder="Rule Bundle Name" value="@(rule.RuleName)" />
+                        </div>
+                        <div class="col-md-6">
+                            Services / Segments
+                        </div>
+                        <div class="col-md-6">
+                            Terminals
+                        </div>
+                        <div class="col-md-6" id="Segments" style="border:solid 1px #CCC; padding:0px;">
+                            <select id="SegmentList" name="SegmentList" multiple="multiple" style="width:100%; min-height:300px; border-style:none;">
+                                @{ 
+                                    foreach (qmSegment item in ServiceList)
+                                    {
+                                        <option value="@(item.SegmentID)">@(servicelist.Where(x=>x.ServiceID == item.ServiceID).FirstOrDefault().ServiceName) / @(item.SegmentName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="Terminals" style="border:solid 1px #CCC; padding:0px;">
+                            <select id="TerminalList" name="TerminalList" multiple="multiple" style="width:100%; min-height:300px; border-style:none;">
+                                @{
+                                    foreach (qmTerminal item in TerminalLister)
+                                    {
+                                        <option value="@(item.TerminalID)">[@(branches.Where(x=>x.BranchID == item.BranchID).FirstOrDefault().BranchName)] @(item.TerminalName)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 text-right">
+                            <a href="javascript:RemoveFromService();" class="btn btn-warning"><span class="fa fa-minus"></span> Remove From Service</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <a href="javascript:RemoveFromTerminal();" class="btn btn-warning"><span class="fa fa-minus"></span> Remove From Terminal</a>
+                        </div>
+
+                        <div class="col-md-12 text-right" style="margin-top:10px;">
+                            <input type="submit" value="Save" class="btn btn-primary" onclick="SavePage();" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-xs-8 col-xs-offset-2">
+        <div class="card">
+            <div class="card-header">
+                Rule Panel
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select name="cmbMacroType" id="cmbMacroType" class="select2" onchange="CheckAction();">
+                            <option value="TT">Transfer To Terminal</option>
+                            <option value="ST">Transfer To Service</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8" id="SerSeg" style="display:none;">
+                        <div class="col-md-6">
+                            <select name="cmbService" id="cmbService" class="select2  select-change" style="width:100%;">
+                                @{
+                                    foreach (qmService item in servicelist)
+                                    {
+                                        <option value="@item.ServiceID">@item.ServiceName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <select name="cmbSegment" id="cmbSegment" class="select2" style="width:100%;">
+                                @{
+                                    foreach (qmSegment item in segmentlist)
+                                    {
+                                        <option value="@item.SegmentID">@item.SegmentName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-8" id="Term">
+                        <div class="col-md-12">
+                            <select name="cmbTerminal" id="cmbTerminal" class="select2" style="width:100%;">
+                                @{
+                                    foreach (qmTerminal item in terminallist)
+                                    {
+                                        <option value="@item.TerminalID">[@(branches.Where(x=>x.BranchID == item.BranchID).FirstOrDefault().BranchName)] @item.TerminalName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <a href="javascript:AddFormula();" class="btn btn-warning"><span class="fa fa-plus"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    //Select Segments Through ServiceID
+    $(function () {
+        $('.select-change').change(function () {
+            var selectId = $(this).attr('id');
+            var text = "";
+
+            $.ajax({
+                type: "POST",
+                url: "/AutoTransferRoute/Segments",
+                data: "id=" + $(this).val(),
+                dataType: "JSON",
+                success: function (result) {
+                    text = "";
+
+                    for (var i = 0; i < result.length; i++) {
+                        text += '<option value="' + result[i].SegmentID + '">' + result[i].SegmentName + '</option>'
+                    }
+
+                    if (selectId == "cmbAdvService") {
+                        var segmentAppend = $('#cmbAdvSegment');
+                        segmentAppend.html("");
+                        segmentAppend.append(text);
+                    }
+                    else if (selectId == "cmbService") {
+                        var segmentAppend = $('#cmbSegment');
+                        segmentAppend.html("");
+                        segmentAppend.append(text);
+                    }
+
+                }
+            })
+        });
+    })
+
+</script>

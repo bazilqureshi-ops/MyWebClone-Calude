@@ -1,0 +1,1276 @@
+﻿@using System.Xml.Linq
+@using Emse.QMagic.Web.Domain.Viewmodels
+@model GenericReportViewModel
+
+<link href="/assets/jquery-ui/jquery-ui.css" rel="stylesheet" />
+<link href="/assets/css/report.css" rel="stylesheet" />
+<link href="/assets/css/sweetalert2.min.css" re l="stylesheet" />
+
+<script src="~/assets/js/jquery.js"></script>
+<script src="~/assets/jquery-ui/jquery-ui.js"></script>
+<script src="/assets/js/sweetalert2.all.min.js"></script>
+@*<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>*@
+
+<style>
+	/* Report Wizard Styles */
+	.wizard-container {
+		display: inline-table;
+		width: 20%;
+		height: 500px;
+		padding: 0;
+		box-sizing: unset;
+		text-align: center;
+		color: unset;
+		margin: 2% auto;
+		position: relative;
+	}
+
+		.wizard-container:focus, .wizard-container:hover {
+			text-decoration: none;
+			color: unset;
+		}
+
+		.wizard-container h4 {
+			color: #29c75f;
+			font-weight: 600;
+			max-height: 35px;
+			font-size: 22px;
+		}
+
+		.wizard-container img {
+			vertical-align: middle;
+			display: block;
+			width: 80%;
+			margin: 20px 36.5px;
+		}
+
+	#first-wizard-element {
+		margin-left: 25%;
+	}
+
+	#second-wizard-element {
+		margin-left: 5%;
+	}
+
+	.btn-create-report {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		margin: 0 15%;
+	}
+
+	/* Quick Custom Report Styles*/
+	.step-container {
+		display: block;
+		width: 100%;
+		position: relative;
+		text-align: center;
+		margin-top: 35px;
+	}
+
+	.step-stick {
+		width: 100%;
+		height: 5px;
+		background-color: #f5f5f5;
+		display: inline-block;
+		position: absolute;
+		top: 50%;
+		left: 0;
+		z-index: 0;
+	}
+
+	.step-item {
+		display: inline-block;
+		width: 60px;
+		height: 60px;
+		border-radius: 50%;
+		background-color: #f5f5f5;
+		color: #bbb;
+		text-align: center;
+		line-height: 60px;
+		font-family: Arial;
+		font-weight: bold;
+		font-size: 20px;
+		border: 1px solid #f5f5f5;
+		position: relative;
+		z-index: 5;
+		margin-left: 25px;
+	}
+
+		.step-item::after {
+			content: "";
+			display: inline-block;
+			position: absolute;
+			width: 120%;
+			height: 120%;
+			top: -10%;
+			left: -10%;
+			border: 2px solid #f5f5f5;
+			border-radius: 50%;
+		}
+
+
+
+	.step-item-active {
+		background-color: #29c75f;
+		color: #ffffff;
+		border: 1px solid #ffffff;
+	}
+
+		.step-item-active::after {
+			content: "";
+			display: inline-block;
+			position: absolute;
+			width: 120%;
+			height: 120%;
+			top: -10%;
+			left: -10%;
+			border: 2px solid #29c75f;
+			border-radius: 50%;
+		}
+
+	.quick-report-step {
+		width: 100%;
+		max-height: 300px;
+		display: inline-table;
+		margin: 3% auto;
+	}
+
+	#left-section, .left-section {
+		width: 50%;
+		margin: 2% auto;
+		position: relative;
+		display: block;
+		float: left;
+		color: unset;
+	}
+
+		#left-section, .left-section h4, h3 {
+			color: #29c75f;
+			font-weight: 600;
+			max-height: 35px;
+			font-size: 22px;
+			text-align: center;
+		}
+
+		#left-section, .left-section img {
+			vertical-align: middle;
+			display: block;
+			margin: 20px auto;
+			width: 256px;
+		}
+
+		#left-section, .left-section p {
+			text-align: center;
+		}
+
+	#right-section, .right-section {
+		width: 50%;
+		float: right;
+		display: block;
+		padding: 2% 2%;
+	}
+
+	.select-item {
+		width: 100%;
+		padding: 3% 5%;
+	}
+
+	.select-branch-container {
+		width: 80%;
+		border: 1px solid #d0c9c9;
+		height: 350px;
+		overflow: auto;
+	}
+
+	.button-container {
+		display: inline-table;
+		width: 100%;
+		min-height: 30px;
+	}
+
+	#previous-button {
+		float: left;
+		position: absolute;
+		left: 2.6%;
+	}
+
+	#next-button {
+		float: right;
+		position: absolute;
+		right: 2.6%;
+	}
+
+	#add-property {
+		position: relative;
+		float: right;
+	}
+
+	#quick-wizard-modal-container {
+		padding: 4% 2%;
+	}
+
+	.property-item {
+		padding: 10px;
+		border: 1px solid #d0d0d0;
+		border-radius: 3px;
+		display: inline-block;
+		color: unset;
+		margin: 0 5px 5px 5px;
+	}
+
+		.property-item:hover {
+			color: unset;
+		}
+
+		.property-item:focus {
+			color: unset;
+			text-decoration: none;
+		}
+</style>
+
+@{
+	var reportType = "";
+	if (!string.IsNullOrEmpty(Model.Report.ReportXaml))
+	{ reportType = XElement.Parse(Model.Report.ReportXaml).FirstAttribute.Value; }
+
+	<input type="hidden" id="report-type" value="@reportType" />
+
+	if (Model.Report.ReportID <= 0)
+	{
+		<!-- Wizard Container -->
+		<div class="row" id="report-type-section">
+			<div class="col-xs-12 col-md-12 col-lg-12">
+				<div class="card">
+					<div class="card-body">	
+
+						<!-- Quick Custom Report Wizard -->
+						<div class="wizard-container" id="first-wizard-element">
+							<h4>Quick Custom Report</h4>
+
+							<img src="~/assets/images/report-wizard-fast.png" title="Quick Report Image" />
+							<p>You can create custom report for yourself and you can make it in few easy steps.</p>
+
+							<button type="button" onclick="reportTypeChange('quick');" class="btn btn-primary btn-create-report"> Create New Quick   Report </button>
+						</div>
+
+						<!-- Advanced Custom Report Wizard -->
+						<div class="wizard-container" id="second-wizard-element">
+							<h4>Advanced Custom Report</h4>
+
+							<img src="~/assets/images/report-wizard-advanced.png" title="Advanced Report Image" />
+							<p>You can create custom report for yourself, this make little bit time but in the end, you have much more options than Quick Report Wizard and also you can create your own design.</p>
+
+							<button type="button" onclick="reportTypeChange('advanced');" class="btn btn-primary btn-outline-primary btn-create-report"> Create New Advanced Report </button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+<!-- Advanced Report Page -->
+<div class="row" id="advanced-design-body" style="display:none;">
+	<div class="col-xs-12 col-md-12 col-lg-12">
+		<div class="card">
+			<div class="card-body report-designer">
+				<form method="POST" class="row" id="generic-form" action="/Reports/SaveGeneric">
+					@Html.HiddenFor(model => model.Report.ReportID)
+
+					<!-- Save, Code Area and Droppable Area -->
+					<!-- Save Change Area-->
+					<div class="input-group" style="margin-top:25px;">
+						<span class="input-group-addon" id="basic-addon3">Page Name</span>
+						<input type="text" class="form-control" id="CustomReportName" name="Report.ReportName" aria-describedby="basic-addon3" value="@Model.Report.ReportName" placeholder="Please enter report name">
+
+						<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" onclick="Save();" class="btn btn-primary" value="Save Design" style="margin:0px;"></span>
+					</div>
+					<label class="text-danger">
+						@Html.ValidationMessageFor(title => title.Report.ReportName)
+					</label>
+
+					<!-- Switch Screen Area -->
+					<div class="col-xs-12 col-md-12 col-lg-12 droppable" style="padding:0px; height:100px !important; min-height:unset">
+
+						<ul class="nav nav-tabs" style="display:inherit; height:65px;" id="nav-tab">
+
+							<li role="presentation" class="active" id="Designer"><a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a></li>
+							<li role="presentation" id="SourceCode"><a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a></li>
+
+							<!-- Tool Box (Elements) -->
+							<!-- Label Element -->
+							<li role="presentation" class="draggable-element design-tool-element" type="Chart">
+								<a>
+									<h4 class="list-group-item-heading">
+										<span class="fa fa-pie-chart"></span>
+										Chart
+									</h4>
+								</a>
+							</li>
+
+							<li role="presentation" class="draggable-element design-tool-element" type="List">
+								<a>
+									<h4 class="list-group-item-heading">
+										<span class="fa fa-list"></span>
+										List
+									</h4>
+								</a>
+							</li>
+
+							<li role="presentation" class="draggable-element design-tool-element" type="Field">
+								<a>
+									<h4 class="list-group-item-heading">
+										<span class="fa fa-paperclip"></span>
+										Field
+									</h4>
+								</a>
+							</li>
+
+							<li role="presentation" class="draggable-element design-tool-element" type="Text">
+								<a>
+									<h4 class="list-group-item-heading">
+										<span class="fa fa-text-width"></span>
+										Static Text
+									</h4>
+								</a>
+							</li>
+						</ul>
+					</div>
+
+					<!-- Droppable Area -->
+					<div class="droppable col-xs-12 col-md-12 col-lg-12" id="DesignArea" style="min-width: 1280px; min-height: 720px; max-width:1920px; max-height:1080px; display: flex">
+						<!-- Close Side Arrows -->
+						<div id="x-arrow"></div>
+
+						<div id="y-arrow"></div>
+
+						<!-- Side Arrows -->
+						<div class="side-arrows" id="upper-left"></div>
+
+						<div class="side-arrows" id="upper-right"></div>
+
+						<div class="side-arrows" id="bottom-left"></div>
+
+						<div class="side-arrows" id="bottom-right"></div>
+
+						<!-- Element Will Be Here -->
+
+						@{
+							if (Model.Report.ReportID > 0)
+							{
+								foreach (var element in XElement.Parse(Model.Report.ReportXaml).Elements("Element"))
+								{
+									string elementType = element.Attribute("Type").Value;
+									string elementIdentify = element.Attribute("Identify").Value;
+									string elementLeft = element.Attribute("Left").Value;
+									string elementTop = element.Attribute("Top").Value;
+									string elementWidth = element.Attribute("Width").Value;
+									string elementHeight = element.Attribute("Height").Value;
+									string elementReportType = "";
+									string elementText = "";
+									string elementFontSize = "";
+									string elementFontWeight = "";
+									string elementFontStyle = "";
+
+
+									if (elementType != "Text")
+									{ elementReportType = element.Element("ReportType").Value; }
+
+									string elementChartType = "";
+									if (elementType == "Chart")
+									{ elementChartType = element.Element("ChartType").Value; }
+
+									if (elementType == "Text")
+									{
+										var text = element.Element("Text");
+
+										elementText = text.Value;
+										elementFontSize = text.Attribute("FontSize").Value;
+										elementFontWeight = text.Attribute("FontWeight").Value;
+										elementFontStyle = text.Attribute("FontStyle").Value;
+									}
+
+									<div class="uiElement ui-draggable ui-draggable-handle ui-resizable draggable" type="@elementType" id="@elementIdentify" style="position: relative; left:@(elementLeft)%; top:@(elementTop)%; width:@(elementWidth)%; height:@(elementHeight)%" @(!string.IsNullOrEmpty(elementChartType) ? "charttype=" + elementChartType + "" : "") @(!string.IsNullOrEmpty(elementReportType) ? "reporttype=" + elementReportType + "" : "") @(!string.IsNullOrEmpty(elementText) ? "text=" + elementText + "" : "") @(!string.IsNullOrEmpty(elementFontSize) ? "fontsize=" + elementFontSize + "" : "") @(!string.IsNullOrEmpty(elementFontWeight) ? "fontweight=" + elementFontWeight + "" : "") @(!string.IsNullOrEmpty(elementFontStyle) ? "fontstyle=" + elementFontStyle + "" : "") element-left="@(elementLeft)" element-top="@(elementTop)" element-width="@(elementWidth)" element-height="@(elementHeight)">
+
+										<a onclick="modalActive($(this).parent())">
+											<i class="fa fa-edit report-icons"></i>
+										</a>
+										<span onclick="DeleteItem($(this))" class="fa fa-trash report-icons text-danger"></span>
+
+										@foreach (var branch in element.Elements("Branches").Elements("Branch"))
+										{
+											<branch branchid="@branch.Value"></branch>
+										}
+
+										@if (elementType == "Field")
+										{
+											<i class="fa fa-paperclip cntr"></i>
+
+
+											foreach (var detail in element.Elements("Details").Elements("Detail"))
+											{
+												if (elementReportType == "Appointment")
+												{
+													<detail appointmentid="@detail.Element("Id").Value" appointmentname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Branch")
+												{
+													<detail branchid="@detail.Element("Id").Value" branchname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Customer" || elementReportType == "User")
+												{
+													<detail customerid="@detail.Element("Id").Value" customername="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Service")
+												{
+													<detail serviceid="@detail.Element("Id").Value" servicename="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Segment")
+												{
+													<detail segmentid="@detail.Element("Id").Value" segmentname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Terminal")
+												{
+													<detail terminalid="@detail.Element("Id").Value" terminalname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Macro")
+												{
+													<detail macroid="@detail.Element("Id").Value" macroname="@detail.Element("Name").Value"></detail>
+												}
+
+											}
+
+											<detail property="@(element.Elements("Properties").Elements("Property").ElementAt(0).Value)" propertytype="@(element.Elements("Properties").Elements("PropertyType").ElementAt(0).Value)"></detail>
+
+										}
+										else if (elementType == "List")
+										{
+											<i class="fa fa-list cntr"></i>
+
+											foreach (var property in element.Elements("Properties").Elements("Property"))
+											{
+												<detail property="@property.Value"></detail>
+											}
+										}
+										else if (elementType == "Chart")
+										{
+											<i class="fa fa-pie-chart cntr"></i>
+
+											foreach (var detail in element.Elements("Details").Elements("Detail"))
+											{
+												if (elementReportType == "Appointment")
+												{
+													<detail appointmentid="@detail.Element("Id").Value" appointmentname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Branch")
+												{
+													<detail branchid="@detail.Element("Id").Value" branchname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Customer" || elementReportType == "User")
+												{
+													<detail customerid="@detail.Element("Id").Value" customername="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Service")
+												{
+													<detail serviceid="@detail.Element("Id").Value" servicename="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Segment")
+												{
+													<detail segmentid="@detail.Element("Id").Value" segmentname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Terminal")
+												{
+													<detail terminalid="@detail.Element("Id").Value" terminalname="@detail.Element("Name").Value"></detail>
+												}
+												else if (elementReportType == "Macro")
+												{
+													<detail macroid="@detail.Element("Id").Value" macroname="@detail.Element("Name").Value"></detail>
+												}
+
+
+
+											}
+
+											<detail property="@(element.Elements("Properties").Elements("Property").ElementAt(0).Value)" propertytype="@(element.Elements("Properties").Elements("PropertyType").ElementAt(0).Value)"></detail>
+										}
+										else if (elementType == "Text")
+										{
+											<i class="fa fa-text-width cntr"></i>
+										}
+									</div>
+
+								}
+							}
+						}
+
+					</div>
+
+					<div class="col-xs-12 col-md-12 col-lg-12" id="CodeTab" style="display:none; padding:0px;">
+						<div class="panel panel-default">
+							<div class="panel-body" id="SourceDiv" style="padding:0;">
+								<!-- Source Code Will Be Heres-->
+								@Html.TextAreaFor(xaml => xaml.Report.ReportXaml, new { @class = "form-control", @id = "txtSourceCode", @style = "width:100%; height:100%; min-height:500px; resize: none;" })
+							</div>
+						</div>
+					</div>
+
+
+
+					<!-- Model Start -->
+					<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+
+								<!-- Step Boxes Container-->
+								<div class="row form-group">
+									<div class="col-xs-12">
+
+										<!-- Step Boxes -->
+										<ul id="modelNav" class="nav nav-pills nav-justified thumbnail setup-panel">
+											<!-- Step 1 -->
+											<li class="active" id="step-1-li">
+												<a href="#step-1">
+													<h4 class="list-group-item-heading">Step 1</h4>
+													<p class="list-group-item-text" id="step-1-text">Select Branches</p>
+												</a>
+											</li>
+
+											<!-- Step 2 -->
+											<li class="disabled" id="step-2-li">
+												<a href="#step-2">
+													<h4 class="list-group-item-heading">Step 2</h4>
+													<p class="list-group-item-text" id="step-2-text">Select Type of Report</p>
+												</a>
+											</li>
+
+											<!-- Step 3 -->
+											<li class="disabled" id="step-3-li">
+												<a href="#step-3">
+													<h4 class="list-group-item-heading">Step 3</h4>
+													<p class="list-group-item-text" id="step-3-text">Detail The Selected Type</p>
+												</a>
+											</li>
+
+											<!-- Step 4 -->
+											<li class="disabled" id="step-4-li">
+												<a href="#step-4">
+													<h4 class="list-group-item-heading">Step 4</h4>
+													<p class="list-group-item-text" id="step-4-text">Select Properties of Type</p>
+												</a>
+											</li>
+										</ul>
+
+									</div>
+								</div>
+
+								<!-- Step 1 -->
+								<div class="row setup-content" id="step-1">
+									<div class="col-xs-12">
+
+										<!-- Branch Select Sections -->
+										<div class="col-md-12 well text-center" id="field-test" style="display: none;">
+
+											<!-- Chart Type -->
+											<div class="row" id="chart-type" style="display: none; width: 100%;">
+
+												<h3 class="step-title"> Please Select Chart Type </h3>
+
+												<!-- Chart Type Select -->
+												<select class="select-branch" id="chart-type-options">
+													<option value="Pie">Pie Chart</option>
+													<option value="Bar">Bar Chart</option>
+													<option value="Line">Line Chart</option>
+												</select>
+											</div>
+
+											<!-- Branch Select -->
+											<div id="branches-select" class="row">
+												<h3> Please Select Branches </h3>
+	
+												<!-- Effected Branches -->
+												<div class="select-box">
+													<label class="select-branch" id="select-branch">Select Branches <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+													<div class="select-item-container" id="branch-select-item-container">
+														@for (int i = 0; i < Model.BranchBoxes.Count; i++)
+														{
+															<label class="select-item">
+																@Html.EditorFor(x => Model.BranchBoxes[i].Checked, new { htmlAttributes = new { @class = "branch-boxes", @branchid = $"{Model.BranchBoxes[i].Id}", branchname = $"{Model.BranchBoxes[i].Name}" } })
+
+																@Html.DisplayFor(x => Model.BranchBoxes[i].Name)
+																S
+																@Html.HiddenFor(x => Model.BranchBoxes[i].Name)
+																@Html.HiddenFor(x => Model.BranchBoxes[i].Id)
+															</label>
+
+														}
+													</div>
+												</div>
+											</div>
+
+											<!-- Validation -->
+											<span class="validate-for text-danger error-label" id="step-1-select-error"> </span>
+
+											<!-- Buttons -->
+											<button type="button" onclick="PreviousStep('step-1')" class="btn btn-danger select-1-next">Close <i class="fa fa-times"></i></button>
+											<button type="button" onclick="NextStep('step-1')" class="btn btn-warning select-1-next">Next Step <i class="fa fa-long-arrow-right"></i></button>
+										</div>
+
+										<!-- Text Properties -->
+										<div class="col-md-12 well text-center" id="text-field" style="display: none;">
+											<div class="row">
+												<h3> Text Properties </h3>
+
+												<!-- Static Text -->
+												<input type="text" class="select-branch" name="static-text" id="static-text" placeholder="Type a text" value="" />
+
+												<!-- Validation -->
+												<span class="validate-for text-danger error-label" id="step-text-select-error"> </span>
+
+
+												<h3> Font Size </h3>
+												<!-- Font Size -->
+												<select class="select-branch" id="text-font-size">
+													@for (var i = 0; i <= 120; i++)
+													{
+														if (Convert.ToBoolean(i / 2) == true)
+														{
+															<option value="@i">@i pt</option>
+															i++;
+														}
+													}
+												</select>
+
+												<h3> Font Weight </h3>
+												<!-- Font Weight -->
+												<select class="select-branch" id="text-font-weights">
+													<option style="font-weight: 100" value="100">100</option>
+													<option style="font-weight: 200" value="200">200</option>
+													<option style="font-weight: 300" value="300">300</option>
+													<option style="font-weight: 400" value="400">400</option>
+													<option style="font-weight: 500" value="500">500</option>
+													<option style="font-weight: 600" value="600">600</option>
+													<option style="font-weight: 700" value="700">700</option>
+													<option style="font-weight: 800" value="800">800</option>
+													<option style="font-weight: 900" value="900">900</option>
+													<option style="font-weight: Bold" value="Bold">Bold</option>
+													<option style="font-weight: Bolder" value="Bolder">Bolder</option>
+												</select>
+
+												<h3> Font Style </h3>
+												<!-- Font Style -->
+												<select id="text-font-style" class="select-branch">
+													<option value="Italic">Italic</option>
+													<option value="Underline">Underline</option>
+													<option value="ItalicAndUnderline">Italic with Underline</option>
+												</select>
+
+												<div class="row">
+													<button type="button" onclick="ApplySettings()" class="btn btn-warning select-1-next">Apply Settings <i class="fa fa-check-circle"></i></button>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+
+								<!-- Step 2 -->
+								<div class="row setup-content" id="step-2">
+									<div class="col-xs-12">
+										<div class="col-md-12 well text-center">
+											<div class="row">
+
+												<h3> Please Select Type of Report</h3>
+
+												<!-- Report Type -->
+												<select class="select-branch" id="select-type-options">
+													<option value="Appointment">Appointment Type Report</option>
+													<option value="Branch"> Branch Type Report</option>
+													<option value="Customer">Customer Type Report</option>
+													<option value="Service">Service Type Report</option>
+													<option value="Segment">Segment Type Report</option>
+													<option value="Terminal">Terminal Type Report</option>
+													<option value="User">User Type Report</option>
+													<option value="Macro">Macro Type Report</option>
+												</select>
+
+												<br />
+
+												<!-- Validation -->
+												<span class="validate-for text-danger error-label" id="step-2-select-error"> </span>
+
+												<button type="button" onclick="PreviousStep('step-2')" class="btn btn-primary select-1-previous"><i class="fa fa-long-arrow-left"></i> Previous Step</button>
+												<button type="button" onclick="NextStep('step-2')" class="btn btn-warning select-1-next">Next Step <i class="fa fa-long-arrow-right"></i></button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Step 3 -->
+								<div class="row setup-content" id="step-3">
+									<div class="col-xs-12">
+										<div class="col-md-12 well text-center">
+											<h3> Please Select Detail of Type</h3>
+
+											<div class="select-box" id="appointment-checkbox-container">
+												<label class="select-branch" id="select-appointments">Select Appointment <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="appointment-select-item-container">
+													@for (int i = 0; i < Model.AppointmentBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.AppointmentBoxes[i].Checked, new { htmlAttributes = new { @class = "appointment-boxes", @appointmentid = $"{Model.AppointmentBoxes[i].Id}", @appointmentname = $"{Model.AppointmentBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.AppointmentBoxes[i].Name)
+															<input type="hidden" name="AppointmentBoxes[@i].ID" id="AppointmentBoxes[@i].ID" value="@Model.AppointmentBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div class="select-box" id="branch1-checkbox-container">
+												<label class="select-branch" id="select-branch1s">Select Branch <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="branch1-select-item-container">
+													@for (int i = 0; i < Model.BranchBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.BranchBoxes[i].Checked, new { htmlAttributes = new { @class = "branch1-boxes", branchid = $"{Model.BranchBoxes[i].Id}", branchname = $"{Model.BranchBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.BranchBoxes[i].Name)
+															<input type="hidden" name="BranchBoxes[@i].ID" id="BranchBoxes[@i].ID" value="@Model.BranchBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div class="select-box" id="service-checkbox-container">
+												<label class="select-branch" id="select-services">Select Services <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="service-select-item-container">
+													@for (int i = 0; i < Model.ServiceBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.ServiceBoxes[i].Checked, new { htmlAttributes = new { @class = "service-boxes", serviceid = $"{Model.ServiceBoxes[i].Id}", servicename = $"{Model.ServiceBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.ServiceBoxes[i].Name)
+															<input type="hidden" name="ServiceBoxes[@i].ID" id="ServiceBoxes[@i].ID" value="@Model.ServiceBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div class="select-box" id="segment-checkbox-container">
+												<label class="select-branch" id="select-segments">Select Segment <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="segment-select-item-container">
+													@for (int i = 0; i < Model.SegmentBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.SegmentBoxes[i].Checked, new { htmlAttributes = new { @class = "segment-boxes", segmentid = $"{Model.SegmentBoxes[i].Id}", segmentname = $"{Model.SegmentBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.SegmentBoxes[i].Name)
+															<input type="hidden" name="SegmentBoxes[@i].ID" id="SegmentBoxes[@i].ID" value="@Model.SegmentBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div class="select-box" id="terminal-checkbox-container">
+												<label class="select-branch" id="select-terminals">Select Terminal <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="terminal-select-item-container">
+													@for (int i = 0; i < Model.TerminalBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.TerminalBoxes[i].Checked, new { htmlAttributes = new { @class = "terminal-boxes", terminalid = $"{Model.TerminalBoxes[i].Id}", terminalname = $"{Model.TerminalBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.TerminalBoxes[i].Name)
+															<input type="hidden" name="TerminalBoxes[@i].ID" id="TerminalBoxes[@i].ID" value="@Model.TerminalBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div class="select-box" id="macro-checkbox-container">
+												<label class="select-branch" id="select-macros">Select Macro <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="macro-select-item-container">
+													@for (int i = 0; i < Model.MacroBoxes.Count; i++)
+													{
+														<label class="select-item">
+															@Html.EditorFor(x => Model.MacroBoxes[i].Checked, new { htmlAttributes = new { @class = "macro-boxes", macroid = $"{Model.MacroBoxes[i].Id}", macroname = $"{Model.MacroBoxes[i].Name}" } })
+															@Html.DisplayFor(x => Model.MacroBoxes[i].Name)
+															<input type="hidden" name="MacroBoxes[@i].ID" id="MacroBoxes[@i].ID" value="@Model.MacroBoxes[i].Id" />
+														</label>
+
+													}
+												</div>
+											</div>
+
+											<div id="customer-user-container" class="select-box">
+
+												<!-- Search Input -->
+												<input class="select-branch" type="text" name="SearchInput" id="SearchInput" placeholder="" value="" autocomplete="off" />
+
+												<input class="btn btn-primary" style="border-color: #29c75f; border-bottom-color: #29c75f; background-color: #29c75f; margin-bottom: 0;" type="button" name="SaveUser" id="SaveUser" value="Add" onclick="SaveCS()" />
+
+												<input type="hidden" name="DataType" id="DataType" value="" />
+
+												<div class="select-item-container" style="margin-left:19.4%;" id="search-customer-user">
+													<!-- Founded Users and Customer Will Be List Here -->
+												</div>
+
+												<ul class="customer-user-list">
+													<!-- Customer List -->
+												</ul>
+											</div>
+
+											<span class="validate-for text-danger error-label" id="step-3-select-error"> </span>
+
+											<button type="button" onclick="PreviousStep('step-3')" class="btn btn-primary select-1-previous"><i class="fa fa-long-arrow-left"></i> Previous Step</button>
+											<button type="button" onclick="NextStep('step-3')" class="btn btn-warning select-1-next">Next Step <i class="fa fa-long-arrow-right"></i></button>
+										</div>
+									</div>
+								</div>
+
+								<!-- Step 4 -->
+								<div class="row setup-content" id="step-4">
+									<div class="col-xs-12">
+										<div class="col-md-12 well text-center">
+											<h3> Please Select Properties </h3>
+
+											<!-- Multi Select -->
+											<div class="select-box" id="step-4-multi-properties" style="width: 100%;">
+												<label class="select-branch" id="select-properties">Select Appointment <i id="select-icon" class="fa fa-caret-down"></i></label>
+
+												<div class="select-item-container" id="multi-select-property-container">
+
+													<!-- Total Ticket-->
+													<label class="select-item">
+														<input type="checkbox" id="total-ticket-multi" class="property-boxes check-box" property="TotalTicket" />
+
+														Total Ticket
+													</label>
+
+													<!-- Total Visit -->
+													<label class="select-item">
+														<input type="checkbox" id="total-visit-multi" class="property-boxes check-box" property="TotalVisit" />
+
+														Total Visit
+													</label>
+
+													<!-- Name -->
+													<label class="select-item">
+														<input type="checkbox" id="name-multi" class="property-boxes check-box" property="Name" />
+
+														Name
+													</label>
+
+													<!-- Surname -->
+													<label class="select-item">
+														<input type="checkbox" id="surname-multi" class="property-boxes check-box" property="Surname" />
+
+														Surname
+													</label>
+
+													<!-- Full Name -->
+													<label class="select-item">
+														<input type="checkbox" id="full-name-multi" class="property-boxes check-box" property="FullName" />
+
+														Full Name
+													</label>
+
+													<!-- Called Ticket -->
+													<label class="select-item">
+														<input type="checkbox" id="called-ticket-multi" class="property-boxes check-box" property="CalledTicket" />
+
+														Called Ticket
+													</label>
+
+													<!-- No Show Ticket -->
+													<label class="select-item">
+														<input type="checkbox" id="no-show-ticket-multi" class="property-boxes check-box" property="NoShowTicket" />
+
+														No Show Ticket
+													</label>
+
+													<!-- Performance Percentage-->
+													<label class="select-item">
+														<input type="checkbox" id="performance-percentage-multi" class="property-boxes check-box" property="PerformancePerc" />
+
+														Performance Percentage
+													</label>
+
+													<!-- Minimum Waiting Time-->
+													<label class="select-item">
+														<input type="checkbox" id="min-waiting-time-multi" class="property-boxes check-box" property="MinimumWaitingTime" />
+
+														Minimum Waiting Time
+													</label>
+
+													<!-- Maximum Waiting Time -->
+													<label class="select-item">
+														<input type="checkbox" id="max-waiting-time-multi" class="property-boxes check-box" property="MaximumWaitingTime" />
+
+														Maximum Waiting Time
+													</label>
+
+													<!-- Average Waiting Time -->
+													<label class="select-item">
+														<input type="checkbox" id="avrg-waiting-time-multi" class="property-boxes check-box" property="AverageWaitingTime" />
+
+														Average Waiting Time
+													</label>
+
+													<!-- Minimum Operation Time -->
+													<label class="select-item">
+														<input type="checkbox" id="min-operation-time-multi" class="property-boxes check-box" property="MinimumOperationTime" />
+
+														Minimum Operation Time
+													</label>
+
+													<!-- Maximum Operation Time -->
+													<label class="select-item">
+														<input type="checkbox" id="max-operation-time-multi" class="property-boxes check-box" property="MaximumOperationTime" />
+
+														Maximum Operation Time
+													</label>
+
+													<!-- Average Operation Time -->
+													<label class="select-item">
+														<input type="checkbox" id="avrg-operation-time-multi" class="property-boxes check-box" property="AverageOperationTime" />
+
+														Average Operation Time
+													</label>
+
+													<!-- Minimum Process Time -->
+													<label class="select-item">
+														<input type="checkbox" id="min-process-time-multi" class="property-boxes check-box" property="MinimumProcessTime" />
+
+														Minimum Process Time
+													</label>
+
+													<!-- Maximum Process Time -->
+													<label class="select-item">
+														<input type="checkbox" id="max-process-time-multi" class="property-boxes check-box" property="MaximumProcessTime" />
+
+														Maximum Process Time
+													</label>
+
+													<!-- Average Process Time -->
+													<label class="select-item">
+														<input type="checkbox" id="avrg-process-time-multi" class="property-boxes check-box" property="AverageProcessTime" />
+
+														Average Process Time
+													</label>
+
+												</div>
+											</div>
+
+											<!-- Single Select -->
+											<div id="step-4-single-property-container" style="width: 100%;">
+
+												<select class="select-branch" id="select-property">
+													<option class="select-item" value="TotalTicket" id="total-ticket-single">Total Ticket</option>
+													<option class="select-item" value="TotalVisit" id="total-visit-single">Total Visit</option>
+													<option class="select-item" value="Name" id="name-single">Name</option>
+													<option class="select-item" value="Surname" id="surname-single">Surname</option>
+													<option class="select-item" value="FullName" id="full-name-single">Full Name</option>
+													<option class="select-item" value="CalledTicket" id="called-ticket-single">Called Ticket</option>
+													<option class="select-item" value="NoShowTicket" id="no-show-ticket-single">No Show Ticket</option>
+													<option class="select-item" value="PerformancePerc" id="performance-percentage-single">Performance Percentage</option>
+													<option class="select-item" value="MinimumProcessTime" id="min-proc-time-single">Minimum Process Time</option>
+													<option class="select-item" value="MaximumProcessTime" id="max-proc-time-single">Maximum Process Time</option>
+													<option class="select-item" value="AverageProcessTime" id="avrg-proc-time-single">Average Process Time</option>
+													<option class="select-item" value="MinimumWaitingTime" id="min-waiting-time-single">Minimum Waiting Time</option>
+													<option class="select-item" value="MaximumWaitingTime" id="max-waiting-time-single">Maximum Waiting Time</option>
+													<option class="select-item" value="AverageWaitingTime" id="avrg-waiting-time-single">Average Waiting Time</option>
+													<option class="select-item" value="MinimumOperationTime" id="min-operation-time">Minimum Operation Time</option>
+													<option class="select-item" value="MaximumOperationTime" id="max-operation-time">Maximum Operation Time</option>
+													<option class="select-item" value="AverageOperationTime" id="avrg-operation-time">Average Operation Time</option>
+												</select>
+
+											</div>
+
+											<!-- Single Select Type -->
+											<div id="step-4-single-property">
+												<h3 id="property-type-header" style="display: none; width: 100% !important;"> Please Select Property Type </h3>
+
+												<!-- Number Select -->
+												<select class="select-branch" id="select-property-type-number">
+													<option class="select-item" value="Classic">Normal</option>
+													<option class="select-item" value="Count">Count</option>
+													<option class="select-item" value="Percentage">Percentage</option>
+													<option class="select-item" value="Sum">Sum</option>
+												</select>
+
+												<!-- String Select -->
+												<select class="select-branch" id="select-property-type-string">
+													<option class="select-item" value="Normal">Normal</option>
+													<option class="select-item" value="CommaDelimited">Comma Delimited</option>
+													<option class="select-item" value="LineByLine">Line by Line</option>
+												</select>
+											</div>
+
+											<!-- Step-4 Error Label -->
+											<span class="validate-for text-danger error-label" id="step-4-select-error"></span>
+
+											<button type="button" onclick="PreviousStep('step-4')" class="btn btn-primary select-1-previous"><i class="fa fa-long-arrow-left"></i> Previous Step</button>
+											<button type="button" onclick="ApplySettings()" class="btn btn-warning select-1-next">Apply Settings <i class="fa fa-check-circle"></i></button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</form>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Quick Report Page -->
+<div class="row" id="report-type-quick" style="display: none;">
+	<div class="col-xs-12 col-md-12 col-lg-12">
+		<div class="card">
+			<form method="POST" class="card-body" id="quick-form" action="/Reports/SaveGeneric">
+				@Html.HiddenFor(model => model.Report.ReportID)
+
+				<h3> Quick Report Setup Wizard </h3>
+
+				<!-- Step Circles -->
+				<div class="step-container">
+					<div class="step-stick"></div>
+
+					<div class="step-item step-item-active" id="step-item-1">
+						1
+					</div>
+
+					<div class="step-item" id="step-item-2">
+						2
+					</div>
+
+					<div class="step-item" id="step-item-3">
+						3
+					</div>
+
+				</div>
+
+				<!-- Step 1 -->
+				<div class="quick-report-step" id="quick-step-1">
+					<div class="left-section">
+						<h4>Branch Selection</h4>
+
+						<img src="~/assets/images/branch-image.png" title="Branch Select Image" />
+
+						<p>Before we start, first you need select some branches. You'll get raport from your selected branches.</p>
+					</div>
+
+					<div class="right-section">
+						<div class="select-branch-container">
+							<label class="select-item">
+								<input type="checkbox" name="select-all" id="all-quick-branch-boxes" />
+
+								Select All
+							</label>
+
+							@for (int i = 0; i < Model.BranchBoxes.Count(); i++)
+							{
+								<label class="select-item" style="font-size:16px;">
+									@Html.EditorFor(x => Model.BranchBoxes[i].Checked, new { htmlAttributes = new { @class = "quick-branch-boxes", @elementId = $"{Model.BranchBoxes[i].Id}" } })
+
+									@Html.DisplayFor(x => Model.BranchBoxes[i].Name)
+
+									@Html.HiddenFor(x => Model.BranchBoxes[i].Name)
+									@Html.HiddenFor(x => Model.BranchBoxes[i].Id)
+								</label>
+							}
+						</div>
+
+						<label class="text-danger" validate-for="quick-step-1" style="width:85%;"></label>
+					</div>
+				</div>
+
+				<!-- Step 2 -->
+				<div class="quick-report-step" id="quick-step-2" style="display: none;">
+					<div class="left-section">
+						<h4>Service / Segment Selection</h4>
+
+						<img src="~/assets/images/hospital-service-icon.png" title="Branch Select Image" />
+
+						<p>On the right-hand list you can see the services and their segments from your relative branches. If you want you can pass this step but all services and segments will be considered as selected.</p>
+					</div>
+
+					<div class="right-section">
+						<div class="select-branch-container">
+							<label class="select-item">
+								<input type="checkbox" name="select-all" id="all-quick-service-boxes" />
+
+								Select All
+							</label>
+
+							@for (int i = 0; i < Model.ServiceSegmentBoxes.Count(); i++)
+							{
+								<label class="select-item" style="font-size:16px;">
+									@Html.EditorFor(x => Model.ServiceSegmentBoxes[i].Checked, new { htmlAttributes = new { @class = "quick-service-boxes", @elementId = $"{Model.ServiceSegmentBoxes[i].ServiceSegmentId}" } })
+
+									@Html.DisplayFor(x => Model.ServiceSegmentBoxes[i].Name)
+
+									@Html.HiddenFor(x => Model.ServiceSegmentBoxes[i].Name)
+									@Html.HiddenFor(x => Model.ServiceSegmentBoxes[i].ServiceSegmentId)
+								</label>
+							}
+						</div>
+					</div>
+				</div>
+
+				<!-- Step 3-->
+				<div id="quick-step-3" class="quick-report-step" style="display:none;">
+					<div class="input-group" style="margin-top:25px;">
+						<span class="input-group-addon" id="basic-addon3">Page Name</span>
+						<input type="text" class="form-control" id="CustomReportName" name="Report.ReportName" aria-describedby="basic-addon3" value="@Model.Report.ReportName" placeholder="Please enter report name">
+
+					</div>
+					<label class="text-danger">
+						@Html.ValidationMessageFor(title => title.Report.ReportName)
+					</label>
+
+					<!-- Table Buttons Container -->
+					<div class="button-container">
+						<button type="button" class="btn btn-primary" id="add-property">
+							<i class="fa fa-plus"></i>
+						</button>
+					</div>
+
+					<table id="quick-wizard-table" cellspacing="0" border="1" width="100%">
+						<thead>
+							@{
+								if (string.IsNullOrEmpty(Model.Report.ReportXaml))
+								{
+									<tr id="property-items">
+										<th class="table-item" index="0" text="Ticket Number">Ticket Number</th>
+										<th class="table-item" index="1" text="Branch Name">Branch Name</th>
+										<th class="table-item" index="2" text="Service Name">Service Name</th>
+										<th class="table-item" index="3" text="Segment Name">Segment Name</th>
+									</tr>
+								}
+								else
+								{
+									<tr id="property-items">
+
+										@foreach (var item in XElement.Parse(Model.Report.ReportXaml).Elements("Items").Elements("Item"))
+										{
+
+											if (item.Element("Title").Value == "Ticket Number" || item.Element("Title").Value == "Branch Name" || item.Element("Title").Value == "Service Name" || item.Element("Title").Value == "Segment Name")
+											{
+												<th class="table-item" index="@item.Element("Index").Value" text="@item.Element("Title").Value">@item.Element("Title").Value</th>
+											}
+											else
+											{
+												<th class="table-item also-items" index="@item.Element("Index").Value" text="@item.Element("Title").Value">@item.Element("Title").Value <i class="fa fa-times-circle text-danger" onclick="DeleteItem($(this))"></i></th>
+
+
+											}
+										}
+									</tr>
+
+								}
+							}
+						</thead>
+					</table>
+				</div>
+
+				<!-- Next and Previous Buttons Container -->
+				<div class="button-container">
+					<button type="button" id="previous-button" class="btn btn-danger" onclick="PreviousStep('quick-wizard-previous')">
+						<i class="fa fa-arrow-circle-o-left"></i> Previous Step
+					</button>
+
+					<button type="button" id="next-button" class="btn btn-primary" onclick="NextStep('quick-wizard-next')">
+						Next Step <i class="fa fa-arrow-circle-o-right"></i>
+					</button>
+				</div>
+
+				<!-- Quick Wizard Modal -->
+				<div class="modal fade" id="quick-wizard-modal" tabindex="-1" role="dialog" aria-labelledby="quickWizardLargeModal" aria-hidden="true">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content" id="quick-wizard-modal-container">
+							<h3>Report Properties</h3>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Terminal Number</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Teller Name</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Visit Date</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Print Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Call Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">End Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Waiting Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Operation Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Process Time</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Customer Name</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Customer Surname</a>
+
+							<!-- Property Item -->
+							<a href="#" class="property-item">Customer Fullname</a>
+
+
+						</div>
+					</div>
+				</div>
+
+				<input type="hidden" name="Report.ReportXaml" id="quick-report-xml" value="@Model.Report.ReportXaml" />
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script src="~/Scripts/ReportDesigner.js"></script>
+
+<script>
+	$(document).ready(function () {
+		var navListItems = $('ul.setup-panel li a'),
+			allWells = $('.setup-content');
+
+		allWells.hide();
+
+		navListItems.click(function (e) {
+			e.preventDefault();
+			var $target = $($(this).attr('href')),
+				$item = $(this).closest('li');
+
+			if (!$item.hasClass('disabled')) {
+				navListItems.closest('li').removeClass('active');
+				$item.addClass('active');
+				allWells.hide();
+				$target.show();
+			}
+		});
+
+		$('ul.setup-panel li.active a').trigger('click');
+	});
+</script>

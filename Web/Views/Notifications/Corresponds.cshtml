@@ -1,0 +1,151 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List<qmTriggerCorrespond> corresponds = ViewBag.Corresponds;
+    List<qmUser> crspdusrs = ViewBag.Users;
+    qmTrigger trigger = ViewBag.Trigger;
+}
+
+<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+<link rel="stylesheet" type="text/css" href="~/assets/css/custom.css" />
+<link rel="icon" href="~/assets/qmagic.ico">
+<script src="~/Scripts/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="~/assets/js/vendor-min.js"></script>
+<script type="text/javascript" src="~/assets/js/app-min.js"></script>
+
+<script>
+    var Triggers = [
+        @{
+            foreach (qmTriggerCorrespond correspond in corresponds)
+            {
+                @(correspond.TriggerCorrespondID+",")
+            }
+        }
+    ];
+    function DeleteCorrespond(TriggerID) {
+        var itemindex = Triggers.indexOf(TriggerID);
+        if (itemindex != -1 && itemindex >= 0) {
+            $.post("Notifications/RemoveUser", { TriggerCorrespondID: TriggerID }, function (data) {
+                if (data.includes("OK++")) {
+                    Triggers.splice(itemindex, 1);
+                    $("#Correspond_" + TriggerID).remove();
+                }
+            });
+        }
+    }
+
+    function AddCorrespond() {
+        var t = document.getElementById("user_list");
+        var selectedvalue = t.options[t.selectedIndex].value;
+
+        $.post("Notifications/AddUser", { UserID: selectedvalue, TriggerID: @(trigger.TriggerID) }, function (data) {
+            $("#CorresBody").append(data);
+        });
+    }
+
+    function ChangeCheckBox(aCheckType, aTriggerID) {
+        var aIsChecked = document.getElementById(aCheckType + "_" + aTriggerID).checked;
+
+        $.post("Notifications/ChangeCheck", { CheckType: aCheckType, TriggerID: aTriggerID, IsChecked: aIsChecked }, function (data) {
+            if (data.includes("ERR--")) {
+                if (aIsChecked == true) {
+                    document.getElementById(CheckType + "_" + TriggerID).checked = false;
+                }
+                else {
+                    document.getElementById(CheckType + "_" + TriggerID).checked = true;
+                }
+            }
+            else {
+                if (data.includes("OK++")) {
+                    //alert("Action successful!");
+                }
+            }
+        });
+    }
+</script>
+
+
+<div class="row">
+    <div class="col-md-10">
+        <select name="user_list" id="user_list" class="select2" style="width:100%;">
+            @{
+                foreach (qmUser user in crspdusrs)
+                {
+                    <option value="@(user.UserID)">@(user.FullName) [@(user.CorporateNumber)]</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <a href="javascript:AddCorrespond();" class="btn btn-primary" style="margin-top:5px;"><i class="fa fa-plus"></i> Add</a>
+    </div>
+</div>
+
+<form action="~/Corresponds?TriggerID=@(trigger.TriggerID)" id="corresform" name="corresform" method="post">
+    <table width="100%" border="1" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <td>Name Surname</td>
+                <td>E-Mail</td>
+                <td>Phone</td>
+                <td>Send E-Mail</td>
+                <td>Send SMS</td>
+                <td>Send Notification</td>
+                <td>Remove</td>
+            </tr>
+        </thead>
+        <tbody id="CorresBody">
+            @{
+                foreach (qmTriggerCorrespond correspond in corresponds)
+                {
+                    qmUser user = crspdusrs.Where(x => x.UserID == correspond.UserID).FirstOrDefault();
+
+                    <tr id="Correspond_@(correspond.TriggerCorrespondID)">
+                        <td>@(user.FullName)</td>
+                        <td>@(user.EMail)</td>
+                        <td>@(user.PhoneNumber)</td>
+                        <td>
+                            @{
+                                if (correspond.SendMail)
+                                {
+                                    <input type='checkbox' class='form-control' name='mail_@(correspond.TriggerCorrespondID)' id="mail_@(correspond.TriggerCorrespondID)" checked="checked" onclick='ChangeCheckBox("mail",@(correspond.TriggerCorrespondID));' />
+                                }
+                                else
+                                {
+                                    <input type='checkbox' class='form-control' name='mail_@(correspond.TriggerCorrespondID)' id="mail_@(correspond.TriggerCorrespondID)" onclick='ChangeCheckBox("mail",@(correspond.TriggerCorrespondID));' />
+                                }
+                            }
+                        </td>
+                        <td>
+                            @{
+                                if (correspond.SendSMS)
+                                {
+                                    <input type='checkbox' class='form-control' name='sms_@(correspond.TriggerCorrespondID)' id="sms_@(correspond.TriggerCorrespondID)" checked="checked" onclick="ChangeCheckBox('sms',@(correspond.TriggerCorrespondID))" />
+                                }
+                                else
+                                {
+                                    <input type='checkbox' class='form-control' name='sms_@(correspond.TriggerCorrespondID)' id="sms_@(correspond.TriggerCorrespondID)" onclick="ChangeCheckBox('sms',@(correspond.TriggerCorrespondID))" />
+                                }
+                            }
+                        </td>
+                        <td>
+                            @{
+                                if (correspond.SendMobileNotification)
+                                {
+                                    <input type='checkbox' class='form-control' name='notification_@(correspond.TriggerCorrespondID)' id="notification_@(correspond.TriggerCorrespondID)" checked="checked" onclick="ChangeCheckBox('notification',@(correspond.TriggerCorrespondID))" />
+                                }
+                                else
+                                {
+                                    <input type='checkbox' class='form-control' name='notification_@(correspond.TriggerCorrespondID)' id="notification_@(correspond.TriggerCorrespondID)" onclick="ChangeCheckBox('notification',@(correspond.TriggerCorrespondID))" />
+                                }
+                            }
+                        </td>
+                        <td><a class="btn btn-danger" href="javascript:DeleteCorrespond(@(correspond.TriggerCorrespondID));"><i class="fa fa-remove"></i></a></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</form>

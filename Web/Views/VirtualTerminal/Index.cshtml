@@ -1,0 +1,84 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Terminal Selection";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<qmBranch> branchlist = ViewBag.branches;
+}
+
+<script>
+    $(document).ready(function () {
+        $(document).on('change', "#lstBranch", function () {
+            var branchid = $(this).val();
+            $.get('@Url.Action("GetTerminals", "VirtualTerminal")', { BranchID: branchid }, function (data, status) {
+                $("#lstTerminal").html(data);
+            });
+        });
+
+        $(document).on('change', "#lstTerminal", function () {
+            $("#BtnSubmit").removeClass("btn-disabled");
+            $("#BtnSubmit").addClass("btn-primary");
+
+            $("#form1").attr("action","VirtualTerminal/Terminal");
+        });
+    });
+</script>
+
+<div class="row">
+    <div class="col-md-2">
+        &nbsp;
+    </div>
+
+    <div class="col-md-8">
+        <form name="form1" id="form1" action="#" method="post" style="display:none;">
+            <select name="lstBranch" id="lstBranch" style="display:none;">
+                <option value="0">Please select a branch</option>
+                @{
+                    foreach (qmBranch item in branchlist)
+                    {
+                        <option value="@item.BranchID">@item.BranchName</option>
+                    }
+                }
+            </select>
+
+            <select name="lstTerminal" id="lstTerminal" style="display:none;">
+                @{
+                    if (ViewBag.selectedterminal != null)
+                    {
+                        qmTerminal term = ViewBag.selectedterminal;
+                        <option value="@term.TerminalID">@term.TerminalName</option>
+                        <script>
+                            $("#form1").attr("action", "VirtualTerminal/Terminal");
+                            $("#form1").submit();
+                        </script>
+                    }
+                }
+            </select>
+        </form>
+
+
+
+
+        <div class="panel panel-default">
+            <div class="panel-body" id="MainArea">
+                @{
+                    if (ViewBag.selectedterminal != null)
+                    {
+                        <center>
+                            <p><img src='~/assets/images/wand-magic.png' /></p>
+                            <h3>Starting virtual terminal application...</h3>
+                            <p>If It is taking so long you can just <a href="Terminal">click here</a> to redirect to virtual terminal application.</p>
+                        </center>
+                    }
+                    else
+                    {
+                        <center>
+                            <p><img src='~/assets/images/wand-magic.png' /></p>
+                            <h3>Terminal could not be determined. </h3>
+                            <p>Please get a static I.P. address and assign this device as a terminal using via QMagic Management Studio.</p>
+                        </center>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

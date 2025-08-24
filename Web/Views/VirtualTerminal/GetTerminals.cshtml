@@ -1,0 +1,11 @@
+﻿@using Emse.QMagic.Web.Models;
+<option value="0">Please select a terminal</option>
+@{ 
+    Layout = null;
+    List<qmTerminal> terminals = ViewBag.data;
+
+    foreach (qmTerminal item in terminals)
+    {
+        <option value="@item.TerminalNumber">@item.TerminalName</option>
+    }
+}

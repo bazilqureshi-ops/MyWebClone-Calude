@@ -1,0 +1,51 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.Domain.Viewmodels
+@model ModuleListViewModel
+@{
+
+	var virtualTerminalControl = Model.Definitions.Where(module => module.qmModule.ModulePath == "/WebTerminal/?Method=FQDN").Count();
+
+
+	foreach (var item in Model.Modules.Where(x => x.ModuleID == x.UpModuleID).OrderBy(module => module.ModuleName))
+	{
+		Model.SubModules = Model.Modules.Where(x => x.UpModuleID == item.ModuleID).Where(y => y.UpModuleID != y.ModuleID).OrderBy(module => module.ModuleName).ToList();
+
+		if (Model.Definitions.Any(x => x.ModuleID == item.ModuleID))
+		{
+			if (Model.SubModules.Count() < 1)
+			{
+				if (virtualTerminalControl > 0 && item.ModulePath == "/WebTerminal")
+				{
+					string doNothing = "";
+				}
+				else if (item.ModulePath == "/WebTerminal/?Method=FQDN")
+				{
+					<li><a href='@item.ModulePath'><div class='icon'><i class='@item.ModuleIcon' aria-hidden='true'></i></div><div class='title'>Virtual Terminal</div></a></li>
+
+				}
+				else
+				{
+					<li><a href='@item.ModulePath'><div class='icon'><i class='@item.ModuleIcon' aria-hidden='true'></i></div><div class='title'>@item.ModuleName</div></a></li>
+				}
+			}
+			else
+			{
+				@Html.Raw("<li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><div class='icon'><i class='")
+				@item.ModuleIcon
+				@Html.Raw("' aria-hidden='true'></i></div><div class='title'>")
+				@item.ModuleName
+				@Html.Raw("</div></a><div class='dropdown-menu'><ul>")
+
+				foreach (var subitem in Model.SubModules)
+				{
+					if (Model.Definitions.Where(x => x.ModuleID == subitem.ModuleID).Any(y => y.UserRoleID == Model.User.UserRoleID))
+					{
+						<li><a href='@subitem.ModulePath'><span class="fa fa-dot-circle-o"></span> @subitem.ModuleName</a></li>
+					}
+				}
+
+				@Html.Raw("</ul></div></li>")
+			}
+		}
+	}
+}

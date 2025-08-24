@@ -1,0 +1,140 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmDSTerminal> dss = ViewBag.DigitalSignageResponsibility;
+    List<qmMainDisplayFlash> flashes = ViewBag.MainDisplayFlash;
+    List<qmMDResponsibility> mdresponses = ViewBag.MDResponsibility;
+    List<qmStatusTerminal> statuses = ViewBag.StatusTerminal;
+    List<qmTerminalConnection> connections = ViewBag.TerminalConnection;
+    List<qmTicket> tickets = ViewBag.Ticket;
+    List<qmTicketHistory> history = ViewBag.TicketHistory;
+    List<qmTransfer> transfers = ViewBag.Transfer;
+    List<qmTransferService> servicetransfers = ViewBag.TransferService;
+    List<qmVotebook> votebooks = ViewBag.Votebook;
+    qmTerminal terminal = ViewBag.Terminal;
+}
+
+<p><b>This terminal has these entities. If you delete this terminal most of that entities will be deleted or changed terminals with null.</b></p>
+
+<div style="max-height:200px; height:200px; overflow-y:scroll; border:solid 1px #CCC; border-radius:5px; padding:5px;">
+    @{
+        if (dss != null)
+        {
+            <p>Total @(dss.Count()) digital signage responsbilities will be deleted.</p>
+        }
+        else
+        {
+            <p>No digital signage responsibility.</p>
+        }
+
+        if (flashes != null)
+        {
+            <p>Total @(flashes.Count()) main display flash histories will be deleted.</p>
+        }
+        else
+        {
+            <p>No flash record.</p>
+        }
+
+        if (mdresponses != null)
+        {
+            <p>Total @(mdresponses.Count()) main display responsibilities will be deleted.</p>
+        }
+        else
+        {
+            <p>No min display responsibility.</p>
+        }
+
+        if (statuses != null)
+        {
+            <p>Total @(statuses.Count()) this statuses will be deleted from this terminal.</p>
+        }
+        else
+        {
+            <p>No status found.</p>
+        }
+
+        if (connections != null)
+        {
+            if (connections.Count > 0)
+            {
+                <p>Connection open! Please be careful because if you delete this terminal opened sessions will automatically terminated.</p>
+            }
+            else
+            {
+                <p>Terminal not connected. Safe to delete this terminal.</p>
+            }
+        }
+        else
+        {
+            <p>Terminal not connected. Safe to delete this terminal.</p>
+        }
+
+        if (tickets != null)
+        {
+            <p>Total @(tickets.Count()) ticket will be deleted.</p>
+        }
+        else
+        {
+            <p>No ticket.</p>
+        }
+
+        if (history != null)
+        {
+            <p>Total @(history.Count()) ticket history will be deleted.</p>
+        }
+        else
+        {
+            <p>No history.</p>
+        }
+
+        if (transfers != null)
+        {
+            <p>This terminal transferred tickets to terminals @(transfers.Count()) times. This data also will be deleted.</p>
+        }
+        else
+        {
+            <p>No terminal transfer.</p>
+        }
+
+        if (servicetransfers != null)
+        {
+            <p>This terminal transferred tickets to services @(servicetransfers.Count()) times. This data also will be deleted.</p>
+        }
+        else
+        {
+            <p>No service transfer.</p>
+        }
+    }
+
+    <p><i>This votebooks devices must be set to another terminal</i></p>
+    <ul>
+        @{
+            foreach (qmVotebook item in votebooks)
+            {
+                <li>@(item.VotebookName)</li>
+            }
+        }
+    </ul>
+
+</div>
+
+<p><b>For the security reasons please enter randomly generated numbers below : </b></p>
+
+<p style="font-size:20px; text-decoration:line-through; font-family:'Segoe Script'; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;" unselectable="on">
+    <u>
+        <i>
+            @{
+                Random rnd = new Random();
+                int securu = rnd.Next(10000, 99999);
+                @(securu)
+            }
+        </i>
+    </u>
+</p>
+
+<form action="../Terminal/DeleteTerminal" method="post" id="PostDelete" name="PostDelete">
+    <input type="hidden" value="@(terminal.TerminalID)" id="txtTerminalID" name="txtTerminalID" />
+    <input type="hidden" value="@(securu)" id="txtSecuru" name="txtSecuru" />
+    <input type="text" class="form-control" name="txtNumber" id="txtNumber" />
+</form>

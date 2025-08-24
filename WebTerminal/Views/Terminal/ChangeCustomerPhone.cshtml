@@ -1,0 +1,36 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = null;
+    qmCustomer Customer = ViewBag.Customer;
+    int SegmentID = -999;
+    if(ViewBag.SegmentID != null)
+    {
+        SegmentID = ViewBag.SegmentID;
+    }
+
+
+    if(Customer != null)
+    {
+        <center>
+            <p>Specified customer information is below. You can change the patient's phone number.</p>
+            <p><b>@(Customer.Name)  @(Customer.Surname)</b></p>
+            <p><input type="text" class="form-control" placeholder="Phone Number" aria-label="Phone Number" aria-describedby="button-addon2" id="txtNewPhone" name="txtNewPhone" data-mdb-input-mask="+974 999-999-999" value="@(Customer.Phone)"></p>
+            @{ 
+                if(SegmentID != -999)
+                {
+                    <p><input type="button" class="btn btn-primary" value="Save Information" onclick="SaveNewPhone(@(SegmentID));" /></p>
+                }
+                else
+                {
+                    <p><input type="button" class="btn btn-primary" value="Save Information" onclick="SaveNewPhoneOnly();" /></p>
+                }
+            }
+
+            
+        </center>
+    }
+    else
+    {
+        Html.Raw("CONTINUEOK++");
+    }
+}

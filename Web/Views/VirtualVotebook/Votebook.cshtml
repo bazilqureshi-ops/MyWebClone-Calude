@@ -1,0 +1,434 @@
+﻿@using Emse.QMagic.Web.Models;
+@using System.Xml.Linq;
+@using System.Text;
+@{
+    ViewBag.Title = "Virtual Votebook";
+    Layout = null;
+    qmVotebook votebook = ViewBag.votebook;
+    qmSurvey survey = ViewBag.survey;
+    List<qmSurveyQuestion> questions = ViewBag.questions;
+    qmScreenDesign Design = ViewBag.design;
+    string sourcecode = Design.DesignSource;
+    qmTicket ticket = ViewBag.ticket;
+    int TimerCount = 0;
+    int RSSID = 0;
+    int RSSRefleshTime = 0;
+    string ItemDataSource = "", ItemRowName = "", ItemRowMap = "", RSSItemID = "";
+    int ItemRowCount = 0, ItemRefleshTime = 0;
+
+    string vbbg = XElement.Parse(sourcecode).Element("Page").Attribute("BackgroundImage").Value;
+    string trigger = XElement.Parse(sourcecode).Element("Page").Attribute("Trigger").Value;
+    string timeoutsecond = XElement.Parse(sourcecode).Element("Page").Attribute("Timeout").Value;
+
+    string questionids = "";
+    foreach (qmSurveyQuestion question in questions.OrderBy(x=>x.OrderNumber))
+    {
+        questionids += question.SurveyQuestionID + ",";
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Votebook</title>
+    <link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/SignalR/Hubs"></script>
+
+    <link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+    <script src="~/assets/js/sweetalert2.all.min.js"></script>
+    <link href="~/Scripts/Votebook.css" rel="stylesheet" />
+    <script>
+        const questions = "@(questionids)".split(',');
+        var ticketID = "@(ViewBag.ticketid)";
+        var TimeOutDef = @(timeoutsecond);
+        var TimeOutSec = @(timeoutsecond);
+        var VotebookID = @(votebook.VotebookID);
+        var TriggerTerminalID = "@(votebook.TriggerTerminalID)";
+        var trigger = "@(trigger)";
+        var SurveyID = "@(survey.SurveyID)";
+
+    </script>
+    <script src="~/Scripts/Votebook.js"></script>
+</head>
+<body style="overflow:hidden;">
+    <div class="FullWidthVideo" onclick="VideoClicked();">
+        @{
+            if (votebook.SleepVideoURL.Contains(".mp4") || votebook.SleepVideoURL.Contains(".avi"))
+            {
+                <video width="100%" height="100%" id="TheVideo" autoplay loop>
+                    <source src="@(votebook.SleepVideoURL.Replace("'","").Replace(";",""))" type="video/mp4">
+                    <source src="@(votebook.SleepVideoURL.Replace("'","").Replace(";",""))" type="video/ogg">
+                    Your browser does not support the video tag.
+                </video>
+            }
+            else
+            {
+                <img src="@(votebook.SleepVideoURL.Replace("'","").Replace(";",""))" style="width:100%; height:100%;" id="TheVideo" />
+            }
+        }
+    </div>
+    <div class="VoteBookMain" style="background-image: url(@(vbbg));">
+
+        @{
+            foreach (XElement level1Element in XElement.Parse(sourcecode).Elements("Page").Elements("Control"))
+            {
+                if (level1Element.Attribute("type").Value == "MediaElement")
+                {
+                    string ItemID = level1Element.Element("Identifier").Value;
+                    string VideoURL = level1Element.Element("BackgroundImage").Value;
+                    string WillBeSeperated = VideoURL.Replace("'", "");
+                    char seperator = ';';
+                    List<string> playlist = WillBeSeperated.Split(seperator).ToList();
+
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    <video id="Video@(ItemID)" style="position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;" preload="metadata" playlist="@Html.Raw(VideoURL)" src="@Html.Raw(VideoURL)" nowplaying="0" onended="NextPlay('Video@(ItemID)')" autoplay muted></video>
+                }
+
+                if (level1Element.Attribute("type").Value == "ScrollText")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    string ItemFont = level1Element.Element("Font").Value;
+                    int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    ItemFontSize = ItemFontSize * 2;
+                    string ForeColor = level1Element.Element("Color").Value;
+                    string ItemText = level1Element.Element("Text").Value;
+
+                    int TickRate = Convert.ToInt32(level1Element.Element("TickRate").Value);
+                    int TickPercentage = Convert.ToInt32(level1Element.Element("TickPercentage").Value);
+
+                    if (level1Element.Element("RightToLeft").Value == "True")
+                    {
+                        <marquee direction="left" behavior="scroll" scrolldelay="@(TickRate)" scrollamount="@(TickPercentage)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</marquee>
+                    }
+                    else
+                    {
+                        <marquee direction="right" behavior="scroll" scrolldelay="@(TickRate)" scrollamount="@(TickPercentage)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</marquee>
+                    }
+                }
+
+                if (level1Element.Attribute("type").Value == "DateTime")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    string ItemFont = level1Element.Element("Font").Value;
+                    int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    ItemFontSize = ItemFontSize * 2;
+                    string ForeColor = level1Element.Element("Color").Value;
+
+                    if (level1Element.Element("ShowDate").Value == "True")
+                    {
+                        if (level1Element.Element("ShowTime").Value == "True")
+                        {
+                            <span class="DateTimer" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortDateString()) @(DateTime.Now.ToShortTimeString())</span>
+                        }
+                        else
+                        {
+                            <span class="Dater" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortDateString()))</span>
+                        }
+                    }
+                    else
+                    {
+                        if (level1Element.Element("ShowTime").Value == "True")
+                        {
+                            <span class="Timer" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(DateTime.Now.ToShortTimeString())</span>
+                        }
+                        else
+                        {
+                            <span class="Noner" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">---</span>
+                        }
+                    }
+
+                    TimerCount++;
+
+                    <script>
+                        function StartTimer() {
+                            setTimeout(function () {
+                                StartTimer();
+                            }, 1000);
+
+                            var dt = new Date(Date.now());
+
+                            $(".Dater").html(dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate());
+                            $(".Timer").html(dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds());
+                            $(".DateTimer").html(dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate() + " " + dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds());
+                        }
+
+                        StartTimer();
+                    </script>
+                }
+
+                if (level1Element.Attribute("type").Value == "Label")
+                {
+                    string ItemID, ItemName, ItemText, ItemPosX, ItemPosY, ItemWidth, ItemHeight, ItemAlign, ItemBold, ItemItalic, ItemUnderline, ItemFont, ForeColor;
+                    int ItemFontSize = 8;
+
+                    string TypeOfIt = level1Element.Element("Type").Value;
+                    ItemID = level1Element.Element("Identifier").Value;
+                    ItemName = level1Element.Element("Name").Value;
+                    ItemText = level1Element.Element("Text").Value;
+                    ItemPosX = level1Element.Element("PositionX").Value;
+                    ItemPosY = level1Element.Element("PositionY").Value;
+                    ItemWidth = level1Element.Element("Width").Value;
+                    ItemHeight = level1Element.Element("Height").Value;
+                    ItemFont = level1Element.Element("Font").Value;
+                    ItemAlign = level1Element.Element("Align").Value;
+                    ItemBold = level1Element.Element("Bold").Value;
+                    ItemItalic = level1Element.Element("Italic").Value;
+                    ItemUnderline = level1Element.Element("Underline").Value;
+                    ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    ItemFontSize = ItemFontSize * 2;
+                    ForeColor = level1Element.Element("Color").Value;
+
+                    switch (TypeOfIt)
+                    {
+                        case "CustomerName":
+                            <span class="CustomerName" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "BranchName":
+                            <span class="BranchName" style="font-family:'@(ItemFont)'; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "ServiceName":
+                            <span class="ServiceName" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "SegmentName":
+                            <span class="SegmentName" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "TerminalName":
+                            <span class="TerminalName" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "UserFullName":
+                            <span class="UserFullName" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "Static":
+                            <span class="StaticText" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                        case "TicketNumber":
+                            <span class="TicketNumber" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ticket != null ? ticket.TicketPrefix : "") @(ticket != null ? ticket.TicketNumber.ToString() : "")</span>
+                            break;
+                        default:
+                            <span class="StaticText" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; font-weight:@(ItemBold == "True" ? "bold" : "normal"); font-style:@(ItemItalic == "True" ? "italic" : "normal"); font-decoration:@(ItemUnderline == "True" ? "underline" : "none"); color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">@(ItemText)</span>
+                            break;
+                    }
+                }
+
+                if (level1Element.Attribute("type").Value == "NextButton")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    string ItemBG = level1Element.Element("BackgroundImage").Value;
+
+                    <img src="@(ItemBG)" id="NextButton" onclick="NextQuestion();" style="margin:20px; position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;" />
+                }
+
+                if (level1Element.Attribute("type").Value == "PreviousButton")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    string ItemBG = level1Element.Element("BackgroundImage").Value;
+
+                    <img src="@(ItemBG)" id="BackButton" onclick="PreviousQuestion();" style="margin:20px; position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;" />
+                }
+
+                if (level1Element.Attribute("type").Value == "RSSFeed")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+                    RSSItemID = level1Element.Element("Identifier").Value;
+
+                    RSSID = Convert.ToInt32(RSSItemID);
+
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+
+                    string ItemFont = level1Element.Element("Font").Value;
+                    int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    string ForeColor = level1Element.Element("Color").Value;
+
+                    ItemDataSource = level1Element.Element("DataSource").Value;
+                    ItemRowCount = Convert.ToInt32(level1Element.Element("RowCount").Value);
+                    ItemRowName = level1Element.Element("RowName").Value;
+                    ItemRefleshTime = Convert.ToInt32(level1Element.Element("RefleshTime").Value);
+                    ItemRowMap = level1Element.Element("RowMap").Value;
+
+                    string AutoRSSScroll = level1Element.Element("AutoScroll").Value;
+
+                    RSSRefleshTime = ItemRefleshTime;
+
+                    <div id="@(RSSItemID)" style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); position:absolute; width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%;">
+                        <img src="~/assets/images/loading2.gif" />
+                    </div>
+
+                    <script>
+                        $.get("RSSFeeder", {ItemDataSource:"@(ItemDataSource)", ItemRowMap:"@Html.Raw(ItemRowMap.Replace("&gt;",">"))", ItemRowCount:"@(ItemRowCount)", ItemRowName:"@(ItemRowName)"}, function (data) {
+                            $("#@(RSSItemID)").html(data);
+                        });
+                    </script>
+                }
+
+                int iyz = 0;
+                if (level1Element.Attribute("type").Value == "QuestionArea")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+                    string ItemAlign = level1Element.Element("Align").Value;
+                    string ItemFont = level1Element.Element("Font").Value;
+                    int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    string ForeColor = level1Element.Element("Color").Value;
+                    string IsBold = level1Element.Element("Bold").Value;
+                    if (IsBold == "true")
+                    {
+                        IsBold = "font-weight:bold;";
+                    }
+                    else
+                    {
+                        IsBold = "";
+                    }
+
+                    foreach (qmSurveyQuestion question in questions)
+                    {
+                        if (question.IsImage == true)
+                        {
+                            <div id="Question_@(question.SurveyQuestionID)" class="@(ItemAlign == "center" ? "text-center" : "")@(ItemAlign == "left" ? "text-left" : "")@(ItemAlign == "right" ? "text-right" : "")" style="position:absolute; align:@(ItemAlign); width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%; font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); display:@(iyz == 0 ? "block" : "none");">
+                                <img src="@(question.ImageURL)" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div id="Question_@(question.SurveyQuestionID)" class="@(ItemAlign == "center" ? "text-center" : "")@(ItemAlign == "left" ? "text-left" : "")@(ItemAlign == "right" ? "text-right" : "")" style="position:absolute; align:@(ItemAlign); width:@ItemWidth%; height:@ItemHeight%; top:@ItemPosY%; left:@ItemPosX%; font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); display:@(iyz == 0 ? "block" : "none");">
+                                <span style="align:@(ItemAlign); @(IsBold)">@(question.Question)</span>
+                            </div>
+                        }
+
+                        iyz++;
+                    }
+                }
+
+                if (level1Element.Attribute("type").Value == "AnswerArea")
+                {
+                    string ItemPosX = level1Element.Element("PositionX").Value;
+                    string ItemPosY = level1Element.Element("PositionY").Value;
+                    string ItemWidth = level1Element.Element("Width").Value;
+                    string ItemHeight = level1Element.Element("Height").Value;
+                    string ItemFont = level1Element.Element("Font").Value;
+                    string ItemAlign = level1Element.Element("Align").Value;
+                    int ItemFontSize = Convert.ToInt32(level1Element.Element("Size").Value.Replace("px", ""));
+                    string ForeColor = level1Element.Element("Color").Value;
+
+                    //string Type = level1Element.Element("Type").Value;
+                    List<string> meternames = new List<string>();
+
+                    iyz = 0;
+
+                    foreach (qmSurveyQuestion question in questions)
+                    {
+                        List<qmSurveyAnswer> answers = new List<qmSurveyAnswer>();
+                        using (QMagicEntities db = new QMagicEntities())
+                        {
+                            answers = db.qmSurveyAnswer.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).ToList();
+                        }
+                        <div id="Answers_@(question.SurveyQuestionID)" style="position:absolute; width:@ItemWidth%; height:@ItemHeight%; top: @ItemPosY%;left: @ItemPosX%; display:@(iyz == 0 ? "table-cell" : "none"); vertical-align: middle; text-align: center; overflow-y:auto;" class="text-center custom-scrollbar">
+                            @{
+                                foreach (qmSurveyAnswer answer in answers)
+                                {
+                                    /*
+                                     *
+                                     * RENDER TYPES
+                                     *
+                                     * 0 -> TextNext
+                                     * 1 -> TextList
+                                     * 2 -> Image
+                                     * 3 -> Text + Image
+                                     * 4 -> TrackBar
+                                     * 5 -> Checkbox
+                                     * 6 -> TextBox
+                                     *
+                                     */
+                                    if (answer.RenderType == 0)
+                                    {
+                                        <label style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor);" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" dependency="@(answer.GoToQuestionID)">@(answer.Answer)</label>
+                                    }
+
+                                    if (answer.RenderType == 1)
+                                    {
+                                        <label style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor);" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" dependency="@(answer.GoToQuestionID)">@(answer.Answer)</label><br />
+                                    }
+
+                                    if (answer.RenderType == 2)
+                                    {
+                                        <img src="@(answer.OptionPicture)" id="Answer_@(answer.SurveyAnswerID)" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" style="margin:20px;" class="imgAnswer" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" dependency="@(answer.GoToQuestionID)" />
+                                    }
+
+                                    if (answer.RenderType == 3)
+                                    {
+                                        <label style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor);" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" dependency="@(answer.GoToQuestionID)">
+                                            <img src="@(answer.OptionPicture)" /><br />
+                                            @(answer.Answer)
+                                        </label><br />
+                                    }
+
+                                    if (answer.RenderType == 4)
+                                    {
+                                        if (!meternames.Contains("slider_" + question.SurveyQuestionID))
+                                        {
+                                            <div class="col-md-8 col-md-offset-2" style="padding-top:15px;">
+
+                                                <input type="range" min="@(answers.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).OrderBy(x => x.Point).Take(1).FirstOrDefault().Point.ToString())" max="@(answers.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).OrderByDescending(x => x.Point).Take(1).FirstOrDefault().Point.ToString())" value="0" class="slider" id="slider_@(question.SurveyQuestionID)" questionid="@(question.SurveyQuestionID)" answerid="@(answers.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).OrderByDescending(x => x.Point).Take(1).FirstOrDefault().SurveyAnswerID.ToString())" style="height:32px;">
+
+                                                <div class="col-md-6 text-left" style="width:50%; font-family:'@(ItemFont)'; font-size:@(ItemFontSize/2)px; color:@(ForeColor);">@(answers.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).OrderBy(x => x.Point).Take(1).FirstOrDefault().Answer.ToString())</div>
+
+                                                <div class="col-md-6 text-right" style="width:50%; font-family:'@(ItemFont)'; font-size:@(ItemFontSize/2)px; color:@(ForeColor);">@(answers.Where(x => x.SurveyQuestionID == question.SurveyQuestionID).OrderByDescending(x => x.Point).Take(1).FirstOrDefault().Answer.ToString())</div>
+                                            </div>
+
+
+                                            meternames.Add("slider_" + question.SurveyQuestionID);
+                                        }
+                                    }
+                                    if (answer.RenderType == 5)
+                                    {
+                                        <label style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor);" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" dependency="@(answer.GoToQuestionID)">
+                                            <input type="checkbox" id="Answer_@(answer.SurveyAnswerID)" name="Answer_@(answer.SurveyQuestionID)" style="width:@(ItemFontSize/1.2)px; height:@(ItemFontSize/1.2)px;" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" />
+                                            @(answer.Answer)
+                                        </label><br />
+                                    }
+                                    if (answer.RenderType == 6)
+                                    {
+                                        <textarea style="font-family:'@(ItemFont)'; font-size:@(ItemFontSize)px; color:@(ForeColor); width:@(ItemFontSize*2)px; height:@(ItemFontSize*2)px;" class="commentary" onclick="SelectAnswer(@(answer.SurveyAnswerID), @(question.SurveyQuestionID));" id="commentary_@(answer.SurveyQuestionID)" name="Answer_@(answer.SurveyQuestionID)" answerid="@(answer.SurveyAnswerID)" point="@(answer.Point)" dependency="@(answer.GoToQuestionID)"></textarea>
+                                    }
+                                }
+                            }
+                        </div>
+                        iyz++;
+                    }
+                }
+            }
+        }
+    </div>
+</body>
+</html>

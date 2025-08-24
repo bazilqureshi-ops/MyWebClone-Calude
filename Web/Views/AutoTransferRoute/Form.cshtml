@@ -1,0 +1,918 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model AutoTransferRouteViewModel
+
+<script>
+    function DeleteRecord(recordid) {
+        if (confirm("Are you sure want to delete this Assignment?")) {
+
+            $.ajax({
+                type: "POST",
+                url: "/AutoTransferRoute/DeleteAssignment",
+                dataType: "json",
+                data: "ID=" + recordid,
+                success: function (result) {
+                    table
+                        .row($(this).parents('tr'))
+                        .remove()
+                        .draw();
+                }
+            });
+
+
+        }
+    }
+
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var servicecount = @(Model.Services.Count());
+        var segmentcount = @(Model.Segments.Count());
+
+        if (servicecount < 1 || segmentcount < 1) {
+            var str = "<p>You're not meeting the minimum requirements of creating a new auto transfer route. You should have at least one service and a segment.</p>";
+
+            if (servicecount < 1) {
+                str += "Please <a href='../Service'>click here</a> to create new service.<br/>";
+            }
+            if (segmentcount < 1) {
+                str += "Please <a href='../Segment'>click here</a> to create new segment.<br/>";
+            }
+
+            swal({
+                title: "Hmm.. Consider This",
+                text: str,
+                icon: "warning",
+                buttons: false,
+                dangerMode: true,
+                content: str
+            });
+
+            $(".swal-text").html(str);
+        }
+    });
+</script>
+
+@using (Html.BeginForm("Save", "AutoTransferRoute", FormMethod.Post, new { @id = "statusForm", enctype = "multipart/form-data" }))
+{
+    @Html.Hidden("AutoTransferRule.AutoTransferRuleID", Model.AutoTransferRule.AutoTransferRuleID, new { @id = "atrID" })
+    @Html.Hidden("OldFlowName", Model.OldFlowName, new { @id = "flowName" })
+
+    <!-- First Section -->
+    <div class="row">
+        <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2 ">
+            @if (!string.IsNullOrEmpty(ViewBag.Error))
+            {
+                var autoTransferRoute = ViewBag.Entity;
+
+                <div class="alert-danger" style="margin-bottom: 10px;">
+                    <label style="padding: 10px">
+                        @ViewBag.Error <a href="/AutoTransferRoute/EditTransferRoute?id=@autoTransferRoute.AutoTransferRuleID">here.</a>
+                    </label>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header">
+                    <!-- Create/Update Auto Tranfer Route Name -->
+                    @if (Model.AutoTransferRule.AutoTransferRuleID > 0)
+                    {
+                        <label class="col-xs-12 col-md-4 col-lg-4">
+                            Update Auto Transfer Route
+                        </label>
+                    }
+                    else
+                    {
+                        <label class="col-xs-12 col-md-4 col-lg-4">
+                            Create a New Auto Transfer Route
+                        </label>
+                    }
+
+                    <label class="col-xs-12 col-md-4 col-md-offset-6 col-lg-4 col-lg-offset-6">
+
+                        <a href="../AutoTransferRoute" class="btn btn-default">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
+
+                    </label>
+
+                </div>
+                <div class="card-body">
+                    @Html.Hidden("Status.StatusID", Model.AutoTransferRule.AutoTransferRuleID, new { @id = "statusId" })
+
+                    <!-- Auto Transfer Route Name -->
+                    <div class="row">
+                        <div class="col-xs-12 col-md-12 col-lg-12">
+                            <div class="form-group">
+                                <label class="col-xs-12 col-md-3 col-lg-3 control-label"> Auto Transfer Route Name </label>
+                                <div class="col-xs-12 col-md-8 col-lg-8">
+                                    @Html.EditorFor(transfer => transfer.AutoTransferRule.AutoTransferName, new { htmlAttributes = new { @class = "form-control" } })
+                                    <label class="text-danger">
+                                        @Html.ValidationMessageFor(transfer => transfer.AutoTransferRule.AutoTransferName)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <br />
+
+    <!-- Second Section -->
+    <div class="row">
+        <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2 ">
+            <div class="card">
+                <!-- Priority Header -->
+                <div class="card-header" id="priorityHeader">
+                    <label class="col-xs-12 col-md-6 col-lg-6">
+                        Priority
+                    </label>
+
+                    <label class="col-xs-12 col-md-6 col-lg-6">
+                        <a class="btn btn-warning" style="float:right !important;" id="addPriorty">+</a>
+                    </label>
+                </div>
+
+                <!-- Priority Body -->
+                <div class="card-body" id="priorityBody">
+                    @{
+                        for (int i = 0; i < Model.PriortyList.Count; i++)
+                        {
+                            <div class="priority-container" id="container_@Model.PriortyList[i]" value="@Model.PriortyList[i]">
+                                @if (!Model.PriortyList[i].Equals(1))
+                                {
+                                    <label class="priority-chain" id="labelChain_@Model.PriortyList[i]"></label>
+                                }
+                                @if (Model.PriortyList[i].Equals(1))
+                                {
+                                    <button name="deletePriority_@Model.PriortyList[i]" id="deletePriority_@Model.PriortyList[i]" value="@Model.PriortyList[i]" class="btn-danger priority-delete">x</button>
+                                    <input type="button" name="priority_@Model.PriortyList[i]" id="priority_@Model.PriortyList[i]" value="@Model.PriortyList[i]" class="btn-danger priority-outline " />
+
+                                }
+                                else
+                                {
+                                    <button name="deletePriority_@Model.PriortyList[i]" id="deletePriority_@Model.PriortyList[i]" value="@Model.PriortyList[i]" class="btn-danger priority-delete">x</button>
+                                    <input type="button" name="priority_@Model.PriortyList[i]" id="priority_@Model.PriortyList[i]" value="@Model.PriortyList[i]" class="btn-danger priority-outline " />
+                                }
+
+                                @Html.HiddenFor(sss => Model.PriortyList[i])
+
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <br />
+
+    <!-- Thirth Section -->
+    <div class="row" style="display: block">
+        <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2 ">
+            <div class="card" id="flowGeneral">
+                <!-- Flow Header -->
+                <div class="card-header">
+                    <label class="col-xs-12 col-md-6 col-lg-6">
+                        Transfer Route
+                    </label>
+                </div>
+
+                <div class="card-body">
+                    <br />
+
+                    <!--Select2 ComboBoxes-->
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="row" id="addRoute">
+                                <input type="hidden" name="priorityValue" id="priorityValue" value="0" />
+
+                                <div class="col-xs-12 col-md-3 col-lg-3">
+                                    <label class="col-xs-12 col-md-12 col-lg-12"> Service Name </label>
+
+                                    <select name="serviceID" id="serviceID" class="select2 col-xs-12 col-md-12 col-lg-12 select-change">
+
+                                        @for (int i = 0; i < Model.Services.Count; i++)
+                                        {
+                                            <option value="@Model.Services[i].ServiceID">@Model.Services[i].ServiceName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-xs-12 col-md-3 col-lg-3">
+                                    <label class="col-xs-12 col-md-12 col-lg-12">Segment Name </label>
+
+                                    <select name="segmentID" id="segmentID" class="select2 col-xs-12 col-md-12 col-lg-12">
+                                        @foreach (var segmentN in Model.Segments.Where(segment => segment.ServiceID == Model.Services[0].ServiceID))
+                                        {
+                                            <option value="@segmentN.SegmentID">@segmentN.SegmentName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-xs-12 col-md-3 col-lg-3">
+                                    <label class="col-xs-12 col-md-12 col-lg-12"> Transfer Service Name </label>
+
+                                    <select name="transferServiceID" id="transferServiceID" class="select2 col-xs-12 col-md-12 col-lg-12 select-change">
+                                        @for (int i = 0; i < Model.Services.Count; i++)
+                                        {
+                                            <option value="@Model.Services[i].ServiceID">@Model.Services[i].ServiceName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-xs-12 col-md-3 col-lg-3">
+                                    <label class="col-xs-12 col-md-12 col-lg-12"> Transfer Segment Name </label>
+
+                                    <select name="transferSegmentID" id="transferSegmentID" class="select2 col-xs-12 col-md-12 col-lg-12">
+                                        @foreach (var segmentN in Model.Segments.Where(segment => segment.ServiceID == Model.Services[0].ServiceID))
+                                        {
+                                            <option value="@segmentN.SegmentID">@segmentN.SegmentName</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <br />
+                    <!-- Buttons (Show All Transfers and Add New Route) -->
+                    <div class="row">
+                        @if (Model.AutoTransferRule.AutoTransferRuleID > 0)
+                        {
+                            <a class="btn btn-warning col-xs-12 col-md-2 col-lg-2" style="float:right !important;" id="addNewRoute">Add New Route</a>
+                            <a class="btn btn-primary col-xs-12 col-md-2 col-lg-2" style="float:right !important; margin-right: 1% !important" id="showAllTransfers">Show All Transfer</a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-warning col-xs-12 col-md-2 col-lg-2" style="float:right !important;" id="addNewRoute">Add New Route</a>
+                            <a class="btn btn-primary col-xs-12 col-md-2 col-lg-2" style="float:right !important; margin-right: 1% !important" id="showAllTransfers">Show All Transfer</a>
+                        }
+                    </div>
+
+                </div>
+
+                <hr style="width: 90%" />
+
+                <!-- Flow Body -->
+                <div class="card-body" id="transferAssigment">
+
+                    @Html.Partial("ResultView")
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+	$(document).ready(function () {
+
+		let table = $('#dataTable').DataTable();
+		let text = "";
+		let priority = 1;
+		let priorties = $('#priorityBody');
+		let countElement = 0;
+		let checked = false;
+		let modelId = $('#atrID').val();
+		let terminals = 0;
+		let willBeAdeed = 0;
+
+		if (modelId > 0) {
+			$('#priorityValue').val('1');
+		}
+
+		//Add Priority Function
+		$('#priorityHeader').on("click",
+			"#addPriorty",
+			function () {
+
+				if (modelId > 0 && checked === false) {
+					priority = @Model.PriortyList.Count;
+					checked = true;
+					priority++;
+				}
+
+				//Priority Area
+				text = '<div class="priority-container" id="container_' + priority + '" value=' + priority + '>';
+				if (priority > 1)
+					text += '<label class="priority-chain" id="labelChain_' + priority + '"></label>';
+
+				//While adding first time, give active classes
+				if (priority === 1) {
+					text += '<button name="deletePriority_' + priority + '" id="deletePriority_' + priority + '" value="' + priority + '" class="priority-delete-active btn-danger priority-delete">x</button>';
+					text += '<input type="button" name="priority_' + priority + '" id="priority_' + priority + '" value="' + priority + '" class="priority-active btn-danger priority-outline" />';
+					text += '<input type="hidden" name="Model.PriortyList[' + priority + ']" id="Model.PriortyList[' + priority + ']" value="' + priority + '" />';
+					text += '<input data-val="true" data-val-number="The field Int32 must be a number." data-val-required="The Int32 field is required." id="PriortyList_' + priority+'_" type="hidden" name="Model.PriortyList[' + priority + ']"  value="' + priority + '" />';
+					$('#priorityValue').val('1');
+
+				}
+				else {
+					text += '<button name="deletePriority_' + priority + '" id="deletePriority_' + priority + '" value="' + priority + '" class="btn-danger priority-delete">x</button>';
+					text += '<input type="button" name="priority_' + priority + '" id="priority_' + priority + '" value="' + priority + '" class="btn-danger priority-outline " />';
+					text += '<input data-val="true" data-val-number="The field Int32 must be a number." data-val-required="The Int32 field is required." id="PriortyList_' + priority + '_" type="hidden" name="Model.PriortyList[' + priority + ']"  value="' + priority + '" />';
+				}
+
+				text += '</div>';
+				priorties.append(text);
+				text = "";
+
+				priority++;
+
+			});
+
+		//Delete Priority Function
+		$('#priorityBody').on("click", ".priority-delete", function () {
+			countElement--;
+			priority--;
+
+			let table = $('#dataTable').DataTable();
+			let container = parseInt($(this).val());
+			let newContainer = container;
+			newContainer++;
+
+			if (modelId > 0) {
+				var transferObject = {
+					id: modelId,
+					priority: container
+				};
+
+				$.ajax({
+					type: "POST",
+					url: "/AutoTransferRoute/DeletePriorityWithAssigment",
+					data: transferObject,
+					success: function () {
+
+						var options = {};
+						options.url = "/AutoTransferRoute/Atrs",
+							options.type = "POST";
+							options.data = '{"id":' + modelId + '}',
+							options.contentType = "application/json; charset=utf-8",
+							options.success = function (result) {
+								//First Delete Datas From DataTables
+								table.clear().draw();
+
+								//Append Datas to Partial Section
+								Ferrari(result)
+
+							};
+
+						options.error = function (err) {
+							alert(err.statusText);
+						};
+						$.ajax(options);
+					}
+				});
+
+			}
+			else {
+				let atrList = $("tr[type='row-element'][priority=" + container + "]");
+
+				if (atrList.length > 0 ) {
+					atrList.each(function () {
+						table
+							.row($(this))
+							.remove()
+							.draw();
+					});
+
+				}
+			}
+
+
+			//Delete Priority Button
+			$(this).parent().remove();
+
+			//Update Children of Priority Containers
+			let priorities = $('.priority-container');
+			for (var i = 0; i < priorities.length; i++) {
+				//Priority Number
+				let priority = $(priorities[i]);
+				let priorityValue = parseInt(priority.attr('value'));
+
+				if (priorityValue > container) {
+					const newPriorityValue = (priorityValue - 1);
+
+					priority.attr('value', newPriorityValue);
+
+					//Chain Update
+					if (newPriorityValue !== 1) {
+						priority.children('label').attr({
+							'id': 'labelChain_' + newPriorityValue + '',
+						});
+					}
+					else {
+						priority.children('label').remove();
+					}
+
+					//Delete Button Update
+					priority.children('button').attr({
+						'name': 'deletePriorty_' + newPriorityValue + '',
+						'id': 'deletePriorty_' + newPriorityValue + '',
+						'value': newPriorityValue,
+					});
+
+					//Priorty Input Update
+					priority.children('input[id*="priority_"]').attr({
+						'name': 'priority_' + newPriorityValue + '',
+						'id': 'priority_' + newPriorityValue + '',
+						'value': newPriorityValue,
+					});
+
+					//Backend List Index Update
+					priority.children('input[name*="Model.PriortyList"]').attr({
+						'name': 'Model.PriorityList[' + newPriorityValue + ']',
+						'id': 'PriortyList_' + newPriorityValue + '_',
+						'value': newPriorityValue,
+					});
+				}
+			}
+
+			//Decrease ATR's priorities]
+			const atrPriority = $("input[name*='.Priority']")
+			if (atrPriority.length > 0) {
+				atrPriority.each(function () {
+					if ($(this).val() > container) {
+						$(this).val($(this).val() - 1)
+					}
+				});
+			}
+
+			$('#priorityValue').val(0);
+
+			//After delete item, other items need to be updated
+			UpdateAtrs();
+
+			//Check other Priority's if they have any active class.
+			DeleteActive();
+
+		});
+
+		//Function Ferrari
+		function Ferrari(result) {
+
+			var table = $('#dataTable').DataTable();
+
+			for (var i = 0; i < result.length; i++) {
+				var serviceText = "";
+				var segmentText = "";
+				var transferServiceText = "";
+				var transferSegmentText = "";
+
+				//serviceText Definition
+				$('#serviceID > option').each(function(index, value) {
+					if ($(this).val() == result[i].ServiceID) {
+						serviceText = $(this).text();
+					}
+				})
+
+				//segmentText Definition
+				$('#segmentID > option').each(function(index, value) {
+					if ($(this).val() == result[i].SegmentID) {
+						segmentText = $(this).text();
+					}
+				})
+
+				//transferServiceText Definition
+				$('#transferServiceID > option').each(function(index, value) {
+					if ($(this).val() == result[i].TransferServiceID) {
+						transferServiceText = $(this).text();
+					}
+				})
+
+				//transferSegmentText Definition
+				$('#transferSegmentID > option').each(function(index, value) {
+					if ($(this).val() == result[i].TransferSegmentID) {
+						transferSegmentText = $(this).text();
+					}
+				})
+
+				//Add Route To DataTable
+				addingRoute(result[i].SegmentID, result[i].ServiceID, result[i].TransferServiceID, result[i].TransferSegmentID, result[i].Priority, serviceText, segmentText, transferServiceText, transferSegmentText, i)
+			}
+		}
+
+		//Priority Change
+		$('#priorityBody').on("click",
+			"input",
+			function () {
+				var value = $(this).val();
+
+				//Add Active Class on Click
+				$(this).addClass("priority-active");
+				$('button').each(function () {
+					if ($(this).val() === value) {
+						$(this).addClass("priority-delete-active");
+
+					}
+				});
+
+				//Check other Priority's if they have any active class.
+				$('input').each(function () {
+					if ($(this).val() != value) {
+						$(this).removeClass("priority-active");
+					}
+				});
+
+				$('button').each(function () {
+					if ($(this).val() != value) {
+						$(this).removeClass("priority-delete-active");
+
+					}
+				});
+
+				//Change Value of Hidden Input
+				$('#priorityValue').val(value);
+
+				//Done With JsonResult
+				if (modelId > 0) {
+					var transferObject = {
+						id: modelId,
+						priority: value
+					};
+
+
+					var options = {};
+					options.url = "/AutoTransferRoute/Atrs";
+					options.type = "POST";
+					options.data = '{"id":' + modelId + ', "priority": ' + value + '}';
+					options.contentType = "application/json; charset=utf-8";
+					options.success = function (result) {
+
+							//First Delete Datas From DataTables
+							table.clear().draw();
+
+							//Append Datas to Partial Section
+							Ferrari(result)
+
+					};
+
+					options.error = function (err) {
+						alert(err.statusText);
+					};
+					$.ajax(options);
+				}
+				else if (modelId == 0) {
+					$("input[name*='.Priority']").each(function () {
+
+						//Getting Tr from parents
+						var parentTr = $(this).parentsUntil('tr').parent();
+						if ($(this).attr('name').indexOf('.Priority') && $(this).val() == value) {
+							$(parentTr).css('display', 'table-row');
+						}
+						else if ($(this).attr('name').indexOf('.Priority') && $(this).val() != value) {
+							$(parentTr).css('display', 'none');
+						}
+					})
+
+					if ($("input[name*='.Priority']").length == 0) {
+						$('.dataTables_empty').css('display', 'table_row');
+					}
+				}
+			});
+
+		//Add New Route
+		$('#addNewRoute').click(function () {
+
+			//Id's for comboBoxes
+			var segmentId = $('#segmentID').val();
+			var serviceId = $('#serviceID').val();
+			var transferServiceId = $('#transferServiceID').val();
+			var transferSegmentId = $('#transferSegmentID').val();
+			var priorityValue = $('#priorityValue').val();
+
+			//Text's for comboBoxes
+			var segmentText = $('#segmentID').find('option:selected').text();
+			var serviceText = $('#serviceID').find('option:selected').text();
+			var transferServiceText = $('#transferServiceID').find('option:selected').text();
+			var transferSegmentText = $('#transferSegmentID').find('option:selected').text();
+
+			//Creating Data Transfer Object
+			var transferObject = {
+				id: modelId,
+				serviceId: serviceId,
+				segmentId: segmentId,
+				serviceTransferId: transferServiceId,
+				segmentTransferId: transferSegmentId,
+				priority: priorityValue
+			};
+
+			if (priorityValue != 0) {
+				if (modelId > 0) {
+					if (modelId != null && modelId > 0 && segmentId != null && segmentId > 0 && serviceId != null && serviceId > 0 && transferServiceId != null && transferServiceId > 0 && transferSegmentId != null && transferSegmentId > 0 && priorityValue != null && priorityValue > 0) {
+						$.ajax({
+							dataType: "JSON",
+							type: "post",
+							url: "/AutoTransferRoute/TransferRouteJobs",
+							data: transferObject,
+							success: function (result) {
+
+								if (result === "bad") {
+									swal("Something goes wrong. Please try againg.", {
+										icon: "error",
+									});
+								}
+								else if (result === "no assigment") {
+									swal("First you need to check previous priorties, you have skipped one stage.", {
+										icon: "warning",
+									});
+								}
+								else {
+
+									//Add Route To DataTable
+									addingRoute(segmentId, serviceId, transferServiceId, transferSegmentId, priorityValue, serviceText, segmentText, transferServiceText, transferSegmentText, result.QueryNumber);
+
+									//table.row.add([
+									//	'<input type="hidden" name="Atrs[' + result.QueryNumber + '].Priority" value="' + result.Priority + '" /> ' + serviceText + ' <input type="hidden" name="Atrs[' + willBeAdeed + '].ServiceID" value="' + serviceId + '" />  ',
+									//	'' + segmentText + ' <input type="hidden" name="Atrs[' + result.QueryNumber + '].SegmentID" value="' + segmentId + '" />',
+									//	'' + transferServiceText + ' <input type="hidden" name="Atrs[' + result.QueryNumber + '].TransferServiceID" value="' + transferServiceId + '" /> ',
+									//	'' + transferSegmentText + ' <input type="hidden" name="Atrs[' + result.QueryNumber + '].TransferSegmentID" value="' + transferSegmentId + '" /> ',
+									//	'<button type="button" value="' + result.Id + '" class="btn btn-danger"><span class="fa fa-remove"></span></button>'
+									//]).draw(false);
+
+									//let parentElement = $('input[type="hidden"][name="Atrs[' + result.QueryNumber + '].Priority"]').parent();
+									//parentElement.attr('type', 'row-element');
+									//parentElement.attr('priority', 'Atrs[' + result.QueryNumber + '].Priority')
+								}
+
+							}
+						});
+					}
+				}
+				else if (modelId == 0) {
+
+					//First generate required variables
+					var array = new Array();
+					var arrayLength = priorityValue - 1;
+					var priorityNumber = 1;
+
+					//Then get ATR's from previous property
+					for (var i = 0; i < arrayLength; i++) {
+						var count = 0;
+
+						//Counting how many of atrs added for this priorty
+						$("input[name*='.Priority']").each(function (index, value) {
+							if ($(value).val() == priorityNumber) {
+								count++;
+							}
+						})
+
+						//If all priorties has controlled this method will deploy and breake the for
+						if (priorityNumber == priorityValue) {
+							return false;
+						}
+						//Else counting number increase one
+						else {
+							priorityNumber++;
+						}
+
+						//After all proccess done adding controlled data to element array.
+						array[i] = count;
+					}
+
+					//If ATR has more than one priorty this method will deploy
+					if (priorityValue > 1) {
+						var data = true;
+						for (var i = 0; i < array.length; i++) {
+							var abc = array[i];
+							if (abc == 0) {
+								data = false;
+							}
+						}
+
+						if (data) {
+							//Add Route To DataTable
+							addingRoute(segmentId, serviceId, transferServiceId, transferSegmentId, priorityValue, serviceText, segmentText, transferServiceText, transferSegmentText, willBeAdeed);
+						} else {
+							swal("First you need to check previous priorties, you have skipped one stage.", {
+								icon: "warning",
+							});
+						}
+					}
+					//If only one priorty has added this method will deploy
+					else if (priorityValue == 1) {
+						//Add Route To DataTable
+						addingRoute(segmentId, serviceId, transferServiceId, transferSegmentId, priorityValue, serviceText, segmentText, transferServiceText, transferSegmentText, willBeAdeed);
+					}
+					//Or this method will deploy (This methot for safety, if somehow first two condition not work.)
+					else {
+						swal("First you need to check previous priorties, you have skipped one stage.", {
+							icon: "warning",
+						});
+					}
+
+				}
+			} else {
+				swal("Please ensure you select a priority", {
+					icon: "warning",
+				});
+
+			}
+
+			//After delete item, other items need to be updated
+			UpdateAtrs();
+
+		});
+
+		function addingRoute(segmentId,serviceId,transferServiceId,transferSegmentId,priorityValue,serviceText,segmentText,transferServiceText,transferSegmentText, queryNumber) {
+			if (segmentId != null &&
+							segmentId > 0 &&
+							serviceId != null &&
+							serviceId > 0 &&
+							transferServiceId != null &&
+							transferServiceId > 0 &&
+							transferSegmentId != null &&
+							transferSegmentId > 0 &&
+							priorityValue != null &&
+							priorityValue > 0) {
+
+								table.row.add([
+									'<input type="hidden" name="Atrs[' + queryNumber + '].Priority" value="' + priorityValue + '" /> ' + serviceText + ' <input type="hidden" name="Atrs[' + queryNumber + '].ServiceID"	value="' + serviceId + '" />  ',
+									'' + segmentText + ' <input type="hidden" name="Atrs[' + queryNumber + '].SegmentID" value="' + segmentId + '" />',
+									'' + transferServiceText + ' <input type="hidden" name="Atrs[' + queryNumber + '].TransferServiceID" value="' + transferServiceId + '" /> ',
+									'' + transferSegmentText + ' <input type="hidden" name="Atrs[' + queryNumber + '].TransferSegmentID" value="' + transferSegmentId + '" /> ',
+									'<button type="button" value="" class="btn btn-danger"><span class="fa fa-remove"></span></button>'
+
+								]).draw(false);
+
+								let parentElement = $('input[type="hidden"][name="Atrs[' + queryNumber + '].Priority"]').parentsUntil('tr').parent();
+									parentElement.attr('type', 'row-element');
+									parentElement.attr('priority', '' + priorityValue + '');
+
+							willBeAdeed++;
+						}
+
+		}
+
+		//Delete Function
+		$('#dataTable').on('click',
+			'.btn-danger',
+			function () {
+				var deleteRow = table.row($(this).parents('tr'));
+				if (modelId == 0) {
+
+					//Delete from table
+					table
+						.row($(this).parents('tr'))
+						.remove()
+						.draw();
+
+				}
+				else if (modelId > 0) {
+
+					if (confirm("Are you sure want to delete this assignment?")) {
+						$.ajax({
+							type: "POST",
+							url: "/AutoTransferRoute/DeleteAssignment",
+							dataType: "json",
+							data: "ID=" + $(this).val(),
+							success: function (result) {
+
+								deleteRow.remove().draw();
+							}
+						});
+
+
+					}
+
+				}
+
+				//After delete item, other items need to be updated
+				UpdateAtrs();
+
+			});
+
+		//Show all transfers
+		$('#showAllTransfers').click(function () {
+
+			if (modelId > 0) {
+				var options = {};
+					options.url = "/AutoTransferRoute/Atrs",
+					options.type = "POST";
+					options.data = '{"id":' + modelId + '}',
+					options.contentType = "application/json; charset=utf-8",
+					options.success = function (result) {
+						//First Delete Datas From DataTables
+						table.clear().draw();
+
+						//Append Datas to Partial Section
+						Ferrari(result)
+
+					};
+
+				options.error = function (err) {
+					alert(err.statusText);
+				};
+				$.ajax(options);
+			}
+			else {
+				$("input[name*='.Priority']").each(function () {
+
+					//Getting Tr from parents
+					var parentTr = $(this).parentsUntil('tr').parent();
+
+					$(parentTr).css('display', 'table-row');
+
+
+				})
+			}
+
+			//Check other Priority's if they have any active class.
+			DeleteActive();
+		});
+
+		//Update Atrs
+		function UpdateAtrs() {
+
+			//After delete item, other items need to be updated
+			$("input[name*='.Priority']").each(function (index, value) {
+				$(this).attr('name', 'Atrs[' + index + '].Priority');
+			});
+
+			$("input[name*='.ServiceID']").each(function (index, value) {
+				$(this).attr('name', 'Atrs[' + index + '].ServiceID');
+			});
+
+			$("input[name*='.SegmentID']").each(function (index, value) {
+				$(this).attr('name', 'Atrs[' + index + '].SegmentID');
+			});
+
+			$("input[name*='.TransferServiceID']").each(function (index, value) {
+				$(this).attr('name', 'Atrs[' + index + '].TransferServiceID');
+			});
+
+			$("input[name*='.TransferSegmentID']").each(function (index, value) {
+				$(this).attr('name', 'Atrs[' + index + '].TransferSegmentID');
+			});
+		}
+
+		//Delete Active Class Function
+		function DeleteActive() {
+			//Check other Priority's if they have any active class.
+			$('input').each(function () {
+				if ($(this).hasClass("priority-active")) {
+					$(this).removeClass("priority-active");
+				}
+			});
+
+			$('button').each(function () {
+				if ($(this).hasClass("priority-delete-active")) {
+					$(this).removeClass("priority-delete-active");
+				}
+			});
+
+			$('#priorityValue').val(0);
+		}
+
+		//Select Segments Through ServiceID
+		$(function () {
+			$('.select-change').change(function () {
+				var selectId = $(this).attr('id');
+
+				$.ajax({
+					type: "POST",
+					url: "/AutoTransferRoute/Segments",
+					data: "id=" + $(this).val(),
+					dataType: "JSON",
+					success: function (result) {
+						text = "";
+
+						for (var i = 0; i < result.length; i++) {
+							text += '<option value="' + result[i].SegmentID + '">' + result[i].SegmentName + '</option>'
+						}
+
+						if (selectId == "serviceID") {
+							var segmentAppend = $('#segmentID');
+							segmentAppend.html("");
+							segmentAppend.append(text);
+						}
+
+						if (selectId == "transferServiceID") {
+							var segmentAppend = $("#transferSegmentID");
+							segmentAppend.html("");
+							segmentAppend.append(text);
+						}
+					}
+			})
+			});
+		})
+	});
+</script>

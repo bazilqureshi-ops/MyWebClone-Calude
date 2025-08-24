@@ -1,0 +1,194 @@
+﻿@using Emse.QMagic.Web.Models;
+@model Emse.QMagic.Web.Models.qmSurvey
+@{
+    ViewBag.Title = "Edit Question";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    qmSurvey Survey = ViewBag.Survey;
+    qmSurveyQuestion Question = ViewBag.Question;
+    List<qmSurveyAnswer> Answers = ViewBag.Answers;
+}
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+    function AddAnswer(branchid) {
+        $.post("../Survey/CreateAnswer?QuestionID=" + branchid, {}, function (data) {
+
+            swal({
+                title: "Create Answer",
+                text: data,
+                icon: "info",
+                buttons: true,
+                dangerMode: false,
+                content: data
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        $("#PostAnswer").submit();
+                    } else {
+                        swal({
+                            title: "Nothing changed",
+                            icon: "success"
+                        });
+                    }
+                });
+
+            $(".swal-text").html(data);
+        });
+    }
+
+    function DeleteAnswer(AnswerID) {
+        swal({
+            title: "Are you sure want to delete this record?",
+            text: "If you delete this record all the data generated from that record also will be deleted. Do you want to proceed?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    window.location = "../Survey/RemoveAnswer?AnswerID=" + AnswerID;
+                } else {
+                    swal({
+                        title: "Nothing changed",
+                        icon: "success"
+                    });
+                }
+            });
+    }
+
+
+    $(function () {
+        $("#AnswersTable").sortable({
+            items: 'tr',
+            cursor: 'pointer',
+            axis: 'y',
+            dropOnEmpty: false,
+            start: function (e, ui) {
+                ui.item.addClass("selected");
+            },
+            stop: function (e, ui) {
+                ui.item.removeClass("selected");
+                $('#AnswersTable>tbody>tr').each(function (index, tr) {
+                    var questionid = tr.getAttribute("id");
+                    questionid = questionid.replace("answer_", "");
+
+                    $.post("ChangeAnswerOrder", { AnswerID: questionid, OrderNumber: index }, function (data) {
+                        if (data.includes("OK++")) {
+                            $(tr).find("td:eq(0)").html(index);
+                            //alert("SET!");
+                        }
+                    });
+                });
+            }
+        });
+    });
+</script>
+
+<div class="row">
+    <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+        <div class="card">
+            <div class="card-header">
+                <a href="javascript:AddAnswer(@(Question.SurveyQuestionID));" class="btn btn-primary"><i class="fa fa-plus-circle"></i> Add Answer</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <form enctype="multipart/form-data" action="~/Survey/EditQuestion?QuestionID=@(Question.SurveyQuestionID)" method="post">
+                        <div class="col-md-2">
+                            <select name="QuestionType" id="QuestionType" class="form-control">
+                                <option value="0" @(Question.IsImage == true ? "selected='selected'" : "")>Image</option>
+                                <option value="1" @(Question.IsCommentary == true ? "selected='selected'" : "")>Commentary</option>
+                                <option value="2" @(Question.IsImage == false && Question.IsCommentary == false ? "selected='selected'" : "")>Text</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="text" id="QuestionQuestion" name="QuestionQuestion" value="@(Question.IsImage == true ? Question.ImageURL : Question.Question)" class="form-control" />
+                        </div>
+                        <div class="col-md-1">
+                            @{
+                                if (Question.IsImage == true)
+                                {
+                                    <input type="button" value="..." class="btn btn-default" onclick="window.open('/KioskDesigner/ImageBrowser?reff=QuestionQuestion', 'Browser', 'width=1100,height=750');" />
+                                }
+                            }
+                        </div>
+
+                        <div class="col-md-12">
+                            <table class="datatable table table-striped primary" cellspacing="0" width="100%" id="AnswersTable">
+                                <thead>
+                                    <tr>
+                                        <td>#</td>
+                                        <td>Point</td>
+                                        <td>Image</td>
+                                        <td>Text</td>
+                                        <td>Render Type</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        foreach (qmSurveyAnswer answer in Answers)
+                                        {
+                                            <tr id="answer_@(answer.SurveyAnswerID)">
+                                                <td>
+                                                    @(answer.OrderNumber)
+                                                </td>
+                                                <td>
+                                                    @(answer.Point)
+                                                </td>
+                                                <td>
+                                                    <img src="@(answer.OptionPicture)" style="max-height:40px;" />
+                                                </td>
+                                                <td>
+                                                    @(answer.Answer)
+                                                </td>
+                                                <td>
+                                                    @{
+                                                        switch (answer.RenderType)
+                                                        {
+                                                            case 0:
+                                                                @("Text Next")
+                                                                break;
+                                                            case 1:
+                                                                @("Text List")
+                                                                break;
+                                                            case 2:
+                                                                @("Image")
+                                                                break;
+                                                            case 3:
+                                                                @("Text + Image")
+                                                                break;
+                                                            case 4:
+                                                                @("Slider")
+                                                                break;
+                                                            case 5:
+                                                                @("Checkbox")
+                                                                break;
+                                                            case 6:
+                                                                @("Textbox")
+                                                                break;
+                                                        }
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <a href="javascript:DeleteAnswer(@(answer.SurveyAnswerID));" class="btn btn-danger"><i class="fa fa-remove"></i></a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="~/Survey/Question?SurveyID=@(Question.SurveyID)" class="btn btn-default">Cancel</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <input type="submit" class="btn btn-primary" value="Save" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

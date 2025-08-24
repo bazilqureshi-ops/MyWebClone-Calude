@@ -1,0 +1,86 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    qmTicket Ticket = ViewBag.Ticket;
+    qmService Service = ViewBag.Service;
+    qmSegment Segment = ViewBag.Segment;
+    qmCustomer Customer = ViewBag.Customer;
+
+    long longPrint = Ticket.PrintTime.Ticks;
+    long longNow = DateTime.Now.Ticks;
+    long DifferenceTime = longNow - longPrint;
+    TimeSpan WaitingTime = TimeSpan.FromTicks(DifferenceTime);
+}
+
+<table width="100%" cellspacing="5" cellpadding="5">
+    <tr>
+        <td colspan="2">
+            <center><h1 style="font-weight:bold;">@(Ticket.TicketPrefix)@(Ticket.TicketNumber)</h1></center>
+        </td>
+    </tr>
+    <tr>
+        <td width="150"><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Service"))</label></td>
+        <td>@(Service.ServiceName)</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Segment"))</label></td>
+        <td>@(Segment.SegmentName)</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"PrintTime"))</label></td>
+        <td>@(Ticket.PrintTime.ToShortTimeString())</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"WaitingTime"))</label></td>
+        <td>@(WaitingTime.Hours):@(WaitingTime.Minutes):@(WaitingTime.Seconds)</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"TicketNote"))</label></td>
+        <td>@(Ticket.TicketNote)</td>
+    </tr>
+    <tr>
+        <td colspan="2" style="background-color:#EAEAEA;"><center><label style="font-size:16px; font-weight:bold;"><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"CustomerInformation"))</label></center></td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Name"))</label></td>
+        <td>@(Customer != null ? Customer.Name : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Surname"))</label></td>
+        <td>@(Customer != null ? Customer.Surname : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"HealthCardID"))</label></td>
+        <td>@(Customer != null ? Customer.HCID : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"UniqueID"))</label></td>
+        <td>@(Customer != null ? Customer.UniqueID : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"BirthDate"))</label></td>
+        <td>@(Customer != null ? Customer.BirthDate != null ? Customer.BirthDate.Value.Date.ToShortDateString() : "-:-" : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Phone"))</label></td>
+        <td>@(Customer != null ? Customer.Phone : "-:-") <a href="javascript:ChangePhone();" class="btn btn-outline-primary" style="margin-left:20px;"><i class="fa fa-spin-reverse"></i> Change</a></td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Gender"))</label></td>
+        <td>@(Customer != null ? Customer.Gender == true ? "Male" : "Female" : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"Nationality"))</label></td>
+        <td>@(Customer != null ? Customer.Country : "-:-")</td>
+    </tr>
+    <tr>
+        <td><label style="font-weight:bold;">@(Localization.Translate(LanguageCode,"CustomerNote"))</label></td>
+        <td>@(Customer != null ? Customer.GeneralNote : "")</td>
+    </tr>
+</table>

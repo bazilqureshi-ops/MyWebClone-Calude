@@ -1,0 +1,420 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.Controllers;
+@{
+    qmUser user = new qmUser();
+    qmConfig conf = new qmConfig();
+    qmLicense license = new qmLicense();
+    using (QMagicEntities db = new QMagicEntities())
+    {
+        string UserID = HttpContext.Current.Session["MagicUser"].ToString();
+
+        user = db.qmUser.Find(Convert.ToInt32(UserID));
+
+        conf = db.qmConfig.FirstOrDefault();
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>QMagic Management Studio</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="~/assets/css/vendor.css">
+	<link rel="stylesheet" type="text/css" href="~/assets/css/flat-admin.css">
+	<link rel="stylesheet" type="text/css" href="~/assets/css/custom.css" />
+	<link rel="icon" href="~/assets/qmagic.ico">
+	<script src="~/Scripts/jquery-3.3.1.js"></script>
+</head>
+<body>
+
+    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="ConfirmTerminal" id="ConfirmTerminal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="gridSystemModalLabel">Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    Chat feature needs virtual terminal application. Do you want to open virtual terminal application now?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="javascript: window.location.href = '/WebTerminal';">Accept</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+
+
+    <div class="app app-default">
+        <aside class="app-sidebar" id="sidebar">
+            <div class="sidebar-header text-center">
+                <!--<a class="sidebar-brand" href="~/Home/Index"><span class="highlight">Q</span>Magic</a>
+                <button type="button" class="sidebar-toggle">
+                    <i class="fa fa-times"></i>
+                </button>-->
+                <img src="~/assets/images/qmagic.png" style="width: 70%" /><br />
+                <span style="font-size:8px;">@(System.Environment.MachineName) - v1.4.81</span>
+            </div>
+            <div class="sidebar-menu">
+                <ul class="sidebar-nav">
+                    @{
+                        Html.RenderAction("Index", "ModuleList");
+                    }
+                </ul>
+            </div>
+            <div class="sidebar-footer">
+                <ul class="menu">
+                    <li>
+                        <a href="/" class="dropdown-toggle" data-toggle="dropdown">
+                            <img src="~/assets/images/emse-logo.png" style="height:54px;" />
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+
+
+        <div class="app-container" id="MainContainer">
+            <nav class="navbar navbar-default" id="navbar">
+                <div class="container-fluid">
+                    <div class="navbar-collapse collapse in">
+                        <ul class="nav navbar-nav navbar-mobile">
+                            <li>
+                                <button type="button" class="sidebar-toggle">
+                                    <i class="fa fa-bars"></i>
+                                </button>
+                            </li>
+                            <li class="logo">
+                                <!--<a class="navbar-brand" href="#"><span class="highlight">Q</span> Magic</a>-->
+                                <img src="~/assets/images/qmagic.png" style="width: 25%; margin-left:38%" />
+                            </li>
+                            <li>
+                                <button type="button" class="navbar-toggle">
+                                    <img class="profile-img" src="@user.ProfilePicture">
+                                </button>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-left">
+                            <li class="navbar-title"><b>QMagic Studio</b></li>
+                            <li class="navbar-search hidden-sm">
+                                <input id="search" type="text" placeholder="Search.." autocomplete="off">
+                                <button class="btn-search"><i class="fa fa-search"></i></button>
+                            </li>
+                        </ul>
+
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="navbar-title">@(conf.PlaceName)</li>
+                            <li class="dropdown notification success">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="icon"><i class="fa fa-language" aria-hidden="true"></i></div>
+                                    <div class="title">System Language</div>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <ul>
+                                        <li class="dropdown-header"><span class="fa fa-language"></span> System Language</li>
+
+                                        <li><a href="~/ChangeLanguage?Language=AR">Arabic (Qatar)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=EN">English (United States of America)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=TR">Turkish (Türkiye)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=FR">French (France)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=PK">Pakistani (Pakistan)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=IN">Hindi (India)</a></li>
+                                        <li><a href="~/ChangeLanguage?Language=PH">Filipino (Philippines)</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="dropdown notification danger">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="icon"><i class="fa fa-bell" aria-hidden="true"></i></div>
+                                    <div class="title">System Notifications</div>
+                                    <div class="count" id="NotifyCount">0</div>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <ul>
+                                        @{
+                                            string IP = Emse.QMagic.Web.RequestExtensions.GetIpAddress(Request);
+                                            string ipadres = Emse.QMagic.Web.Controllers.WebTerminalController.DetermineCompName(IP);
+                                            int totalnotifcount = 0;
+                                            qmTerminal terminal = new qmTerminal();
+                                            List<qmTerminalConnection> tco = new List<qmTerminalConnection>();
+
+                                            using (QMagicEntities db = new QMagicEntities())
+                                            {
+                                                terminal = db.qmTerminal.Where(x => x.IPAddress == ipadres).FirstOrDefault();
+                                                tco = db.qmTerminalConnection.ToList();
+                                            }
+                                            List<qmTicket> ticketlist = new List<qmTicket>();
+                                            int waiting = 0;
+                                            int appoint = 0;
+                                            if (terminal != null)
+                                            {
+                                                WebTerminalController wt = new WebTerminalController();
+                                                ticketlist = wt.ServiceMacroNextTicket(terminal.TerminalID, null);
+
+                                                if (ticketlist != null)
+                                                {
+                                                    waiting = ticketlist.Where(x => x.AppointmentID == null).ToList().Count();
+                                                    appoint = ticketlist.Where(x => x.AppointmentID != null).ToList().Count();
+                                                }
+
+
+                                                totalnotifcount = waiting + appoint;
+                                            }
+
+
+                                        }
+                                        <li class="dropdown-header"><span class="fa fa-bell"></span> Notification Area</li>
+                                        <li>
+                                            <a href="#">
+                                                @{
+                                                    if (terminal != null)
+                                                    {
+                                                        <span class="badge badge-danger pull-right" id="TotalWaitingBadge">@(waiting)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-danger pull-right">NOT DEFINED</span>
+                                                    }
+                                                }
+                                                <div class="message">
+                                                    <div class="content">
+                                                        <div class="title">Waiting Ticket</div>
+                                                        <div class="description">Total Count of Waiting Tickets</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#">
+                                                @{
+                                                    if (terminal != null)
+                                                    {
+                                                        <span class="badge badge-danger pull-right" id="TotalAppointmentBadge">@(appoint)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-danger pull-right">NOT DEFINED</span>
+                                                    }
+                                                }
+                                                <div class="message">
+                                                    <div class="content">
+                                                        <div class="title">Appointments</div>
+                                                        <div class="description">Count of Printed & Waiting Appointments</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:ConfirmTerminal();">
+                                                <span class="badge badge-danger pull-right" id="TotalOnlineTerminalCounts">@(tco.Count())</span>
+                                                <div class="message">
+                                                    <div class="content">
+                                                        <div class="title">Chats</div>
+                                                        <div class="description">Online available terminals</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li class="dropdown-footer">
+                                            <a href="~/WebTerminal">Open Terminal <i class="fa fa-television"></i></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+
+                            <li class="dropdown profile">
+                                <a href="/html/pages/profile.html" class="dropdown-toggle" data-toggle="dropdown">
+                                    <img class="profile-img" src="@user.ProfilePicture">
+                                    <div class="title">Profile</div>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <div class="profile-info">
+                                        <h4 class="username">@user.FullName</h4>
+                                    </div>
+                                    <ul class="action">
+                                        <li>
+                                            <a href="~/Profile">
+                                                <span class="fa fa-cogs"></span> My Profile
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Session/Logout">
+                                                <span class="fa fa-sign-out"></span> Logout
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+
+            @RenderBody()
+
+            <footer class="app-footer">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="footer-copyright" style="padding-top:5%">
+                            Copyright © 2017 CEO Technology LLC<br />
+                            <span style="font-size:10px;">
+                                Last update at May 2024 version 1.4.86<br />
+                                <span style="font-size:8px;">Proudly made in Turkiye with <i class="fa fa-heart" style="color:#C00;"></i>. Made in Turan.</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+
+    <script type="text/javascript" src="~/assets/js/vendor-min.js"></script>
+    <script type="text/javascript" src="~/assets/js/app-min.js"></script>
+    <!--<script src="~/assets/js/FileSaver.min.js"></script>
+    <script src="~/assets/js/jspdf.min.js"></script>
+    <script src="~/assets/js/jspdf.plugin.autotable.js"></script>
+    <script src="~/assets/js/tableExport.min.js"></script>-->
+    <script src="~/Scripts/moment.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.js"></script>
+    <link href="~/Content/bootstrap-datetimepicker.css" rel="stylesheet" />
+    <link href="~/Scripts/jquery-ui-1.13.2/jquery-ui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-ui-1.13.2/jquery-ui.min.js"></script>
+
+    @RenderSection("scripts", required: false)
+
+    <script>
+        $(document).ready(function () {
+            $("#NotifyCount").html("@(totalnotifcount)");
+
+			if (window.outerWidth <= 1300) {
+				document.addEventListener('contextmenu', event => event.preventDefault());
+			}
+
+            CheckNotification();
+        });
+
+        function ConfirmTerminal() {
+            $("#ConfirmTerminal").modal("show");
+        }
+
+        var TotalWaitingCount = 0;
+        var TotalAppointmentCount = 0;
+
+        function CheckNotification() {
+            setTimeout(function () { CheckNotification(); }, 10000);
+
+            @{
+                if(terminal != null)
+                {
+                    @Html.Raw("UpdateTable();")
+                }
+                else
+                {
+                    terminal = new qmTerminal
+                    {
+                        TerminalID = 0
+                    };
+                }
+            }
+        }
+
+        function UpdateTable() {
+            $.get("../WebTerminal/StatisticBox", { TerminalID: "@(terminal.TerminalID)" }, function (data) {
+                if (data.includes("Username")) {
+                    window.location.href = "../../WebTerminal/ThrowError?ErrorCode=2";
+                }
+                else {
+                    var pFrom = data.indexOf("<b id='WaitingStatistic'>");
+                    var pTo = data.indexOf("</b></p></w>");
+                    var TWB = data.substring(pFrom+25, pTo);
+
+                    TotalWaitingCount = parseInt(TWB);
+
+                    $("#TotalWaitingBadge").html(TWB);
+                }
+            });
+
+
+            $.get("../WebTerminal/AppointmentCount", { TerminalID: "@(terminal.TerminalID)" }, function (data) {
+                if (data.includes("Username")) {
+                    window.location.href = "../../WebTerminal/ThrowError?ErrorCode=2";
+                }
+                else {
+                    var pFrom = data.indexOf("<b id='CountOfAppointments'>");
+                    var pTo = data.indexOf("</b></p>");
+                    var TWB = data.substring(pFrom + 28, pTo);
+
+                    TotalAppointmentCount = parseInt(TWB);
+
+                    var pFrom = data.indexOf("OnlineTerminals'>");
+                    var pTo = data.indexOf("</div>");
+                    var TWB2 = data.substring(pFrom + 17, pTo);
+
+
+                    $("#TotalOnlineTerminalCounts").html(TWB2);
+                    $("#TotalAppointmentBadge").html(TWB);
+                }
+            });
+
+            var GeneralTotal = TotalAppointmentCount + TotalWaitingCount;
+
+            $("#NotifyCount").html("" + GeneralTotal);
+        }
+    </script>
+
+    <div class="autocomplete-suggestions" id="searchDiv">
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var searchboxID = "#search";
+            $('#btn-search').click(function () {
+                $(searchboxID).keyup();
+            });
+            $(searchboxID).keyup(function (event) {
+                if (event.keyCode != 13 && event.keyCode != 37 && event.keyCode != 39) {
+                    if ($.trim($(searchboxID).val()).length > 1) {
+                        var options = {};
+                        options.url = '/Search/Search',
+                            options.type = "POST";
+                        options.data = "{searchKey:'" + $(searchboxID).val() + "'}",
+                            options.contentType = "application/json; charset=utf-8",
+                            options.success = function (result) {
+                                $("#searchDiv").html(result);
+                                $("#searchDiv").show();
+                            };
+                        options.error = function (err) {
+                            if (err.status == 500) {
+                                alert('Something horribly goes wrong');
+                            } else {
+                                if (err.status != 0) {
+                                    alert(err.statusText);
+                                }
+                            }
+                        };
+                        $.ajax(options);
+
+                    } else {
+                        $("#searchDiv").hide();
+                    }
+                }
+            });
+        });
+
+        $(document).click(function (e) {
+            var target = e.target;
+
+            if (!$(target).is('#searchDiv') && !$(target).parents().is('#searchDiv')) {
+                $('#searchDiv').hide();
+            }
+        });
+    </script>
+</body>
+</html>

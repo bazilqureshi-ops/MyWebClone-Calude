@@ -1,0 +1,126 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model GenericReportViewModel
+
+<style>
+	.report-element {
+		position: relative;
+	}
+</style>
+
+<div class="row">
+	<div class="row  col-md-offset-1" style="width: 1343px; height: 1900px;">
+		<div class="card">
+			<div class="card-header">
+				<div style="float:left;">
+					@Model.Report.ReportName
+				</div>
+
+
+			</div>
+
+			<div class="card-body" style="width: 1343px; height: 1900px;">
+				@foreach (var element in Model.GenericDto)
+				{
+					if (element.Type == "Field")
+					{
+						<div class="report-element" type="@element.Type" style="left:@(element.Left)%; top:@(element.Top)%; width:@(element.Width)%; height:@(element.Height)%">
+							@{
+
+								if (element.Property.PropertyName == "TotalTicket")
+								{
+									if (element.Property.PropertyType == "Count")
+									{
+										@element.PropertyNames.TotalTicket
+									}
+									else if (element.Property.PropertyType == "Percentage")
+									{
+										@Html.Raw($"{element.PropertyNames.TotalTicket} %")
+									}
+								}
+								else if (element.Property.PropertyName == "TotalVisit")
+								{
+
+								}
+								else if (element.Property.PropertyName == "Name")
+								{
+									@Html.Raw(element.PropertyNames.Name)
+								}
+								else if (element.Property.PropertyName == "Surnames")
+								{
+									@Html.Raw(element.PropertyNames.Surname)
+								}
+								else if (element.Property.PropertyName == "FullName")
+								{
+									@Html.Raw(element.PropertyNames.FullName)
+								}
+								else if (element.Property.PropertyName == "CalledTicket")
+								{
+									if (element.Property.PropertyType == "Count")
+									{
+										@element.PropertyNames.CalledTicket
+									}
+									else if (element.Property.PropertyType == "Percentage")
+									{
+										@Html.Raw($"{element.PropertyNames.CalledTicket} %")
+									}
+								}
+								else if (element.Property.PropertyName == "NoShowTicket")
+								{
+									if (element.Property.PropertyType == "Count")
+									{
+										@element.PropertyNames.NoShowTicket
+									}
+								}
+								else if (element.Property.PropertyName == "PerformancePerc")
+								{
+									if (element.Property.PropertyType == "Percentage")
+									{
+										@Html.Raw($"{element.PropertyNames.PerformancePerc} %")
+									}
+								}
+								else if (element.Property.PropertyName == "MinimumProcessTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "MaximumProcessTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "AvarageProcessTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "MinimumWaitingTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "MaximumWaitingTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "AvarageWaitingTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "MinimumOperationTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "MaximumOperationTime")
+								{
+
+								}
+								else if (element.Property.PropertyName == "AvarageOperationTime")
+								{
+
+								}
+
+							}
+						</div>
+					}
+				}
+			</div>
+
+		</div>
+	</div>
+</div>

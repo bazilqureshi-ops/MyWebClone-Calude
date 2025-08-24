@@ -1,0 +1,736 @@
+﻿@using Emse.QMagic.Web.Models
+@using System.Xml.Linq
+@using System.Globalization
+@{
+	ViewBag.Title = "MainDesigner";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	qmScreenDesign Design = ViewBag.Design;
+
+	List<qmTerminal> TerminalList = ViewBag.TerminalList;
+}
+
+<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+<link href="~/assets/css/designer.css" rel="stylesheet" />
+
+<script src="~/assets/js/jquery.js"></script>
+<script src="~/assets/jquery-ui/jquery-ui.js"></script>
+
+<link href="~/assets/css/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/assets/js/sweetalert2.all.min.js"></script>
+
+<script>
+	function ConvertToPx(Percentage, Orient) {
+		var area_width = $("#DesignArea").width();
+		var area_height = (area_width * 9) / 16;
+
+		var Result = 0;
+		if (Orient == "Vertical") {
+			Result = area_height * (Percentage / 100);
+		}
+		else {
+			Result = area_width * (Percentage / 100);
+		}
+
+		return Result;
+	}
+</script>
+
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-default">
+			<div class="panel-body" id="MainLegend">
+
+
+				<div class="col-md-12" style="padding:5px;">
+
+					<div class="col-md-12">
+						@using (Html.BeginForm())
+						{
+							<!-- Page Name -->
+							<div class="input-group" style="margin-top:15px;">
+								<span class="input-group-addon" id="basic-addon3">Page Name</span>
+
+								<input type="text" class="form-control" id="txtPageName" name="txtPageName" aria-describedby="basic-addon3" value="">
+
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+									<input type="button" onclick="SaveScreen();" class="btn btn-primary" value="Save Design" style="margin:0px;" />
+								</span>
+							</div>
+
+							<div class="col-xs-12 col-md-12 col-lg-12" style="padding:0px;">
+
+								<!-- Description Icons -->
+								<div class="row">
+									<!-- Edit Item -->
+									<span class="description-container"> <i class="fa fa-edit description-icons"></i> Edit element button </span>
+
+									<!-- Delete Item -->
+									<span class="description-container"> <i class="fa fa-trash text-danger description-icons"></i> Delete element button </span>
+
+									<!-- Drag Resize Item -->
+									<span class="description-container"> <i style="display:inline-flex;" class="ui-icon ui-icon-gripsmall-diagonal-se"></i> Dragabble resizer </span>
+								</div>
+
+								<!-- Nav Bar-->
+                                <ul class="nav nav-tabs" style="display:inherit;" id="nav-tab">
+
+                                    <!-- Tab Changes -->
+                                    <li role="presentation" class="active" id="btnGoDesigner">
+                                        <a href="javascript:GoDesigner();"><span class="fa fa-eye"></span> Designer</a>
+                                    </li>
+
+                                    <li role="presentation" id="btnGoSourceCode">
+                                        <a href="javascript:GoSourceCode();"><span class="fa fa-code"></span> Source Code</a>
+                                    </li>
+
+                                    <li role="presentation" id="btnGoSourceCode">
+                                        <a href="javascript:modalActive('PageProperties');"><span class="fa fa-cogs"></span> Page Properties</a>
+                                    </li>
+
+                                    <!-- Tool Box (Elements) -->
+                                    <!-- Caller Image Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('CallerImage');">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-user"></span>
+                                                Caller Image
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Label Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('Label');">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-text-width"></span>
+                                                Label
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Media Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('WMV');">
+                                            <h5 class="list-group-item-heading">
+                                                <span class="fa fa-file-video-o"></span>
+                                                Media Element
+                                            </h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Scroll Text Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('ScrollText');">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-file-text"></span> Scroll Text</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Rss Feed Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('RSSFeed');">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-rss"></span> RSS Feed</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Date & Time Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('DateTime');">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-calendar-times-o"></span> Date & Time</h5>
+                                        </a>
+                                    </li>
+
+                                    <!-- Waiting List Element -->
+                                    <li role="presentation" class="design-tool-element">
+                                        <a href="javascript:createElement('WaitingList');">
+                                            <h5 class="list-group-item-heading"><span class="fa fa-th-list"></span> Waiting List</h5>
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+							</div>
+
+							<div class="col-md-12" id="DesignTab" style="padding:0px;">
+								<div class="panel panel-default">
+									<div class="panel-body" id="DesignArea" style="border:solid 1px #000000; background-size:100% 100%; padding:0px; font-family:Arial; font-size:8px; color:#000;">
+
+										<!-- Close Side Arrows -->
+										<div id="x-arrow"></div>
+
+										<div id="y-arrow"></div>
+
+										<!-- Side Arrows -->
+										<div class="side-arrows" id="upper-left"></div>
+
+										<div class="side-arrows" id="upper-right"></div>
+
+										<div class="side-arrows" id="bottom-left"></div>
+
+										<div class="side-arrows" id="bottom-right"></div>
+
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12" id="CodeTab" style="display:none; padding:0px;">
+								<div class="panel panel-default">
+									<div class="panel-body" id="SourceDiv">
+										<textarea name="txtSourceCode" id="txtSourceCode" class="form-control" style="width:100%; height:100%; min-height:500px;"></textarea>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Start -->
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<!-- Element Settings -->
+			<div class="row" id="props-container">
+				<div class="col-xs-12">
+
+					<!-- Element Settings -->
+					<div class="col-md-12 text-center" style="padding-top:10px; padding-bottom:10px;" id="modal-container">
+						<ul class="setup-options" id="setup-options">
+							<li onclick="changeSetting('quick')" class="select-option-active" id="quick-setting">Quick Settings</li>
+
+							<li onclick="changeSetting('advanced')" id="advanced-setting">Advanced Settings</li>
+						</ul>
+
+						<!-- Page Props Area-->
+						<div class="row" id="content-container">
+							<h3> Page Properties </h3>
+
+							<!-- Page Background -->
+							<div class="input-group" id="page-background-container">
+								<span class="input-group-addon" id="basic-addon3">Page Background</span>
+
+								<input type="text" class="form-control" id="page-background" aria-describedby="basic-addon3" value="">
+
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+									<input type="button" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=page-background', 'Browser', 'width=1100,height=750');" />
+								</span>
+							</div>
+
+							<!-- Ding Dong -->
+							<div class="input-group" style="margin:0px;" id="ding-dong-container">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Ding Dong</span>
+
+								<input type="checkbox" class="form-control" id="ding-dong" aria-describedby="basic-addon3" checked="">
+							</div>
+
+							<!-- Read Ticket -->
+							<div class="input-group" style="margin:0px;" id="read-ticket-container">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Read Ticket</span>
+
+								<input type="checkbox" class="form-control" id="read-ticket" aria-describedby="basic-addon3" checked="">
+							</div>
+
+							<!-- Read Floor -->
+							<div class="input-group" style="margin:0px;" id="read-floor-container">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Read Floor</span>
+
+								<input type="checkbox" class="form-control" id="read-floor" aria-describedby="basic-addon3" checked="">
+							</div>
+
+							<!-- Language 1 -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Language 1</span>
+								@{
+									List<string> languages = new List<string>();
+									languages.Add("English");
+									languages.Add("Arabic");
+									languages.Add("French");
+									languages.Add("Turkish");
+								}
+
+								<select id="language-1" class="designer-select">
+									<option value="" selected="selected">None</option>
+
+									@foreach (var lang in languages)
+									{
+										<option value='@lang'>@lang</option>
+									}
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="language1-validation"></span>
+
+							<!-- Language 2 -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Language 2</span>
+
+								<select id="language-2" class="designer-select">
+									<option value="" selected="selected">None</option>
+
+									@foreach (var lang in languages)
+									{
+										<option value='@lang'>@lang</option>
+									}
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="language2-validation"></span>
+
+							<!-- Arabic Translation -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Arabic Translation</span>
+
+								<input type="number" class="form-control" id="arabic-translation" aria-describedby="basic-addon3" value="0" />
+
+							</div>
+							<span class="validate-for text-danger" id="arabic-translation-validation"></span>
+
+							<div class="input-group">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Display Orientation</span>
+
+								@{
+									List<string> orientations = new List<string>();
+									orientations.Add("Landscape");
+									orientations.Add("Portrait");
+								}
+
+								<select id="display-orientation" class="designer-select">
+									@foreach (var orientation in orientations)
+									{
+										<option value="@orientation">@orientation</option>
+									}
+									@*<option value="Portrait">Portrait</option>*@
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="display-validation"></span>
+						</div>
+
+						<!-- Common Props Area -->
+						<div class="row" id="common-props-container">
+							<h3> Common Properties </h3>
+
+							<!-- Type -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Type</span>
+
+								<input type="text" class="form-control" id="element-type" aria-describedby="basic-addon3">
+							</div>
+
+							<!-- Identifier -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Identifier</span>
+
+								<input type="text" class="form-control" id="element-id" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="id-validation"></span>
+
+							<!-- Name -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Name</span>
+
+								<input type="text" class="form-control" id="element-name" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="name-validation"></span>
+
+							<!-- Position -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Position</span>
+
+								<input type="number" class="form-control double-item" id="position-x" aria-describedby="basic-addon3">
+
+								<input type="number" class="form-control double-item" id="position-y" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="posx-validation"></span>
+
+							<span class="validate-for text-danger" id="posy-validation"></span>
+
+							<!-- Size -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Size</span>
+
+								<input type="number" class="form-control double-item" id="size-x" aria-describedby="basic-addon3">
+
+								<input type="number" class="form-control double-item" id="size-y" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="sizex-validation"></span>
+
+							<span class="validate-for text-danger" id="sizey-validation"></span>
+
+						</div>
+
+						<!-- Special Props Area -->
+						<div id="special-props-container" class="row">
+							<h3> Special Properties</h3>
+
+							<!-- Data Bind -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Bind</span>
+
+								<select class="designer-select" id="data-bind" aria-describedby="basic-addon3">
+									<option value="Static"> Static Text </option>
+									<option value="StaticTicket"> Static Ticket </option>
+									<option value="StaticFloor"> Static Floor</option>
+									<option value="StaticCounter"> Static Counter </option>
+									<option value="StaticStatus"> Static Status </option>
+									<option value="StaticArrow"> Static Arrow </option>
+									<option value="TerminalName"> Terminal Name </option>
+									<option value="ServiceName"> Service Name </option>
+									<option value="TellerName"> Teller Name </option>
+									<option value="Status"> Status Name </option>
+									<option value="TicketNumber"> Ticket Number </option>
+									<option value="CounterNumber"> Counter Number </option>
+									<option value="Arrow"> Arrow </option>
+									<option value="Floor"> Floor </option>
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="data-bind-validation"></span>
+
+							<!-- Parameters -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Parameter</span>
+
+								<select class="designer-select" id="parameter" aria-describedby="basic-addon3">
+									@for (int i = 1; i <= 20; i++)
+									{
+										<option value="@i">@i</option>
+									}
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="parameter-validation"></span>
+
+							<!-- Terminals -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Terminal</span>
+
+								<select class="designer-select" id="terminal" aria-describedby="basic-addon3">
+									@{
+										foreach (var terminal in TerminalList)
+										{
+											<option value="@terminal.TerminalID">@terminal.TerminalName</option>
+										}
+									}
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="terminal-validation"></span>
+
+							<!-- Right To Left -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Right To Left</span>
+
+								<input type="checkbox" class="form-control" id="right-to-left" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="right-to-left-validation"></span>
+
+							<!-- Tick Rate -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Tick Rate</span>
+
+								<input type="number" class="form-control" id="tick-rate" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="tick-rate-validation"></span>
+
+							<!-- Tick Percentage -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Tick Percentage</span>
+
+								<input type="number" class="form-control" id="tick-percentage" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="tick-percentage-validation"></span>
+
+							<!-- Auto Scroll-->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Auto Scroll</span>
+
+								<input type="checkbox" class="form-control" id="auto-scroll" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="auto-scroll-validation"></span>
+
+							<!-- Data Source -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Data Source</span>
+
+								<input type="text" class="form-control" id="data-source" style="width:70%" aria-describedby="basic-addon3">
+								<i class="btn fa" id="ds-icon"></i>
+							</div>
+							<span class="validate-for text-danger" id="data-source-validation"></span>
+
+							<!-- Background -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Background</span>
+
+								<input type="text" class="form-control" id="element-background" aria-describedby="basic-addon3">
+
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;"><input type="button" id="btnBackgroundBrowser" class="btn btn-default" value="..." style="margin:0px;" onclick="window.open('/KioskDesigner/ImageBrowser?reff=element-background', 'Browser', 'width=1100,height=750');" /></span>
+							</div>
+
+							<!-- Caption -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:115px;">Caption</span>
+
+								<input type="text" class="form-control" id="element-caption" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="caption-validation"></span>
+
+							<!-- Row Count -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Count</span>
+
+								<input type="number" class="form-control" id="row-count" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="row-count-validation"></span>
+
+							<!-- Row Name -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Name</span>
+
+								<input type="text" class="form-control" id="row-name" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="row-name-validation"></span>
+
+							<!-- Row Map -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Row Map</span>
+
+								<input type="text" class="form-control" id="row-map" aria-describedby="basic-addon3">
+
+								<button class="btn btn-warning" id="add-map-item"> Add Map </button>
+								<button class="btn btn-primary" id="accordion-button">
+									<i class="fa fa-plus-circle"></i>
+								</button>
+							</div>
+							<span class="validate-for text-danger" id="row-map-validation"></span>
+
+							<!-- Row Accordion -->
+							<div id="row-accordion">
+								<ul id="row-list"></ul>
+							</div>
+							<span class="validate-for text-danger" id="row-accordion-validation"></span>
+
+							<!-- Refresh Time -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Reflesh Time</span>
+
+								<input type="number" class="form-control" id="refresh-time" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="refresh-time-validation"></span>
+
+							<!-- Show Date -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Date</span>
+
+								<input type="checkbox" class="form-control" id="show-date" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="show-date-validation"></span>
+
+							<!-- Show Time -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Time</span>
+
+								<input type="checkbox" class="form-control" id="show-time" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="show-time-validation"></span>
+
+							<!-- Play List -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Playlist</span>
+
+								<input type="text" class="form-control" id="play-list" aria-describedby="basic-addon3">
+
+								<span class="input-group-addon" id="basic-addon3" style="padding:0px;">
+									<input type="button" class="btn btn-default" value="..." style="margin:0px;" />
+								</span>
+							</div>
+							<span class="validate-for text-danger" id="play-list-validation"></span>
+
+							<!-- Waiting List Multi Select -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;"> Waiting List Properties </span>
+
+								<label id="waiting-list-label">Please Select Properties <i class="fa fa-caret-down"></i></label>
+								<div id="waiting-list-multi-select">
+									<label>
+										<input class="list-checkbox" type="checkbox" name="show-ticket" id="show-ticket" value="" />
+
+										<span>Show Ticket</span>
+									</label>
+
+									<label>
+										<input class="list-checkbox" type="checkbox" name="show-customer-name" id="show-customer-name" value="" />
+
+										<span>Show Customer Name</span>
+									</label>
+
+									<label>
+										<input class="list-checkbox" type="checkbox" name="show-service" id="show-service" value="" />
+
+										<span>Show Service Name</span>
+									</label>
+
+									<label>
+										<input class="list-checkbox" type="checkbox" name="show-approximate-time" id="show-approximate-time" value="" />
+
+										<span>Show Approximate Time</span>
+									</label>
+								</div>
+							</div>
+							<span class="validate-for text-danger" id="waiting-list-validation"></span>
+
+							<!-- Length -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Length</span>
+
+								<input type="number" class="form-control" id="length" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="length-validation"></span>
+
+							<!-- Border Thickness -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Border Thickness</span>
+
+								<input type="number" class="form-control" id="border-thickness" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="border-thickness-validation"></span>
+
+							<!-- Show Border -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Show Border</span>
+
+								<input type="checkbox" class="form-control" id="show-border" aria-describedby="basic-addon3">
+							</div>
+							<span class="validate-for text-danger" id="show-border-validation"></span>
+
+							<!-- Macro List -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Macro List</span>
+								<select class="designer-select" id="macro-list">
+									@{
+										var macroList = (List<qmMacro>)ViewBag.MacroList;
+										foreach (var macro in macroList)
+										{
+											<option value="@macro.MacroID">@macro.MacroName</option>
+										}
+									}
+
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="macro-validation"></span>
+
+							<!-- Branch List -->
+							<div class="input-group" style="margin:0;">
+								<span class="input-group-addon" id="basic-addon3" style="width:130px;">Branch List</span>
+								<select class="designer-select" id="branch-list">
+									@{
+										var branchList = (List<qmBranch>)ViewBag.BranchList;
+										foreach (var branch in branchList)
+										{
+											<option value="@branch.BranchID">@branch.BranchName</option>
+										}
+									}
+
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="branch-validation"></span>
+
+						</div>
+
+						<!-- Font Props Area -->
+						<div id="font-props-container" class="row">
+							<h3 id="font-properties-header">Font Properties</h3>
+
+							<!-- Font Style -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font</span>
+
+								<select class="designer-select" id="font-list" aria-describedby="basic-addon3">
+									<option value="Arial">Arial</option>
+									<option value="Tahoma">Tahoma</option>
+									<option value="Segoe UI">Segoe UI</option>
+									<option value="Times New Roman">Times New Roman</option>
+									<option value="Comic Sans">Comic Sans</option>
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="font-style-validation"></span>
+
+							<!-- Font Size -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Size</span>
+
+								<input type="number" class="designer-select" id="font-size" aria-describedby="basic-addon3" value="24" min="8" max="200" />
+							</div>
+							<span class="validate-for text-danger" id="font-size-validation"></span>
+
+							<!-- Font Colour-->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Color</span>
+
+								<select class="designer-select" id="font-colour" aria-describedby="basic-addon3">
+									<option value="rgb(0, 0, 0)">Black</option>
+									<option value="rgb(255, 255, 255)">White</option>
+									<option value="rgb(0, 255, 0)">Green</option>
+									<option value="rgb(255, 255, 0)">Yellow</option>
+									<option value="rgb(255, 0, 0)">Red</option>
+									<option value="rgb(0, 0, 255)">Blue</option>
+									<option value="rgb(255, 0, 255)">Pink</option>
+									<option value="rgb(128, 128, 128)">Gray</option>
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="font-colour-validation"></span>
+
+							<!-- Align -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Align</span>
+
+								<select class="designer-select" id="align" aria-describedby="basic-addon3">
+									<option value="left">Left</option>
+									<option value="center">Center</option>
+									<option value="right">Right</option>
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="align-validation"></span>
+
+							<!-- VAlign -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Vertical Align</span>
+
+								<select class="designer-select" id="valign" aria-describedby="basic-addon3">
+									<option value="top">Top</option>
+									<option value="middle">Middle</option>
+									<option value="bottom">Bottom</option>
+								</select>
+							</div>
+							<span class="validate-for text-danger" id="valign-validation"></span>
+
+							<!-- Font Type -->
+							<div class="input-group" style="margin:0px;">
+								<span class="input-group-addon" id="basic-addon3" style="width:105px;">Font Type</span>
+
+								<a href="javascript:fontActions('bold');" class="btn btn-default" id="font-bold" aria-describedby="basic-addon3"><span class="fa fa-bold"></span></a>
+
+								<a href="javascript:fontActions('italic');" class="btn btn-default" id="font-italic" aria-describedby="basic-addon3"><span class="fa fa-italic"></span></a>
+
+								<a href="javascript:fontActions('underline');" class="btn btn-default" id="font-underline" aria-describedby="basic-addon3"><span class="fa fa-underline"></span></a>
+							</div>
+							<span class="validate-for text-danger" id="font-type-validation"></span>
+
+						</div>
+
+						<!-- Button -->
+						<div class="row">
+
+							<button type="button" onclick="applySettings()" class="btn btn-warning col-md-offset-9" id="apply-button">
+								Apply Settings
+
+								<i class="fa fa-check-circle"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- Modal End -->
+
+<script src="~/Scripts/DigitalSignageDesigner.js"></script>

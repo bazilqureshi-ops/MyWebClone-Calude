@@ -1,0 +1,56 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmTerminalConnection> tco = ViewBag.tco;
+    List<qmUser> userlist = ViewBag.userlist;
+    List<qmBranch> branches = ViewBag.branches;
+    List<qmTerminal> allterminals = ViewBag.allterminals;
+    qmTerminal LoginTerminal = ViewBag.LoginTerminal;
+}
+<!--<div class="col-md-12" style="padding:0px;">
+    <input type="text" name="txtOnlineUserSearch" id="txtOnlineUserSearch" style="padding:5px; width:100%; border-style:none;" placeholder="Search..." />
+</div>-->
+<div class="col-md-12" style="padding:0px; height:90%;">
+    <div class="list-group" id="FullList">
+        @{
+            foreach (qmTerminalConnection item in tco)
+            {
+                qmTerminal itemterminal = allterminals.Where(x => x.TerminalID == Convert.ToInt32(item.TerminalID)).FirstOrDefault();
+                qmUser itemuser = userlist.Where(x => x.UserID == Convert.ToInt32(item.UserID)).FirstOrDefault();
+                qmBranch itembranch = branches.Where(x => x.BranchID == Convert.ToInt32(itemterminal.BranchID)).FirstOrDefault();
+                <button type="button" class="list-group-item" onclick="OpenChatWindow(@(LoginTerminal.TerminalID), @(HttpContext.Current.Session["MagicUser"].ToString()), @(itemterminal.TerminalID), @(itemuser.UserID));">
+                    <img src="@(itemuser.ProfilePicture)" width="32" style="border-radius:16px; border:solid 1px #000; margin-right:10px;" align="left" />
+                    @(itemuser.FullName) <br />
+                    <span style="font-size:10px; font-style:italic;">@(itemterminal.TerminalName) (@(itembranch.BranchName))</span>
+                </button>
+            }
+        }
+    </div>
+    <div class="list-group" id="SearchResult" style="display:none;">
+
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $("#txtOnlineUserSearch").on('keypress', function (e) {
+            if (e.which === 13) {
+
+                var searchtext = $("#txtOnlineUserSearch").val();
+
+                if (searchtext === "") {
+                    //$(".list-group-item").show();
+
+                    $("#SearchResult").hide();
+                    $("#FullList").show();
+                }
+                else {
+                    $("#SearchResult").show();
+                    $("#FullList").hide();
+                    $("#SearchResult").html($("button:contains('" + searchtext + "')").html());
+                }
+            }
+        });
+    });
+</script>

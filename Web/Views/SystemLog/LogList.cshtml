@@ -1,0 +1,21 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List<qmLog> logs = ViewBag.logs;
+    List<qmUser> users = ViewBag.users;
+}
+
+@{
+    foreach (qmLog log in logs)
+    {
+        qmUser usr = users.Where(x => x.UserID == log.UserID).FirstOrDefault();
+
+        <tr>
+            <td>@(log.Action)</td>
+            <td>@(log.TableName)</td>
+            <td>@(usr != null ? usr.FullName : "NO LOGIN")</td>
+            <td>@(log.ActionDate.ToString())</td>
+        </tr>
+    }
+}

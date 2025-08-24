@@ -1,0 +1,33 @@
+﻿@{
+    Layout = null;
+
+    int ReturnType = ViewBag.ReturnType;
+    int TicketID = ViewBag.TicketID;
+    int TerminalID = ViewBag.TerminalID;
+
+    if (ReturnType == 1)
+    {
+        string Message = "TicketCalled(" + TicketID + "," + TerminalID + ")[" + DateTime.Now.ToString() + "]";
+        string InterBag = "FlashNumber(" + TicketID + "," + TerminalID + ")[" + DateTime.Now.ToString() + "]";
+
+        <script>
+            signalRHub.server.send("@(Message)").fail(function (e) {
+                alert(e.message);
+            });
+
+            signalRHub.server.interSend("@(InterBag)").fail(function (e) {
+                alert(e.message);
+            });
+        </script>
+
+        <table width='100%' height='180'>
+            <tr>
+                <td align='center' valign='center'>
+                    <p>&nbsp;</p>
+                    <p><img src='../assets/images/loading2.gif' /></p>
+                    <p style="font-size:24px; font-family:'Segoe UI'; font-weight:lighter;">Please wait while getting ticket informations.</p>
+                </td>
+            </tr>
+        </table>
+    }
+}

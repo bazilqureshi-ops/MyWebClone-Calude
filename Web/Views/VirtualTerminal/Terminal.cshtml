@@ -1,0 +1,599 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    ViewBag.Title = "Virtual Terminal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string terminalid = ViewBag.TerminalID;
+    string userid = ViewBag.UserID;
+
+    bool WillBeReset = ViewBag.ResetComission;
+    List<qmTerminal> terminals = ViewBag.terminals;
+    List<qmSegment> segments = ViewBag.segments;
+}
+@section scripts{
+    <script src="~/Scripts/jquery.signalR-2.2.2.js"></script>
+    <script src="~/SignalR/Hubs"></script>
+    <style>
+        .MnItem {
+            height: 23px;
+            padding: 5px;
+            padding-bottom: 10px;
+            padding-top: 10px;
+            width: 100%;
+            border-bottom: dotted 1px #CCC;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+            .MnItem:hover {
+                background-color: #F5F5F5;
+            }
+
+
+        .blurbg {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            margin: 0px;
+            padding: 0px;
+            left: 0px;
+            top: 0px;
+            background-image: url(../assets/images/blur.png);
+            display: none;
+            z-index: 1453;
+        }
+    </style>
+    <script>
+    var signalRHub;
+    $(function () {
+        $("#InfoLoading").css("width", $("#InfoBox").css("width"));
+
+        $("#InfoLoading").show();
+        $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+            $("#WaitingTableBody").html(data);
+            $("#InfoLoading").hide();
+        });
+
+        signalRHub = $.connection.comHub;
+
+        signalRHub.client.SendMessage = function (command) {
+            //$("#rtn").append(command + "\n");
+
+            if (command.includes("PrintTicket")) {
+                $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+                    $("#WaitingTableBody").html(data);
+                });
+            }
+
+            if (command.includes("NextCall")) {
+                $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+                    $("#WaitingTableBody").html(data);
+                });
+            }
+
+            if (command.includes("TicketCalled")) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(",");
+                var ticketNumber = command.substring(pFrom + 1, pTo);
+
+                pFrom = command.indexOf(",");
+                pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                if (terminalNumber == @terminalid){
+                    $("#InfoBox").html("");
+                    $("#InfoLoading").css("width", $("#InfoBox").css("width"));
+                    $("#InfoLoading").show();
+                    $.get('@Url.Action("NextCallView", "VirtualTerminal")', { TicketID: ticketNumber, TerminalID: terminalNumber }, function (data, status) {
+                        $("#InfoBox").html(data);
+                        $("#InfoLoading").hide();
+                    });
+                }
+
+                $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+                    $("#WaitingTableBody").html(data);
+                });
+            }
+
+            if (command.includes("ManuallyCall")) {
+                $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+                    $("#WaitingTableBody").html(data);
+                });
+            }
+
+            if (command.includes("TicketRecalled")) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(",");
+                var ticketNumber = command.substring(pFrom + 1, pTo);
+
+                pFrom = command.indexOf(",");
+                pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                if (terminalNumber == @terminalid){
+                    var tickedshowed = $("#InfoBoxTicketNumber").html($("#InfoBoxTicketNumber").html() + " RECALL");
+                }
+            }
+
+
+            if (command.includes("TicketParked")) {
+                var pFrom = command.indexOf(",");
+                var pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                if (terminalNumber == @terminalid){
+                    $("#InfoBox").html("<center><p>&nbsp;</p><p><img src='../../assets/images/bell.png' /></p><p>Ticket parked. Please call next ticket to continue.</p></center>");
+                }
+            }
+
+            if (command.includes("CONNECTED-")) {
+                $.get("OnlineTerminalView", { nullko: "" }, function (data) {
+                    $("#OnlineTerminalBody").html(data);
+                });
+            }
+
+            if (command.includes("DISCONNECTED-")) {
+                var hid = $.connection.hub.id;
+                var gid = command.replace("DISCONNECTED-","");
+                if (hid != gid) {
+                    $.get("OnlineTerminalView", { nullko: "" }, function (data) {
+                        $("#OnlineTerminalBody").html(data);
+                    });
+                }
+                else {
+                    window.location.href = '@(Url.Action("Logout", "Session"))';
+                }
+            }
+
+            if (command.includes("TicketNotShowed")) {
+                var pFrom = command.indexOf(",");
+                var pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                if (terminalNumber == @terminalid){
+                    $("#InfoBox").html("<center><p>&nbsp;</p><p><img src='../../assets/images/bell.png' /></p><p>Ticket not showed up. Please call next ticket to continue.</p></center>");
+                }
+            }
+
+            if (command.includes("TicketCalledFromPark")) {
+                var pFrom = command.indexOf("(");
+                var pTo = command.indexOf(",");
+                var ticketNumber = command.substring(pFrom + 1, pTo);
+
+                pFrom = command.indexOf(",");
+                pTo = command.indexOf(")");
+                var terminalNumber = command.substring(pFrom + 1, pTo);
+
+                if (terminalNumber == @terminalid){
+                    $("#InfoLoading").css("width", $("#InfoBox").css("width"));
+                    $("#InfoLoading").show();
+                    $.get('@Url.Action("NextCallView", "VirtualTerminal")', { TicketID:ticketNumber }, function (data, status) {
+                        $("#InfoBox").html(data);
+                        $("#InfoLoading").hide();
+                    });
+                }
+
+                $.get("GetWaitingCustomers/", { TerminalID:"@terminalid"}, function (data) {
+                    $("#WaitingTableBody").html(data);
+                });
+
+                $.get("ParkedCustomerView", { TerminalID:"@terminalid"}, function (data) {
+                    $("#ParkedTableBody").html(data);
+                });
+            }
+
+        };
+
+        $.connection.hub.disconnected(function() {
+            window.location.href = "../../Session/Logout";
+        });
+
+        setInterval(function() {
+            $.get('@Url.Action("CheckSession", "Session")', { nullko: "" }, function (data) {
+                data = data.replace(/^\s*$[\n\r]{1,}/gm, "");
+                if(data != "OK++"){
+                    window.location.href = '@(Url.Action("Logout", "Session"))';
+                }
+            });
+        }, 5000);
+
+        $.connection.hub.start().done(function () {
+
+            var myconid = $.connection.hub.id;
+
+            signalRHub.server.send("TerminalOnline(" + myconid + ", " + @userid +" ," +@terminalid+")");
+
+
+            $("#btnNextCall").click(function () {
+                seconds = 0;
+                minutes = 0;
+                hours = 0;
+                var tickid = $("#hiddenTicketID").val();
+                if (typeof tickid !== "undefined") {
+                    signalRHub.server.send("EndTicket(" + tickid + ")");
+                }
+                signalRHub.server.send("NextCall(" +@terminalid+")");
+
+                var btn = $(this);
+                btn.prop('disabled', true);
+                btn.removeClass("btn-primary");
+                btn.addClass("btn-disabled");
+                setTimeout(function () {
+                    btn.prop('disabled', false);
+                    btn.removeClass("btn-disabled");
+                    btn.addClass("btn-primary");
+                }, 15000);
+            });
+
+            $("#btnRecall").click(function () {
+                var tickid = $("#hiddenTicketID").val();
+                if (typeof tickid !== "undefined") {
+                    signalRHub.server.send("ReCall(" +@terminalid+ "," + tickid + ")");
+                }
+                else{
+                    alert("There is no ticket at the screen.");
+                }
+            });
+
+            $("#btnPark").click(function () {
+                seconds = 0;
+                minutes = 0;
+                hours = 0;
+                var tickid = $("#hiddenTicketID").val();
+                if (typeof tickid !== "undefined") {
+                    signalRHub.server.send("ParkTicket("+@terminalid+")");
+                }
+                else{
+                    alert("There is no ticket at the screen.");
+                }
+            });
+
+            $("#btnNoShow").click(function () {
+                seconds = 0;
+                minutes = 0;
+                hours = 0;
+                var tickid = $("#hiddenTicketID").val();
+                if (typeof tickid !== "undefined") {
+                    signalRHub.server.send("EndTicket(" + tickid + ")");
+                    signalRHub.server.send("NoShow("+@terminalid+")");
+                }
+            });
+
+            $("#btnPause").click(function () {
+                signalRHub.server.send("StartStopPause("+@terminalid+")");
+            });
+        });
+    });
+
+    function CallFromHistory(HistoryTicketID) {
+        signalRHub.server.send("TicketCalled(" + HistoryTicketID + ", " + @terminalid + ")");
+    }
+
+    function ManualCall(ManualTicketID) {
+        signalRHub.server.send("ManualCall(" + ManualTicketID + ", " + @terminalid + ")");
+    }
+
+    function CallFromPark(ParkTicketID) {
+        signalRHub.server.send("CallFromPark(" + ParkTicketID + ", " + @terminalid + ")");
+    }
+
+    function NoNe() {
+        //Take some action
+    }
+
+    function SwitchTab(tabid) {
+
+        if (tabid == 1) {
+            $.get("GetWaitingCustomers/", { TerminalID: @terminalid }, function (data) {
+                $("#WaitingTableBody").html(data);
+                $("#InfoLoading").hide();
+            });
+        }
+
+        if (tabid == 2) {
+            $("#ParkedTableBody").html("<tr><td colspan='3' class='text-center'><br/><br/><br/><p>Please wait while loading parked customers...</p><p><img src='~/assets/images/loading.gif' /></p></td></tr>");
+            $.get("ParkedCustomerView", { TerminalID:"@terminalid"}, function (data) {
+                $("#ParkedTableBody").html(data);
+            });
+        }
+
+        if (tabid == 3) {
+            $("#TicketHistoryBody").html("<tr><td colspan='3' class='text-center'><br/><br/><br/><p>Please wait while loading history tickets...</p><p><img src='~/assets/images/loading.gif' /></p></td></tr>");
+            $.get("TicketHistoryView", { TerminalID: "@terminalid" }, function (data) {
+                $("#TicketHistoryBody").html(data);
+            });
+        }
+
+        if (tabid == 4) {
+            $("#OnlineTerminalBody").html("<tr><td colspan='3' class='text-center'><br/><br/><br/><p>Please wait while loading online terminals...</p><p><img src='~/assets/images/loading.gif' /></p></td></tr>");
+            $.get("OnlineTerminalView", { nullko:""}, function (data) {
+                $("#OnlineTerminalBody").html(data);
+            });
+        }
+
+        $(".tab-pane").hide();
+        $("#tab" + tabid).show();
+
+        $(".tab-pane").removeClass("active");
+        $("#tab" + tabid).addClass("active");
+
+        $(".tabsap").removeClass("active");
+        $("#TabSap" + tabid).addClass("active");
+    }
+
+        var seconds = 0, minutes = 0, hours = 0, t;
+
+        setInterval(function() {
+            seconds++;
+            if (seconds >= 60) {
+                seconds = 0;
+                minutes++;
+                if (minutes >= 60) {
+                    minutes = 0;
+                    hours++;
+                }
+            }
+
+            if ($("#hiddenTicketID").length > 0) {
+                document.getElementById("ProcessTimeString").textContent = (hours ? (hours > 9 ? hours : "0" + hours) : "00") + ":" + (minutes ? (minutes > 9 ? minutes : "0" + minutes) : "00") + ":" + (seconds > 9 ? seconds : "0" + seconds);
+            }
+        }, 1000);
+
+    $(document).ready(function () {
+        $('#btnTransfer').click(function () {
+            $("#Lister1").show();
+            $("#Loader1").hide();
+            $("#BlurBG").fadeIn("fast", function () {
+                $("#TransferPane").fadeIn("fast");
+            });
+        });
+
+        $('#btnTransferService').click(function () {
+            $("#Lister2").show();
+            $("#Loader2").hide();
+            $("#BlurBG").fadeIn("fast", function () {
+                $("#ServicePane").fadeIn("fast");
+            });
+        });
+    });
+
+    function TransferToTerminal(termid) {
+        $("#Lister1").hide();
+        $("#Loader1").show();
+        var tickid = $("#hiddenTicketID").val();
+        if (typeof tickid !== "undefined") {
+            $.get("TransferToTerminal", { TerminalID: termid, TicketID:tickid, MyTerminalID:@terminalid}, function (data) {
+                if (data.indexOf("OK++") > 0) {
+                    $("#Lister1").show();
+                    $("#Loader1").hide();
+                    $("#BlurBG").fadeOut("fast", function () {
+                        $("#TransferPane").fadeOut("fast");
+                    });
+                    $("#InfoBox").html("<center><p>&nbsp;</p><p><img src='../../assets/images/bell.png' /></p><p>Ticket transfered to terminal. Please call next ticket to continue.</p></center>");
+                    signalRHub.server.send("TransferredTerminal(" + termid + ")");
+                }
+            });
+        }
+    }
+
+
+    function TransferToService(segmentid) {
+        $("#Lister2").hide();
+        $("#Loader2").show();
+        var tickid = $("#hiddenTicketID").val();
+        if (typeof tickid !== "undefined") {
+            $.get("TransferToService", { SegmentID: segmentid, TicketID:tickid, TerminalID: @terminalid }, function (data) {
+                if (data.indexOf("OK++") > 0) {
+                    $("#Lister2").show();
+                    $("#Loader2").hide();
+                    $("#BlurBG").fadeOut("fast", function () {
+                        $("#ServicePane").fadeOut("fast");
+                    });
+                    $("#InfoBox").html("<center><p>&nbsp;</p><p><img src='../../assets/images/bell.png' /></p><p>Ticket transfered to service. Please call next ticket to continue.</p></center>");
+
+                    signalRHub.server.send("TransferredService(" + segmentid + ")");
+                }
+            });
+        }
+    }
+
+    function SendTicketNote() {
+        var tNote = $("#txtTicketNote").val();
+
+        $.get("SendTicketNote", { TerminalID: @terminalid, TicketNote: tNote }, function (data) {
+            if (data.indexOf("OK++") > 0) {
+                alert("Ticket note has been saved.");
+            }
+        });
+    }
+
+    function CloseTransfer() {
+        $("#BlurBG").fadeOut("fast", function () {
+            $("#TransferPane").fadeOut("fast");
+        });
+        }
+
+
+    function CloseTransferService() {
+        $("#BlurBG").fadeOut("fast", function () {
+            $("#ServicePane").fadeOut("fast");
+        });
+    }
+    </script>
+}
+
+<div class="blurbg" id="BlurBG">
+    <div class="col-md-4 col-md-offset-4" style="display:none; margin-top:150px;" id="TransferPane">
+        <div class="col-md-12 text-right" style="background-color:#FFF; border-radius:7px;">
+            <div id="Lister1" style="height:500px; overflow-y:scroll;">
+                <h3 style="text-align:left;">Terminal List</h3>
+                <div id="TransferList">
+                    <table width="100%" border="0">
+                        @{
+                            foreach (qmTerminal item in terminals)
+                            {
+                                <tr>
+                                    <td onclick="TransferToTerminal(@item.TerminalID);" align="left" class="MnItem">
+                                        @item.TerminalName
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+            <input type="button" onclick="CloseTransfer();" class="btn btn-primary" value="Close" style="margin-top:15px;" />
+            <div id="Loader1" class="text-center">
+                <br /><br /><img src="~/assets/images/loading.gif" /><br />
+                <p>Please wait while ticket transferring...</p><br /><br />
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4 col-md-offset-4" style="display:none; margin-top:150px;" id="ServicePane">
+        <div class="col-md-12 text-right" style="background-color:#FFF; border-radius:7px;">
+            <div id="Lister2" style="height:500px; overflow-y:scroll;">
+                <h3 style="text-align:left;">Service List</h3>
+                <div id="ServiceList">
+                    <table width="100%" border="0">
+                        @{
+                            int i = 0;
+                            foreach (qmSegment item in segments)
+                            {
+                                <tr>
+                                    <td onclick="TransferToService(@item.SegmentID);" align="left" class="MnItem">
+                                        @item.SegmentName
+                                    </td>
+                                </tr>
+
+                                i++;
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+            <input type="button" onclick="CloseTransferService();" class="btn btn-primary" value="Close" style="margin-top:15px;" />
+            <div id="Loader2" class="text-center">
+                <br /><br /><img src="~/assets/images/loading.gif" /><br />
+                <p>Please wait while ticket transferring...</p><br /><br />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Virtual Terminal
+            </div>
+            <div class="panel-body">
+                <div class="col-md-12" style="margin-bottom:20px; padding:0px;">
+                    <div class="card card-mini" style="background-color:#F5F5F5;">
+                        <div class="card-body">
+                            <div class="row" id="InfoBox" style="min-height:230px;">
+                                <center><p>&nbsp;</p><p><img src="~/assets/images/bell.png" /></p><p>Welcome to virtual terminal. You can start with Next Call.</p></center>
+                            </div>
+                            <div class="row text-center" id="InfoLoading" style="position:absolute; margin-top:-230px; background-color:#F5F5F5; min-height:240px; display:none;">
+                                <p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p><img src="~/assets/images/loading.gif" /></p><p>Please wait while loading informations...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2" style="padding:0px;">
+                    <div class="btn-group-vertical" role="group" aria-label="..." style="width:100%;">
+                        <button id="btnNextCall" class="btn btn-primary" style="width:100%;"><span class="fa fa-arrow-right "></span> Next Call</button>
+                        <button id="btnRecall" class="btn btn-default" style="width:100%;"><span class="fa fa-repeat "></span> Recall</button>
+                        <button id="btnPark" class="btn btn-default" style="width:100%;"><span class="fa fa-pause "></span> Park</button>
+                        <div id="btnTransfer" class="btn btn-default" style="width:100%;"><span class="fa fa-exchange "></span> Transfer to Terminal</div>
+                        <div id="btnTransferService" class="btn btn-default" style="width:100%;"><span class="fa fa-exchange "></span> Transfer to Service</div>
+                        <button id="btnNoShow" class="btn btn-default" style="width:100%;"><span class="fa fa-ban "></span> No Show</button>
+                        <button id="btnPause" class="btn btn-default" style="width:100%;"><span class="fa fa-coffee "></span> Start Pause</button>
+                        <!--<a href="javascript:IssueTicket();" id="btnIssueTicket" class="btn btn-default" style="width:100%;"><span class="fa fa-exclamation-triangle"></span> Issue Ticket</a>
+                        <a href="javascript:ManualCall();" id="btnManualCall" class="btn btn-default" style="width:100%;"><span class="fa fa-user"></span> Manually Call</a>-->
+                    </div>
+                </div>
+
+                <div class="col-md-10" style="padding-right:0px;">
+                    <div class="card card-tab card-mini">
+                        <div class="card-header" style="overflow:hidden;">
+                            <ul class="nav nav-tabs">
+                                <li class="tabsap active" style="min-width:200px;" id="TabSap1" onclick="SwitchTab(1);">
+                                    <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-clock-o" aria-hidden="true"></i> Waiting Customers</a>
+                                </li>
+                                <li class="tabsap" style="min-width:200px;" id="TabSap2" onclick="SwitchTab(2);">
+                                    <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-thumb-tack" aria-hidden="true"></i> Parked Customers</a>
+                                </li>
+                                <li class="tabsap" style="min-width:200px;" id="TabSap3" onclick="SwitchTab(3);">
+                                    <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-history" aria-hidden="true"></i> History</a>
+                                </li>
+                                <li class="tabsap" style="min-width:200px;" id="TabSap4" onclick="SwitchTab(4);">
+                                    <a href="javascript:NoNe();" role="tab" data-toggle="tab"><i class="fa fa-terminal" aria-hidden="true"></i> Online Terminals</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body tab-content no-padding">
+                            <div class="tab-pane active" id="tab1" style="padding:0px; max-height:400px; overflow-y:scroll;">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <td>Ticket Number</td>
+                                            <td>Segment Name</td>
+                                            <td>Service Name</td>
+                                            <td>Ticket Print Time</td>
+                                            <td>Action</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="WaitingTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="tab2" style="padding:0px; max-height:400px; overflow-y:scroll;">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <td>Parked Ticket Number</td>
+                                            <td>Print Time</td>
+                                            <td>Action</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ParkedTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="tab3" style="padding:0px; max-height:400px; overflow-y:scroll;">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <td>Ticket Number</td>
+                                            <td>Print Time</td>
+                                            <td>Call Time</td>
+                                            <!--<td>Action</td>-->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="TicketHistoryBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="tab4" style="padding:0px; max-height:400px; overflow-y:scroll;">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <td>Terminal Number</td>
+                                            <td>Terminal Name</td>
+                                            <td>Terminal Location</td>
+                                            <td>Online User</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="OnlineTerminalBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

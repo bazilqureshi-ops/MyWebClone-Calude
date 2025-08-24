@@ -1,0 +1,25 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.XTO;
+@{ 
+    Layout = null;
+
+    List<TransferDTO> TransferList = ViewBag.TransferList;
+    qmTerminal terminal = ViewBag.Terminal;
+    List<qmStatus> Statuses = ViewBag.Statuses;
+}
+
+<table width="100%" border="0">
+    @{
+        if (TransferList.Count > 0)
+        {
+            foreach (TransferDTO item in TransferList)
+            {
+                <tr>
+                    <td onclick="TransferToTerminal(@(item.Terminal.TerminalID), @(terminal.TerminalID), '@(Statuses.Where(x=>x.StatusID == terminal.TransferStatusID).FirstOrDefault().StatusName)','@(Statuses.Where(x=>x.StatusID == terminal.TransferStatusID).FirstOrDefault().StatusColor)');" align="left" class="MnItem">
+                        @(item.Terminal.TerminalName) [@(item.WaitingCount) / @(item.ServedCount)]
+                    </td>
+                </tr>
+            }
+        }
+    }
+</table>

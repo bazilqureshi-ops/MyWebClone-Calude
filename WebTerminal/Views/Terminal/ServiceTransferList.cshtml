@@ -1,0 +1,57 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+    List<qmTransferRule> ServiceTransferList = ViewBag.ServiceTransferList;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+    List<TransferDTO> TransferDetails = ViewBag.TransferDetails;
+    bool Directly = ViewBag.Directly;
+    int? TicketID = ViewBag.TicketID;
+}
+<style>
+    .transfer_item {
+        cursor: pointer;
+    }
+
+        .transfer_item:hover {
+            background-color: #F5F5F5;
+        }
+</style>
+<table width="100%" height="100%" border="0" cellpadding="10" cellspacing="5">
+    <tr style="border-bottom:solid 1px #CCC; font-weight:bold;">
+        <td>@(Localization.Translate(LanguageCode,"Service"))</td>
+        <td>@(Localization.Translate(LanguageCode,"Segment"))</td>
+        <td>@(Localization.Translate(LanguageCode,"WaitingTicket"))</td>
+        <td>@(Localization.Translate(LanguageCode,"Served"))</td>
+    </tr>
+    @{
+        foreach (TransferDTO transferable in TransferDetails)
+        {
+            if (Directly)
+            {
+                <tr onclick="DirectTransferFromPark(@(TicketID), @(transferable.Segment.SegmentID));" class="transfer_item" data-bs-dismiss="modal">
+                    <td>@(ServiceList.Where(x=>x.ServiceID == transferable.Segment.ServiceID).FirstOrDefault().ServiceName)</td>
+                    <td>@(transferable.Segment.SegmentName)</td>
+                    <td>@(transferable.WaitingCount)</td>
+                    <td>@(transferable.ServedCount)</td>
+                </tr>
+            }
+            else
+            {
+                <tr onclick="ServiceTransfer(@(transferable.Segment.SegmentID));" class="transfer_item" data-bs-dismiss="modal">
+                    <td>@(ServiceList.Where(x=>x.ServiceID == transferable.Segment.ServiceID).FirstOrDefault().ServiceName)</td>
+                    <td>@(transferable.Segment.SegmentName)</td>
+                    <td>@(transferable.WaitingCount)</td>
+                    <td>@(transferable.ServedCount)</td>
+                </tr>
+            }
+        }
+    }
+</table>

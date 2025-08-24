@@ -1,0 +1,21 @@
+﻿@{
+    Layout = null;
+
+    string CalledMessage = ViewBag.BagMessage;
+
+    <script>
+            signalRHub.server.send("@(CalledMessage)").fail(function (e) {
+                alert(e.message);
+            });
+    </script>
+
+    <table width='100%' height='180'>
+        <tr>
+            <td align='center' valign='center'>
+                <p>&nbsp;</p>
+                <p><img src='../assets/images/bell.png' height='66' /></p>
+                <p style='font-size:24px; font-family:"Segoe UI"; font-weight:lighter;'>Ticket Closed. You can continue with Next Call.</p>
+            </td>
+        </tr>
+    </table>
+}

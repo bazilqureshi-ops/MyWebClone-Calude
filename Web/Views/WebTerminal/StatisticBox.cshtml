@@ -1,0 +1,14 @@
+﻿@{
+    Layout = null;
+    string WaitingNumber = ViewBag.WaitingNumber;
+    string ParkedNumber = ViewBag.ParkedNumber;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+}
+<w><p><i class="fa fa-clock-o"></i> <b id='WaitingStatistic'>@(WaitingNumber)</b></p></w>
+<p>
+    <i class="fa fa-pause"></i> <b>@(ParkedNumber)</b>
+</p>

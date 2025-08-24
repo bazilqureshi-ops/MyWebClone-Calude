@@ -1,0 +1,92 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+    List<qmBranch> CentralBranches = ViewBag.CentralBranches;
+    List<qmBranchGroup> BranchGroups = ViewBag.BranchGroups;
+    List<qmDigitalSignage> DigitalSignages = ViewBag.DigitalSignages;
+    List<qmKiosk> Kiosks = ViewBag.Kiosks;
+    List<qmLimitRule> LimitRules = ViewBag.Limits;
+    List<qmSurvey> Surveys = ViewBag.Surveys;
+    List<qmTerminal> Terminals = ViewBag.Terminals;
+    List<qmTicket> Tickets = ViewBag.Tickets;
+    List<qmUser> Users = ViewBag.Users;
+    int BranchID = ViewBag.BranchID;
+}
+
+<p><b>This branch has these entities. If you delete this branch most of that entities will be deleted or changed branches with null.</b></p>
+
+<div style="max-height:200px; height:200px; overflow-y:scroll; border:solid 1px #CCC; border-radius:5px; padding:5px;">
+
+
+    <p><i>Will be removed from this branch groups</i></p>
+    <ul>
+        @{
+            foreach (qmBranchGroup item in BranchGroups)
+            {
+                <li>@(item.GroupName)</li>
+            }
+        }
+    </ul>
+    <p><i>Digital Signages will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmDigitalSignage item in DigitalSignages)
+            {
+                <li>@(item.DigitalSignageName)</li>
+            }
+        }
+    </ul>
+    <p><i>Kiosks will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmKiosk item in Kiosks)
+            {
+                <li>@(item.KioskName)</li>
+            }
+        }
+    </ul>
+    <p><i>Surveys will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmSurvey item in Surveys)
+            {
+                <li>@(item.SurveyName)</li>
+            }
+        }
+    </ul>
+    <p><i>Terminals will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmTerminal item in Terminals)
+            {
+                <li>@(item.TerminalName)</li>
+            }
+        }
+    </ul>
+    <p><i>Users will be deleted</i></p>
+    <ul>
+        @{
+            foreach (qmUser item in Users)
+            {
+                <li>@(item.FullName)</li>
+            }
+        }
+    </ul>
+    <p>Total @(Tickets.Count()) ticket will be deleted.</p>
+</div>
+
+<p><b>For the security reasons please enter randomly generated numbers below : </b></p>
+
+<p style="font-size:20px; text-decoration:line-through; font-family:'Segoe Script'; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;" unselectable="on"><u><i>
+    @{
+        Random rnd = new Random();
+        int securu = rnd.Next(10000, 99999);
+        @(securu)
+    }
+</i></u></p>
+
+<form action="../Branch/DeleteBranch" method="post" id="PostDelete" name="PostDelete">
+    <input type="hidden" value="@(BranchID)" id="txtBranchID" name="txtBranchID" />
+    <input type="hidden" value="@(securu)" id="txtSecuru" name="txtSecuru" />
+    <input type="text" class="form-control" name="txtNumber" id="txtNumber" />
+</form>

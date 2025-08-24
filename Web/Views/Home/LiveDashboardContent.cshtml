@@ -1,0 +1,386 @@
+﻿@using Emse.QMagic.Web.Models;
+@using Emse.QMagic.Web.XTO;
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = null;
+    List<qmTicket> TodaysTicket = ViewBag.TodayTicket;
+    List<qmTransferService> TransferList = ViewBag.TransferList;
+    List<int> TicketCounts = ViewBag.TicketCounts;
+    string asserie = "";
+    int i = 0;
+    foreach (int item in TicketCounts)
+    {
+        if (i != TicketCounts.Count() - 1)
+        {
+            asserie += item + ",";
+        }
+        else
+        {
+            asserie += item;
+        }
+    }
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<TicketCountPerBranch> TCPB = ViewBag.TCPB;
+    List<LatestTerminals> LatestOnline = ViewBag.LT;
+    List<qmBranch> Branches = ViewBag.branches;
+    List<MostCalledTerminal> MostCalled = ViewBag.MostCalled;
+}
+
+<script>
+    function SearchTicketHistory() {
+        var sDate = $("#txtDate").val();
+        var sPrefix = $("#txtPrefix").val();
+        var sNumber = $("#txtNumber").val();
+        var sBranch = $("#cmbBranch").val();
+
+        $("#HistoryResult").html("<center><img src='assets/images/loading.gif'/></center><p>&nbsp;</p><p>&nbsp;</p>");
+        $.post("/Home/TicketHistory", { txtDate: sDate, txtPrefix: sPrefix, TicketNumber: sNumber, BranchID: sBranch }, function (data) {
+            debugger;
+            $("#HistoryResult").html(data);
+        });
+    }
+
+    function OpenTracking() {
+        $("#TrackingModule").modal("show");
+    }
+
+    function OpenOfflines() {
+        $.get("/Home/OfflineDevices", { hede: "bidi" }, function (data) {
+            $("#OfflineBody").html(data);
+            $("#OfflineModule").modal("show");
+        });
+    }
+
+    function RefreshOffline() {
+        $("#OfflineBody").html("<img src='assets/images/loading.gif'/>");
+        $.get("/Home/OfflineDevices", { hede: "bidi" }, function (data) {
+            $("#OfflineBody").html(data);
+        });
+    }
+
+    function SwitchTab(tabid) {
+        $(".tab-pane").hide();
+        $("#tab" + tabid).show();
+
+        $(".tab-pane").removeClass("active");
+        $("#tab" + tabid).addClass("active");
+
+        $(".tabsap").removeClass("active");
+        $("#TabSap" + tabid).addClass("active");
+    }
+</script>
+
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="TrackingModule" id="TrackingModule">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">Ticket Tracking</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row" style="margin-bottom:10px;">
+                            <div class="col-md-12">
+                                <select name="cmbBranch" id="cmbBranch" class="form-control" style="width:100%;">
+                                    @{
+                                        foreach (qmBranch item in Branches)
+                                        {
+                                            <option value="@(item.BranchID)">@(item.BranchName)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="date" name="txtDate" id="txtDate" class="form-control" style="height:50px;" />
+                            </div>
+                            <div class="col-md-6">
+                                <select name="txtPrefix" id="txtPrefix" class="form-control" style="height:50px;">
+                                    @{
+                                        foreach (qmService item in ServiceList)
+                                        {
+                                            <option value="@(item.ServicePrefix)">@(item.ServiceName) (@(item.ServicePrefix))</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="number" min="1" max="999" value="100" name="txtNumber" id="txtNumber" class="form-control" style="height:50px;" />
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <a href="javascript:SearchTicketHistory();" class="btn btn-primary"><i class="fa fa-search"></i> Find Ticket History</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12" id="HistoryResult">
+                        &nbsp;
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="OfflineModule" id="OfflineModule">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="gridSystemModalLabel">Offline Devices</h4>
+            </div>
+            <div class="modal-body" id="OfflineBody" style="padding:0px;">
+
+
+
+            </div>
+            <div class="modal-footer">
+                <a href="javascript:RefreshOffline();" class="btn btn-default"><i class="fa fa-refresh"></i></a>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="card card-banner card-chart card-green no-br">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="title">Today Printed Tickets</div>
+                </div>
+                <ul class="card-action">
+                    <li>
+                        ticket
+                        <a href="/Home">
+                            <i class="fa fa-refresh"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="ct-chart-sale"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <a class="card card-banner card-green-light">
+            <div class="card-body">
+                <i class="icon fa fa-ticket fa-4x"></i>
+                <div class="content">
+                    <div class="title">Total Ticket</div>
+                    <div class="value"><span class="sign"></span>@(TodaysTicket.Count().ToString())</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <a class="card card-banner card-blue-light">
+            <div class="card-body">
+                <i class="icon fa fa-bell-o fa-4x"></i>
+                <div class="content">
+                    <div class="title">Total Called</div>
+                    <div class="value"><span class="sign"></span>@(TodaysTicket.Where(x => x.CalledTerminalID != null).Count().ToString())</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <a class="card card-banner card-yellow-light">
+            <div class="card-body">
+                <i class="icon fa fa-remove fa-4x"></i>
+                <div class="content">
+                    <div class="title">Total No Show</div>
+                    <div class="value"><span class="sign"></span>@(TodaysTicket.Where(x => x.NoShow == true).Count().ToString())</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <a class="card card-banner card-orange-light">
+            <div class="card-body">
+                <i class="icon fa fa-clock-o fa-4x"></i>
+                <div class="content">
+                    <div class="title">Total Waiting</div>
+                    <div class="value"><span class="sign"></span>@(TodaysTicket.Where(x => x.CalledTerminalID == null).Where(x => x.CallingTime == null).Count().ToString())</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-6">
+        <div class="card card-mini">
+            <div class="card-header">
+                <div class="card-title"><span class="fa fa-ticket"></span> System Modules</div>
+            </div>
+            <div class="card-body">
+                <a href="javascript:OpenTracking();" class="btn btn-default">
+                    <i class="fa fa-reply-all"></i><br />
+                    Ticket Tracking
+                </a>
+
+                <a href="javascript:OpenOfflines();" class="btn btn-default">
+                    <i class="fa fa-tv"></i><br />
+                    Offline Devices
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <div class="card card-mini">
+            <div class="card-header">
+                <div class="card-title"><span class="fa fa-building"></span> Ticket Counts Per Branch</div>
+                <ul class="card-action">
+                    <li>
+                        <a href="/Home">
+                            <i class="fa fa-refresh"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body no-padding table-responsive">
+                <table class="table card-table">
+                    <thead>
+                        <tr>
+                            <th>Branch Name</th>
+                            <th class="right">Ticket Count</th>
+                            <th>Online Terminal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (TicketCountPerBranch branch in TCPB)
+                            {
+                                <tr>
+                                    <td>@(branch.BranchName)</td>
+                                    <td class="right">@(branch.TicketCount)</td>
+                                    <td><span class="badge badge-success badge-icon"><i class="fa fa-check" aria-hidden="true"></i><span>Alive @(branch.TerminalCount)</span></span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-6">
+        <div class="card card-mini">
+            <div class="card-header">
+                <div class="card-title"><span class="fa fa-bell"></span> Most 10 Called Terminals (Today)</div>
+            </div>
+            <div class="card-body no-padding table-responsive">
+                <table class="table card-table">
+                    <thead>
+                        <tr>
+                            <th>Branch Name</th>
+                            <th>Terminal Name</th>
+                            <th>Ticket Count</th>
+                            <th>Login User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            MostCalled = MostCalled.OrderByDescending(x => x.TicketCount).Take(10).ToList();
+                            foreach (MostCalledTerminal item in MostCalled)
+                            {
+                                <tr>
+                                    <td>@(item.BranchName)</td>
+                                    <td>@(item.TerminalName)</td>
+                                    <td>@(item.TicketCount)</td>
+                                    <td>@Html.Raw(item.LoginUser)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <div class="card card-mini">
+            <div class="card-header">
+                <div class="card-title"><span class="fa fa-terminal"></span> Latest Online Terminals</div>
+                <ul class="card-action">
+                    <li>
+                        <a href="/Home">
+                            <i class="fa fa-refresh"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body no-padding table-responsive">
+                <table class="table card-table">
+                    <thead>
+                        <tr>
+                            <th>Branch Name</th>
+                            <th class="right">Terminal Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (LatestTerminals terminal in LatestOnline)
+                            {
+                                <tr>
+                                    <td>@(terminal.BranchName)</td>
+                                    <td class="right">@(terminal.TerminalName)</td>
+                                    <td><span class="badge badge-success badge-icon"><i class="fa fa-check" aria-hidden="true"></i><span>Alive</span></span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+    if ($('.ct-chart-sale').length) {
+        new Chartist.Line('.ct-chart-sale', {
+            labels: ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"],
+            series: [[@(asserie)]]
+        }, {
+                height: 250,
+                high: @(TicketCounts.Max()+10),
+                showArea: true,
+                stackBars: true,
+                fullWidth: true,
+                lineSmooth: false,
+            });
+    }
+    </script>
+}

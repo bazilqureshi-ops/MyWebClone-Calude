@@ -1,0 +1,497 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model ReportViewModel
+
+@{
+	string ticketCounts = "";
+	string[] branchNames = new string[Model.UserBranches.Count];
+	string[] branchTicketCount = new string[Model.UserBranches.Count];
+}
+
+<link href="~/assets/css/Chart.min.css" rel="stylesheet" />
+<script src="~/assets/js/Chart.min.js"></script>
+
+<form action="/Reports" method="post" class="col-xs-12 col-md-12 col-lg-12" style="padding: 0 2%;">
+	<input type="hidden" id="ReportType" name="ReportType" value="@Model.ReportType" />
+
+	<div class="row" style="margin-bottom: 25px;">
+		<div class="col-xs-12 col-md-8">
+			<div class="card card-banner card-chart card-green no-br">
+				<div class="card-header">
+					<div class="card-title">
+						<div class="title">Printed Tickets By Your Branches (Today)</div>
+						@for (int i = 0; i < Model.TicketCounts.Count; i++)
+						{
+							ticketCounts += $"{Model.TicketCounts[i].ToString()},";
+
+							@Html.HiddenFor(count => Model.TicketCounts[i]);
+						}
+
+						@for (int i = 0; i < Model.UserBranches.Count; i++)
+						{
+							branchNames[i] = Model.UserBranches[i].Name;
+							branchTicketCount[i] = $"{Model.UserBranches[i].QueryNumber.ToString()}";
+							@Html.HiddenFor(colours => Model.Colours[i]);
+							@Html.HiddenFor(colours => Model.BorderColours[i]);
+						}
+
+					</div>
+
+				</div>
+				<div class="card-body">
+					<div class="ct-chart-sale"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xs-12 col-md-4">
+			<div class="card card-banner card-chart no-br">
+				<div class="card-body" style="padding-top:15px; padding-bottom: 55px;">
+					<canvas id="myChart"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class=" col-xs-12 col-md-8 col-md-offset-2 col-lg-8">
+			<div class="card">
+				<div class="card-body" style="padding-bottom: 5%;">
+					<div class="row">
+						<!-- Left Column -->
+						<div class="col-xs-12 col-md-6 col-lg-6">
+							<!-- Reports -->
+							<div class="col-xs-12 col-md-12 col-lg-12 report-select-container">
+								<label>Reports</label>
+								<select class="report-select col-xs-12 col-md-12 col-lg-12" name="ReportName" id="ReportName" size="10">
+									<option disabled="disabled"> ---------------------- Classic Reports ---------------------- </option>
+
+									@for (int i = 0; i < Model.Reports.Count(); i++)
+									{
+										if (string.IsNullOrEmpty(Model.Reports[i].ReportXaml))
+										{
+											<option value="@Model.Reports[i].ReportName" ReportType="Classic">
+												<label>
+													@Model.Reports[i].ReportName
+												</label>
+											</option>
+										}
+
+									}
+
+									<option disabled="disabled"> ---------------------- Custom Reports ---------------------- </option>
+
+									@for (int i = 0; i < Model.Reports.Count(); i++)
+									{
+										if (!string.IsNullOrEmpty(Model.Reports[i].ReportXaml))
+										{
+											<option value="@Model.Reports[i].ReportName" ReportType="Generic">
+												<label>
+													@Model.Reports[i].ReportName
+												</label>
+											</option>
+										}
+
+									}
+								</select>
+
+								@for (int i = 0; i < Model.Reports.Count(); i++)
+								{
+									@Html.HiddenFor(x => Model.Reports[i].ReportID)
+									@Html.HiddenFor(x => Model.Reports[i].ReportName)
+									@Html.HiddenFor(x => Model.Reports[i].ReportXaml)
+								}
+
+								<label class="text-danger">
+									@Html.ValidationMessageFor(report => report.ReportName)
+								</label>
+							</div>
+						</div>
+
+						<!-- Right Column -->
+						<div class="col-xs-12 col-md-6 col-lg-6">
+							<!-- Search Key -->
+							<div class="row search-key">
+								<div class="col-xs-12 col-md-12 col-lg-12" id="searchOpt">
+									<label class="search-key">Search Key</label>
+									<input type="text" name="SearchKey" autocomplete="off" id="SearchKey" placeholder="Please enter search key..." class="form-control search-key" style="display: none; padding: 15.1px 15px; " />
+									<input type="hidden" value="" name="CustomerID" id="CustomerID" />
+
+									<div id="visit" class="visit-suggestion autocomplete-suggestion">
+
+
+
+									</div>
+
+									<label class="text-danger">
+										@Html.ValidationMessageFor(report => report.SearchKey)
+									</label>
+								</div>
+
+							</div>
+
+							<!-- Select Branches -->
+							<div class="row">
+								<div class="multiselect col-xs-12 col-md-12 col-lg-12" id="multi-select">
+									<label>Branches</label>
+									<div class="selectBox" onclick="showCheckboxes()">
+										<select class="select2" id="select1">
+											<option selected="selected" value="1">
+												<label id="selectBranch">Select Branch</label>
+											</option>
+										</select>
+										<label class="text-danger">
+											@Html.ValidationMessageFor(branch => branch.UserBranches)
+										</label>
+										<div class="overSelect"></div>
+									</div>
+									<div id="checkboxes" class="autocomplete-suggestion">
+										@for (int i = 0; i < Model.UserBranches.Count(); i++)
+										{
+											<label class="options" style="font-size:16px;">
+												@Html.EditorFor(x => Model.UserBranches[i].Checked, new { @class = "userRoleLi" })
+
+												@Html.DisplayFor(x => Model.UserBranches[i].Name)
+
+												@Html.HiddenFor(x => Model.UserBranches[i].Name)
+												@Html.HiddenFor(x => Model.UserBranches[i].Id)
+											</label>
+										}
+
+									</div>
+								</div>
+							</div>
+
+							<!-- Start Date -->
+							<div class="row">
+								<div class="col-xs-12 col-md-12 col-lg-12">
+									<label>Report Start Date</label>
+									<input type="date" name="StartDate" id="StartDate" class="form-control" />
+									<label class="text-danger">
+										@Html.ValidationMessageFor(report => report.StartDate)
+									</label>
+								</div>
+
+							</div>
+
+							<!-- End Date -->
+							<div class="row">
+								<div class="col-xs-12 col-md-12 col-lg-12">
+									<label>Report End Date</label>
+									<input type="date" name="FinishDate" id="FinishDate" class="form-control" />
+									<label class="text-danger">
+										@Html.ValidationMessageFor(report => report.FinishDate)
+									</label>
+								</div>
+							</div>
+
+
+							<!-- Button -->
+							<div class="row col-xs-12 col-md-6 col-md-offset-6 col-lg-6 col-lg-offset-6">
+								<button type="submit" class="btn btn-primary col-xs-12 col-md-6 col-lg-6 col-xs-offset-6">Get Report</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="btn-floating" id="help-actions">
+		<div class="btn-bg"></div>
+		<button type="button" class="btn btn-default btn-toggle" data-toggle="toggle" data-target="#help-actions">
+			<i class="icon fa fa-plus"></i>
+			<span class="help-text">Shortcut</span>
+		</button>
+		<div class="toggle-content">
+			<ul class="actions">
+				<li><a href="#">Create Report Template</a></li>
+			</ul>
+		</div>
+	</div>
+
+</form>
+
+<script>
+	var ctx = document.getElementById('myChart');
+
+	var myChart = new Chart(ctx, {
+		type: 'doughnut',
+		data: {
+			labels: [@foreach (var branc in branchNames)
+					 {
+					 	if (branchNames.Last() != branc) {@Html.Raw($"'{branc}',");}
+					 	else {@Html.Raw($"'{branc}'");}
+					 }],
+
+			datasets: [{
+				label: '# of Votes',
+				data: [@for (int i = 0; i < branchTicketCount.Length; i++)
+				        {
+				        		@Html.Raw($"{Model.UserBranches[i].QueryNumber},");
+				        }],
+				backgroundColor: [
+					@foreach (var colour in Model.Colours)
+					{
+						@Html.Raw($"'{colour}',")
+					}
+						],
+				borderColor: [
+					@foreach (var colour in Model.BorderColours)
+					{
+						@Html.Raw($"'{colour}',")
+					}
+					],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			legend: {
+				display: false
+			},
+			title: {
+				display: true,
+					text: 'Ticket Count Per Branch'
+			}
+		}
+	});
+</script>
+
+@section scripts{
+	<script>
+		if ($('.ct-chart-sale').length) {
+			new Chartist.Line('.ct-chart-sale', {
+				labels: ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"],
+				series: [[@ticketCounts]]
+			}, {
+					axisX: {
+						position: 'center'
+					},
+					axisY: {
+						offset: 0,
+						showLabel: false,
+						labelInterpolationFnc: function labelInterpolationFnc(value) {
+							return value;
+						}
+					},
+					chartPadding: {
+						top: 0,
+						right: 0,
+						bottom: 0,
+						left: 0
+					},
+					height: 250,
+					high: @(Model.TicketCounts.Max()+10),
+					showArea: true,
+					stackBars: true,
+					fullWidth: true,
+					lineSmooth: false,
+					plugins: [Chartist.plugins.ctPointLabels({
+						textAnchor: 'left',
+						labelInterpolationFnc: function labelInterpolationFnc(value) {
+							return '' + parseInt(value);
+						}
+					})]
+				}, [['screen and (max-width: 768px)', {
+					axisX: {
+						offset: 0,
+						showLabel: false
+					},
+					height: 180
+				}]]);
+		}
+	</script>
+}
+
+<script>
+
+	//Branch Checkbox List Setting
+	var expanded = false;
+
+	//Branch Select Function
+	function showCheckboxes() {
+		var checkboxes = document.getElementById("checkboxes");
+
+		if (!expanded) {
+			checkboxes.style.display = "block";
+			expanded = true;
+			checkboxes.style.zIndex = 9999;
+		}
+		else {
+			checkboxes.style.display = "none";
+			expanded = false;
+			checkboxes.style.zIndex = 1;
+		}
+	}
+
+	$(document).ready(function () {
+
+		var searchboxID = "#SearchKey";
+		$('#btn-search').click(function () {
+			$(searchboxID).keyup();
+		});
+
+		//Customer Journey Search Key
+		$(searchboxID).keyup(function (event) {
+			var reportName = $('#ReportName option:selected').text();
+			if (reportName.indexOf("Customer Journey") >= 0) {
+				if (event.keyCode != 13 && event.keyCode != 37 && event.keyCode != 39) {
+					var search = $(searchboxID);
+					var key = $('.visit-suggestion');
+					if ($.trim($(searchboxID).val()).length > 0) {
+						$.ajax({
+							type: "POST",
+							data: "key=" + search.val(),
+							url: "/Reports/CustomerList",
+							dataType: "Json",
+							success: function (result) {
+								text = "";
+								key.html('');
+
+								for (var i = 0; i < result.length; i++) {
+									text += '<label class="options" style="z-index:9999;"><option value="' + result[i].CustomerID + '" class="searchOption" style="font-size:16px;">' + result[i].Name + ' ' + result[i].Surname + ' </option></label>';
+								}
+
+								$(key).append(text);
+								if (result.length > 0) {
+									$(key).css('display', 'block');
+								}
+							}
+
+						});
+					}
+					else {
+						$(key).css('display', 'none');
+					}
+
+				}
+			}
+
+		});
+
+		//Search Key On Change
+		$(function () {
+			$('#SearchKey').keyup(function (event) {
+				if (event.keyCode != 13 && event.keyCode != 37 && event.keyCode != 39) {
+					var value = $('#SearchKey').val();
+				}
+
+			})
+		})
+
+		//If validate is false on
+		$(function () {
+			$('.field-validation-error').each(function () {
+				var text = $(this).text();
+				if (text === "Please ensure you enter the search key") {
+					$('.search-key').css('display', 'block');
+				}
+			});
+		})
+
+		//Search Button Selection
+		function SelectChange() {
+			//var reportName = $('#select2-ReportName-container').text();
+			var reportName = $('#ReportName option:selected').text();
+			if (reportName.indexOf("Visit") >= 0 || reportName.indexOf("Customer Journey") >= 0) {
+				$('.search-key').css('display', 'block');
+				if (reportName.indexOf("Visit") >= 0) {
+					var key = $('.visit-suggestion');
+					key.html('');
+					key.css('display', 'none');
+				}
+			}
+			else {
+				$('.search-key').css('display', 'none');
+			}
+		}
+
+		//Report Name Change Function
+		$(function () {
+			$('#ReportName').change(function () {
+				SelectChange();
+			})
+		})
+
+		//Branch Counter
+		function Option() {
+			var checked = 0;
+			var total = 0;
+
+			$('.check-box').each(function () {
+				if ($(this).prop('checked')) {
+					checked++;
+				}
+			});
+
+			$('.check-box').each(function () {
+				total++;
+			})
+
+			if (checked > 0) {
+				$('#select1 option[value="1"]').text('' + checked + ' of ' + total + ' Branch(es) Selected');
+				$('#select2-select1-container').text('' + checked + ' of ' + total + ' Branch(es) Selected');
+			}
+			else if (checked === 0) {
+				$('#select1 option[value="1"]').text('Select Branch');
+				$('#select2-select1-container').text('Select Branch');
+			}
+		}
+
+		//Option Change Function
+		$(function () {
+			$('.options').click(function () {
+				Option();
+			});
+		})
+
+		//Call Back Functions
+		SelectChange();
+		Option();
+
+		//Classic Report or Generic Report Select Trigger (While Select is Generi, Branch Select Will Hide)
+		$('#ReportName').on('change', (v) => {
+			const selected = $('#ReportName > option[value="' + $(v.target).val() + '"]');
+
+			if (selected.attr('reporttype') === "Classic") {
+				$('#multi-select').css('display', 'block');
+			}
+			else if (selected.attr('reporttype') === "Generic") {
+				$('#multi-select').css('display', 'none');
+			}
+
+			$('#ReportType').val(selected.attr('reporttype'));
+		})
+
+	});
+
+	//Other Events
+	$(document).click(function (e) {
+		var target = e.target;
+
+		if ($('#checkboxes').css('display') == "block" && !$(target).parents().is('#checkboxes')) {
+			if (!$(target).hasClass('overSelect')) {
+				$('#checkboxes').css('display', 'none');
+				expanded = false;
+			}
+		}
+
+		if ($('#visit').css('display') == "block" && !$(target).parents().is('#searchOpt')) {
+			if (!$(target).hasClass('overSelect')) {
+				$('#visit').css('display', 'none');
+				expanded = false;
+			}
+		}
+
+		if ($(target).parents().is('#visit') && $(target).hasClass('searchOption')) {
+			var customer = $(target);
+			$('#SearchKey').val(customer.text());
+			$('#CustomerID').val(customer.val());
+			$('#visit').css('display', 'none');
+			$('#visit').html('');
+			expanded = false;
+
+		}
+	});
+
+</script>

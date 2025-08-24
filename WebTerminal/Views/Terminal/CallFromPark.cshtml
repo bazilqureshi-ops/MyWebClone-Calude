@@ -1,0 +1,55 @@
+﻿@using Emse.QMagic.DAL;
+@using Emse.QMagic.WebTerminal.Helpers;
+@{
+    Layout = null;
+    string LanguageCode = "EN";
+    if (Session["MagicLanguage"] != null)
+    {
+        LanguageCode = Session["MagicLanguage"].ToString();
+    }
+
+    int RowCount = ViewBag.ReturnType;
+    int TicketID = ViewBag.TicketID;
+    int TerminalID = ViewBag.TerminalID;
+    qmTicket Ticket = ViewBag.Ticket;
+    List<qmService> ServiceList = ViewBag.ServiceList;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
+
+
+    string CalledMessage = "TicketCalled(" + TicketID + "," + TerminalID + ")" + "   [" + DateTime.Now + "]   ";
+    string InterBag = "FlashNumber(" + TicketID + "," + TerminalID + ")";
+}
+<script>
+    signalRHub.server.send('@(CalledMessage)').fail(function (e) {
+        alert(e.message);
+    });
+
+    signalRHub.server.interSend('@(InterBag)').fail(function (e) {
+        alert(e.message);
+    });
+</script>
+@{
+    if (TicketID != null)
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-ticket"></i> <b>@(Ticket.TicketPrefix)@(Ticket.TicketNumber)</b></h2>
+        <p>
+            <b>@(ServiceList.Where(x=>x.ServiceID == Ticket.ServiceID).FirstOrDefault().ServiceName)</b><br />
+            <i>@(SegmentList.Where(x => x.SegmentID == Ticket.SegmentID).FirstOrDefault().SegmentName)</i>
+        </p>
+        <button class="btn btn-light" onclick="MoreInformation(@(Ticket.TicketID));" data-bs-toggle="modal" data-bs-target="#MoreInformationModal"><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        <p class="elapsedtime" sec="0" style="font-weight:600;">&nbsp;</p>
+        <input type="hidden" id="InfoTicketID" name="InfoTicketID" value="@(Ticket.TicketID)" />
+    }
+    else
+    {
+        <p>&nbsp;</p>
+        <h2 class="text-center" style="font-size:64px;"><i class="fa fa-ticket"></i> <b>-/-</b></h2>
+        <p>
+            <b>-/-</b><br />
+            <i>-/-</i>
+        </p>
+        <button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button>
+        <p>&nbsp;</p>
+    }
+}

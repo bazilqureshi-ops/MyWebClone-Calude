@@ -1,0 +1,12 @@
+﻿@{
+    Layout = null;
+    string WaitingNumber = ViewBag.WaitingNumber;
+    int TerminalConnections = ViewBag.TerminalConnections;
+    string LanguageCode = Session["MagicLanguage"] != null ? Session["MagicLanguage"].ToString() : "";
+    if (LanguageCode == null)
+    {
+        LanguageCode = "";
+    }
+}
+<p><b id='CountOfAppointments'>@(WaitingNumber)</b></p>
+<div id='OnlineTerminals'>@(TerminalConnections)</div>

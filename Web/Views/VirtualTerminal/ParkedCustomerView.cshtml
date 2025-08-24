@@ -1,0 +1,15 @@
+﻿@using Emse.QMagic.Web.Models;
+@{
+    Layout = null;
+
+    List<qmTicket> parkedtickets = ViewBag.listticket;
+
+    foreach (qmTicket item in parkedtickets)
+    {
+        <tr>
+            <td>@item.TicketPrefix @item.TicketNumber</td>
+            <td>@item.PrintTime</td>
+            <td><a href="javascript:CallFromPark(@item.TicketID);" id="btnCallFromPark" class="btn btn-default" style="width:100%;"><span class="fa fa-hand-o-up "></span> Call From Park</a></td>
+        </tr>
+    }
+}

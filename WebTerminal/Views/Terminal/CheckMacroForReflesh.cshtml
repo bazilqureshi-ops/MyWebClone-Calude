@@ -1,0 +1,17 @@
+﻿@using Emse.QMagic.DAL;
+@{
+    Layout = null;
+    qmSegment segment = ViewBag.Segment;
+    qmTerminal terminal = ViewBag.Terminal;
+    if (segment == null)
+    {
+        segment = new qmSegment();
+        segment.SegmentID = 0;
+    }
+    if (terminal == null)
+    {
+        terminal = new qmTerminal();
+        terminal.TerminalID = 0;
+    }
+}
+(@(segment.SegmentID),@(terminal.MacroID))

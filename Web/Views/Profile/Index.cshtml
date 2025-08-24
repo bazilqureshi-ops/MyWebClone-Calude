@@ -1,0 +1,175 @@
+﻿@using Emse.QMagic.Web.Domain.Viewmodels
+@model ProfileViewModel
+
+<script>
+    $(document).on('submit', 'form', function () {
+        var button = $(this).find(':submit');
+        setTimeout(function () {
+            button.attr('disabled', 'disabled');
+        }, 0);
+    });
+</script>
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="card">
+			<div class="card-header">
+				User Management
+			</div>
+			<div class="card-body" style="padding-top: 25px;">
+				<form action="~/Profile" method="post">
+					@Html.HiddenFor(user => user.User.UserID)
+					@Html.HiddenFor(user => user.User.UserRoleID)
+					@Html.HiddenFor(user => user.User.CreatedUserID)
+					@Html.HiddenFor(user => user.User.CreationDate)
+					@Html.HiddenFor(user => user.User.Username)
+					@Html.HiddenFor(user => user.User.Password)
+					@Html.HiddenFor(user => user.User.IsDeleted)
+
+					<div class="row">
+						<div class="col-xs-12">
+							<div class="col-xs-12" style="margin-bottom: 5%; padding-top: 5%">
+								<div class="row">
+									<div class="col-xs-3">
+										<img src="@Model.User.ProfilePicture" style="max-width: 200px; border: solid 1px #000;" />
+									</div>
+
+									<div class="row col-xs-9">
+										<div class="row">
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Full Name</label>
+													<div class="col-md-9">
+														@Html.EditorFor(user => Model.User.FullName, new { htmlAttributes = new { @class = "form-control" } })
+														<label class="text-danger">
+															@Html.ValidationMessageFor(user => Model.User.FullName)
+														</label>
+													</div>
+												</div>
+											</div>
+
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Gender</label>
+													<div class="col-md-9">
+														@{
+															if (Model.User.Gender == true)
+															{
+																<label><input type="radio" value="1" id="male" checked="checked" />Male</label>
+																<label><input type="radio" value="0" id="female" />Female</label>
+																<input type="hidden" name="User.Gender" id="gender" value="true" />
+
+															}
+															else
+															{
+																<label><input type="radio" value="1" id="male" />Male</label>
+																<label><input type="radio" value="0" id="female" checked="checked" />Female</label>
+																<input type="hidden" name="User.Gender" id="gender" value="false" />
+
+															}
+														}
+
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Profile Picture</label>
+													<div class="col-md-9" style="min-height: 64px;">
+														<input type="text" readonly="readonly" style="overflow: left;" class="form-control disabled" name="User.ProfilePicture" id="User.ProfilePicture" value="@Model.User.ProfilePicture" />
+														@*@Html.EditorFor(user => user.User.ProfilePicture, new {htmlAttributes = new {@class = "form-control disabled", @style = "overflow:left; align:left;", @readonly = "readonly"}})*@
+													</div>
+												</div>
+											</div>
+											<div class="col-xs-6">
+												<a href="#" onclick="window.open('/User/ImageBrowser?reff=User.ProfilePicture', 'Browser', 'width=1100,height=750');" class="btn btn-default">Upload / Browse Profile Gallery</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row" style="margin-bottom: 5%">
+								<div class="card">
+
+									<div class="card-header">
+										<p>
+											<label class="h2 bold">Password</label>
+											<br />
+											We recommend updating your password periodically to prevent unauthorized access.
+										</p>
+									</div>
+
+									<div class="card-body">
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Old Password</label>
+													<div class="col-md-6">
+														@Html.EditorFor(user => Model.OldPassword, new { htmlAttributes = new { @class = "form-control", type = "password", autocomplete = "off" } })
+														<label class="text-danger">
+															@if (!string.IsNullOrEmpty(ViewBag.Error))
+															{
+																@ViewBag.Error
+															}
+															else
+															{
+																@Html.ValidationMessageFor(user => user.OldPassword)
+															}
+														</label>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">New Password</label>
+													<div class="col-md-6">
+														@Html.EditorFor(user => Model.Password, new { htmlAttributes = new { @class = "form-control", type = "password", autocomplete = "off" } })
+														<label class="text-danger">
+															@Html.ValidationMessageFor(user => user.Password)
+														</label>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-xs-12">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Confirm Password</label>
+													<div class="col-md-6">
+														@Html.EditorFor(user => Model.ConfirmPassword, new { htmlAttributes = new { @class = "form-control", type = "password", autocomplete = "off" } })
+														<label class="text-danger">
+															@Html.ValidationMessageFor(user => user.ConfirmPassword)
+														</label>
+													</div>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+						</div>
+						<div class="form-footer text-right">
+							<div class="form-group">
+								<div class="col-md-9 col-md-offset-3">
+									<a href="../Home" class="btn btn-default">Cancel</a>
+									<button type="submit" class="btn btn-primary">Save</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
