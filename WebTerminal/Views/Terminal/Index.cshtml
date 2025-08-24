@@ -12,7 +12,7 @@
     qmUser LoginUser = ViewBag.LoginUser;
     List<qmTransferRule> ServiceTransferList = ViewBag.ServiceTransferList;
     List<qmService> ServiceList = ViewBag.ServiceList;
-    List<qmSegment> SegmentList = ViewBag.Segments;
+    List<qmSegment> SegmentList = ViewBag.SegmentList;
     List<qmGenerateTicketRule> Rules = ViewBag.Rules;
     List<qmGenerateTicketItem> GenItems = ViewBag.GenItems;
     string Segments = ViewBag.Segments;
@@ -23,168 +23,251 @@
         autofillticket = ViewBag.AutoFillTicket;
     }
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Calling Terminal</title>
-    <!-- Include Bootstrap CSS from the dashboard file -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Include Font Awesome CSS from the dashboard file -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- Include your original site CSS -->
-    <link href="~/Content/Site.css" rel="stylesheet" />
-</head>
-<body>
+<script src="http://localhost/SignalR/Hubs"></script>
+<script src="~/Scripts/Terminal.js"></script>
 
-<!-- Your existing logo and logout button from the original file -->
+<script>
+    loginTerminalID = "@(LoginTerminal.TerminalID)";
+    loginUserID = "@(LoginUser.UserID)";
+    var commasegment = "@(Segments)";
+    var SegmentList = commasegment.split(",");
+</script>
+
+@{
+    if (autofillticket != null)
+    {
+        <script>
+        var bckp = "@(autofillticket.TicketID)";
+        if (bckp != null) {
+            BackupCall = bckp;
+        }
+        </script>
+    }
+
+    <script>
+        ExitStatusID = @(LoginTerminal.ExitStatusID);
+        ReadyStatusID = @(LoginTerminal.ReadyStatusID);
+    </script>
+}
+
+<link href="~/Content/Site.css" rel="stylesheet" />
 <img src="~/assets/qlogo.png" style="position:absolute; right:10px; bottom:10px; opacity:0.3;" />
-<div id="TerminalLoadingMain">&nbsp;</div>
+
+<div id="TerminalLoadingMain">
+    &nbsp;
+</div>
+
 <a href="#" class="btn btn-danger btn-sm" style="position:absolute; right:50px; top:20px;" onclick="LogoutRequest();"><b><i class="fa fa-sign-out"></i> @(Localization.Translate(LanguageCode,"Logout"))</b></a>
 <img src="~/assets/client.png" height="150" style="position:absolute; left:50px; bottom:50px;" />
 
-<!-- Main content container from the dashboard file -->
 <div class="container-fluid" style="margin:20px;">
     <div class="row">
-        <!-- Left Column: Now Serving Card and Action Buttons -->
-        <div class="col-lg-5 col-md-12 mb-3">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">@(Localization.Translate(LanguageCode,"NowServing"))</h5>
+        <div class="col-3 col-sm-12 col-md-6 col-lg-3 col-xl-3">
+            <div class="card">
+                <div class="card-header">
+                    <center><b>@(LoginTerminal.TerminalName) <span class="badge bg-secondary">@(LoginTerminal.TerminalNumber)</span></b></center>
                 </div>
-                <div class="card-body text-center">
-                    <h1 class="display-3 fw-bold" id="servingTicketNumber">@if (autofillticket != null) { @autofillticket.TicketID }</h1>
-                    <p class="lead" id="servingService">@if (autofillticket != null) { var service = ServiceList.FirstOrDefault(s => s.ServiceCode == autofillticket.ServiceCode); if (service != null) { @service.ServiceName } } </p>
-                    <p class="text-muted" id="servingCounter">@(Localization.Translate(LanguageCode,"Terminal")) @LoginTerminal.TerminalName</p>
-                    <div class="d-flex justify-content-center align-items-center mb-3">
-                        <span class="badge bg-secondary p-2 me-2">
-                            <i class="fas fa-clock"></i> <span id="transactionTimer">00:00</span>
-                        </span>
-                        <div id="servedCount" class="text-muted">
-                            <i class="fas fa-user-check"></i> <span id="totalServedDisplay">0</span> @(Localization.Translate(LanguageCode,"TotalServed"))
+                <div class="card-body" style="padding:0px;">
+                    <div class="row" style="margin-bottom:10px; margin-top:10px;">
+                        <div class="card">
+                            <div class="card-body idcard">
+                                <div class="row">
+                                    <div class="col-4 justify-content-center">
+                                        <img src="@(LoginUser.ProfilePicture)" width="100%" style="border:solid 1px #000;" />
+                                    </div>
+                                    <div class="col-8">
+                                        @(LoginUser.FullName)<br />
+                                        @(LoginUser.CorporateNumber)<br />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="javascript:NextCall();" id="btnNextCall" class="list-group-item list-group-item-action ctrlbutton active"><i class="fa fa-bell" style="margin-right:16px;"></i> <b>@(Localization.Translate(LanguageCode,"Next"))</b></a>
+                        <a href="javascript:Recall();" id="btnRecall" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-refresh" style="margin-right:14px;"></i> @(Localization.Translate(LanguageCode,"Recall"))</a>
+                        <a href="javascript:Park();" id="btnPark" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-pause" style="margin-right:20px;"></i> @(Localization.Translate(LanguageCode,"Hold"))</a>
+                        <a href="javascript:ServiceTransferList(false);" onclick="ServiceTransferList(false);" data-bs-toggle="modal" data-bs-target="#ServiceTransferModal" id="btnServiceTransfer" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-right-left" style="margin-right:12px;"></i> @(Localization.Translate(LanguageCode,"Transfer"))</a>
+                        <a href="javascript:NoShowTicket();" id="btnNoShow" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-user-minus" style="margin-right:10px;"></i> @(Localization.Translate(LanguageCode,"NoShow"))</a>
+                        <a href="javascript:CloseTicket();" id="btnClose" class="list-group-item list-group-item-action disabled ctrlbutton"><i class="fa fa-remove" style="margin-right:19px;"></i> @(Localization.Translate(LanguageCode,"Close"))</a>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <center>@(BranchList.Where(x=>x.BranchID == LoginTerminal.BranchID).FirstOrDefault().BranchName)</center>
+                </div>
+            </div>
+        </div>
+        <div class="col-9 col-sm-12 col-md-6 col-lg-9 col-xl-9">
+            <div class="card text-center">
+                <div class="card-body" id="InfoBox" style="height:300px; min-height:300px; max-height:300px;">
+                    <div class="row" style="padding-left:12px;">
+                        <div class="col-3 ticketnumber">
+                            <h1 style="font-weight:bold; vertical-align:central; margin-top:25px;">n/a</h1>
+                        </div>
+                        <div class="col-9">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr>
+                                    <td align="right" style="font-weight:bold; padding-right:10px;">Service </td>
+                                    <td align="left">n/a</td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Print Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                                <tr>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Segment </td>
+                                    <td align="left">n/a</td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Waiting Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><button class="btn btn-light" disabled><i class="fa fa-user"></i> @(Localization.Translate(LanguageCode,"MoreInformation"))</button></td>
+                                    <td align="right" style="font-weight: bold; padding-right: 10px;">Transaction Time </td>
+                                    <td align="left" height="35">n/a</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr>
+                                    <td><b>Ticket Note</b></td>
+                                    <td><input type="text" class="form-control" placeholder="Ticket Note" /></td>
+                                    <td><button class="btn btn-primary"><i class="fa fa-check"></i> Save Note</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="10">
+                                <tr style="border-bottom:solid 1px #000; font-weight:bold;">
+                                    <td>Patient Name</td>
+                                    <td>QID Number</td>
+                                    <td>HC Number</td>
+                                    <td>Phone Number</td>
+                                    <td>Nationality</td>
+                                    <td>Birth Date</td>
+                                </tr>
+                                <tr>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                    <td>n/a</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Action Buttons Row -->
-            <div class="d-grid gap-2 mt-3">
-                <button id="callNextBtn" class="btn btn-success btn-lg" onclick="NextCall();">
-                    <i class="fas fa-phone-alt"></i> @(Localization.Translate(LanguageCode,"NextCall"))
-                </button>
-                <button id="callAgainBtn" class="btn btn-info text-white btn-lg" onclick="CallAgain();">
-                    <i class="fas fa-redo-alt"></i> @(Localization.Translate(LanguageCode,"CallAgain"))
-                </button>
-                <div class="row g-2 mt-2">
-                    <div class="col">
-                        <button id="parkBtn" class="btn btn-warning btn-lg w-100" onclick="Park();">
-                            <i class="fas fa-pause"></i> @(Localization.Translate(LanguageCode,"Park"))
-                        </button>
-                    </div>
-                    <div class="col">
-                        <button id="noshowBtn" class="btn btn-danger btn-lg w-100" onclick="NoShow();">
-                            <i class="fas fa-user-slash"></i> @(Localization.Translate(LanguageCode,"NoShow"))
-                        </button>
-                    </div>
-                </div>
-                <button id="finishBtn" class="btn btn-primary btn-lg mt-2" onclick="Finish();">
-                    <i class="fas fa-check-circle"></i> @(Localization.Translate(LanguageCode,"Finish"))
-                </button>
-            </div>
-        </div>
-
-        <!-- Right Column: Tabs -->
-        <div class="col-lg-7 col-md-12">
-            <div class="card shadow">
+            <div class="card text-center" style="margin-top:20px;">
                 <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                    <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
-                            <button class="nav-link active" id="queueTabBtn" data-bs-toggle="tab" data-bs-target="#MyQueueContent" type="button" role="tab">
-                                @(Localization.Translate(LanguageCode,"MyQueue"))
-                            </button>
+                            <a class="nav-link cTabs active" aria-current="true" id="MyQueueContentTab" href="javascript:SwitchTab('MyQueueContent');" onclick="WaitingList();"><i class="fa fa-clock"></i> @(Localization.Translate(LanguageCode,"WaitingList")) <span class="badge bg-secondary" id="TotalWaitingBadge">-</span></a>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link" id="holdTabBtn" data-bs-toggle="tab" data-bs-target="#MyParkedContent" type="button" role="tab">
-                                @(Localization.Translate(LanguageCode,"ParkedTickets"))
-                            </button>
+                            <a class="nav-link cTabs" href="javascript:SwitchTab('MyParkedContent');" id="MyParkedContentTab" onclick="ParkList();"><i class="fa fa-pause"></i> @(Localization.Translate(LanguageCode,"HoldTickets")) <span class="badge bg-secondary" id="TotalParkedBadge">-</span></a>
                         </li>
-                        <li class="nav-item">
-                            <button class="nav-link" id="generateTabBtn" data-bs-toggle="tab" data-bs-target="#GenerateTicketContent" type="button" role="tab">
-                                @(Localization.Translate(LanguageCode,"GenerateTicket"))
-                            </button>
-                        </li>
+                        @{
+                            if (Rules != null && Rules.Count > 0)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link cTabs" href="javascript:SwitchTab('GenerateTicketContent');" id="GenerateTicketContentTab" onclick="GenerateTicketInfo();"><i class="fa fa-ticket"></i> @(Rules.FirstOrDefault().RuleName)</a>
+                                </li>
+                            }
+                        }
+
                     </ul>
                 </div>
                 <div class="card-body">
-                    <div class="tab-content" id="myTabContent">
-                        <!-- My Queue Tab -->
-                        <div class="tab-pane fade show active" id="MyQueueContent" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover" id="waitingQueueTable">
-                                    <thead>
-                                        <tr>
-                                            <th>@(Localization.Translate(LanguageCode,"TicketID"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"Service"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"WaitingSince"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"Actions"))</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Data will be populated by JavaScript from your SignalR hub -->
-                                    </tbody>
-                                </table>
+                    <div class="row AllTabContents" id="MyQueueContent">
+                        &nbsp;
+                    </div>
+                    <div class="row AllTabContents" id="MyParkedContent" style="display:none;">
+                        &nbsp;
+                    </div>
+                    <div class="row AllTabContents" id="GenerateTicketContent" style="display:none;">
+                        <div class="col-6">
+                            <div class="accordion accordion-flush" id="myGenerateListAccordion">
+                                @{
+                                    if (Rules != null && Rules.Count > 0)
+                                    {
+                                        List<qmGenerateTicketItem> Headers = GenItems.Where(x => x.IsHeader == true).ToList();
+                                        foreach (qmGenerateTicketItem header in Headers)
+                                        {
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse_@(header.GenerateTicketItemID)" aria-expanded="false" aria-controls="flush-collapse_@(header.GenerateTicketItemID)">
+                                                        <i class="fa fa-circle-check" style="margin-right:10px;"></i> <span>@(header.HeaderText)</span>
+                                                    </button>
+                                                </h2>
+                                                @{
+                                                    <div id="flush-collapse_@(header.GenerateTicketItemID)" class="accordion-collapse collapse" data-bs-parent="#myGenerateListAccordion">
+                                                        <div class="accordion-body" style="max-height:400px; overflow-y:scroll;">
+                                                            <table width="100%" height="100%" border="0" cellpadding="10" cellspacing="5">
+                                                                <tr style="border-bottom:solid 1px #CCC; font-weight:bold;">
+                                                                    <td>@(Localization.Translate(LanguageCode,"Service"))</td>
+                                                                    <td>@(Localization.Translate(LanguageCode,"Segment"))</td>
+                                                                    <td>@(Localization.Translate(LanguageCode,"Generate"))</td>
+                                                                </tr>
+                                                                @{
+                                                                    int ThisHeaderIndex = Headers.FindIndex(x => x.GenerateTicketItemID == header.GenerateTicketItemID);
+                                                                    qmGenerateTicketItem next_header = Headers.Skip(ThisHeaderIndex + 1).FirstOrDefault();
+                                                                    if (next_header != null)
+                                                                    {
+                                                                        for (int i = header.OrderNumber + 1; i < next_header.OrderNumber; i++)
+                                                                        {
+                                                                            qmGenerateTicketItem print_item = GenItems.Where(x => x.OrderNumber == i).FirstOrDefault();
+                                                                            qmSegment print_segment = SegmentList.Where(x => x.SegmentID == print_item.SegmentID).FirstOrDefault();
+                                                                            qmService print_service = ServiceList.Where(x => x.ServiceID == print_segment.ServiceID).FirstOrDefault();
+                                                                            <tr>
+                                                                                <td>@(print_service.ServiceName)</td>
+                                                                                <td>@(print_segment.SegmentName)</td>
+                                                                                <td><button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#GenerateTicketModal" onclick="GenerateTicket(@(print_segment.SegmentID));"><i class="fa fa-print"></i> @(Localization.Translate(LanguageCode,"Generate"))</button></td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        int last_row_id = GenItems.Last().OrderNumber;
+                                                                        for (int i = header.OrderNumber + 1; i <= last_row_id; i++)
+                                                                        {
+                                                                            qmGenerateTicketItem print_item = GenItems.Where(x => x.OrderNumber == i).FirstOrDefault();
+                                                                            qmSegment print_segment = SegmentList.Where(x => x.SegmentID == print_item.SegmentID).FirstOrDefault();
+                                                                            qmService print_service = ServiceList.Where(x => x.ServiceID == print_segment.ServiceID).FirstOrDefault();
+                                                                            <tr>
+                                                                                <td>@(print_service.ServiceName)</td>
+                                                                                <td>@(print_segment.SegmentName)</td>
+                                                                                <td><button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#GenerateTicketModal" onclick="GenerateTicket(@(print_segment.SegmentID));"><i class="fa fa-print"></i> @(Localization.Translate(LanguageCode,"Generate"))</button></td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                }
                             </div>
                         </div>
-
-                        <!-- My Parked Tickets Tab -->
-                        <div class="tab-pane fade" id="MyParkedContent" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover" id="holdTicketsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>@(Localization.Translate(LanguageCode,"TicketID"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"Service"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"ParkedSince"))</th>
-                                            <th>@(Localization.Translate(LanguageCode,"Actions"))</th>
+                        <div class="col-6" style="padding-right:-5px;">
+                            <div class="card">
+                                <div class="card-body" id="InfoGenerateTicket">
+                                    <table width="100%" border="0" cellpadding="5" cellspacing="0">
+                                        <tr style="border-bottom:solid 1px #000;">
+                                            <td>Name</td>
+                                            <td>Waiting</td>
+                                            <td>Served</td>
+                                            <td>User</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Data will be populated by JavaScript from your SignalR hub -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Generate Ticket Tab (from your original file) -->
-                        <div class="tab-pane fade" id="GenerateTicketContent" role="tabpanel">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="form-group">
-                                        <label>@(Localization.Translate(LanguageCode,"Service"))</label>
-                                        <select id="ddlGenService" class="form-control" onchange="RuleChange();">
-                                            @foreach (var item in ServiceList)
-                                            {
-                                                <option value="@item.ServiceID">@item.ServiceName</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="form-group">
-                                        <label>@(Localization.Translate(LanguageCode,"Segment"))</label>
-                                        <select id="ddlGenSegment" class="form-control">
-                                            @foreach (var item in SegmentList)
-                                            {
-                                                <option value="@item.SegmentID">@item.SegmentName</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12 text-center mt-3">
-                                    <button class="btn btn-primary" onclick="GenerateTicket()">@(Localization.Translate(LanguageCode,"GenerateTicket"))</button>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -195,26 +278,19 @@
     </div>
 </div>
 
-<!-- All modals from your original file -->
-<!-- Call Ticket Modal -->
-<div class="modal" id="CallTicketModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+
+<div class="modal" id="ServiceTransferModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"CallTicket"))</h5>
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"Transfer"))</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="CallTicketModalBody">
-                <div class="row">
-                    <div class="col-11">
-                        <input type="text" id="txtSearchTicket" class="form-control" placeholder="@(Localization.Translate(LanguageCode,"Searchbyticketnumber"))" />
+            <div class="modal-body" id="ServiceTransferListBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
                     </div>
-                    <div class="col-1">
-                        <button class="btn btn-primary" onclick="SearchTicket();"><i class="fa fa-search"></i></button>
-                    </div>
-                </div>
-                <div class="row mt-2" id="TicketSearchResult">
-                    &nbsp;
                 </div>
             </div>
             <div class="modal-footer">
@@ -224,7 +300,48 @@
     </div>
 </div>
 
-<!-- Change Customer Modal -->
+<div class="modal" id="MoreInformationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketInformation"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="MoreInformationModalBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="GenerateTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketPreview"))</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="GenerateTicketModalBody">
+                <div class='d-flex text-center justify-content-center'>
+                    <div class='spinner-border' role='status' style='margin-top:100px;'>
+                        <span class='visually-hidden'>@(Localization.Translate(LanguageCode,"Loading"))</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal" id="ChangeCustomerModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -235,7 +352,7 @@
             <div class="modal-body" id="ChangeCustomerModalBody">
                 <div class="row">
                     <div class="col-11">
-                        <input type="text" id="txtSearchCustomer" class="form-control" placeholder="@(Localization.Translate(LanguageCode,"SearchbyQatarIDHCIIDNameSurnameorPhone"))" />
+                        <input type="text" id="txtSearchCustomer" class="form-control" placeholder="Search by Qatar ID, HC ID, Name, Surname or Phone" />
                     </div>
                     <div class="col-1">
                         <button class="btn btn-primary" onclick="SearchCustomer();"><i class="fa fa-search"></i></button>
@@ -251,148 +368,3 @@
         </div>
     </div>
 </div>
-
-<!-- View Customer Modal -->
-<div class="modal" id="ViewCustomerModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">@(Localization.Translate(LanguageCode,"TicketPreview"))</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="ViewCustomerModalBody">
-                <!-- Content for this modal is typically loaded dynamically by JS -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">@(Localization.Translate(LanguageCode,"Close"))</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- All JavaScript at the end of the body for best practices -->
-<!-- Include jQuery first, as it is a dependency for SignalR -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<!-- Include the core SignalR library from a CDN for a reliable load -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.signalr/2.4.3/jquery.signalR.min.js"></script>
-<!-- Include SignalR Hubs, which depends on jQuery and the core library -->
-<script src="http://localhost/SignalR/Hubs"></script>
-<script src="~/Scripts/Terminal.js"></script>
-
-<script>
-    // Variables from Index.org.cshtml
-    loginTerminalID = "@(LoginTerminal.TerminalID)";
-    loginUserID = "@(LoginUser.UserID)";
-    var commasegment = "@(Segments)";
-    var SegmentList = commasegment.split(",");
-    
-    // The rest of the JS from hospital_dashboard-changes.html is integrated here.
-    const callNextBtn = document.getElementById('callNextBtn');
-    const callAgainBtn = document.getElementById('callAgainBtn');
-    const parkBtn = document.getElementById('parkBtn');
-    const noshowBtn = document.getElementById('noshowBtn');
-    const finishBtn = document.getElementById('finishBtn');
-
-    const queueTabBtn = document.getElementById('queueTabBtn');
-    const holdTabBtn = document.getElementById('holdTabBtn');
-    const generateTabBtn = document.getElementById('generateTabBtn');
-
-    const servingTicketDisplay = document.getElementById('servingTicketNumber');
-    const servingServiceDisplay = document.getElementById('servingService');
-    const transactionTimerDisplay = document.getElementById('transactionTimer');
-    const totalServedDisplay = document.getElementById('totalServedDisplay');
-
-    const waitingQueueTableBody = document.querySelector('#waitingQueueTable tbody');
-    const holdTicketsTableBody = document.querySelector('#holdTicketsTable tbody');
-    const tabContent = document.getElementById('myTabContent');
-
-    // State variables
-    let totalServedCount = 0;
-    let transactionTimerInterval;
-
-    // Functions to manage UI and data (from the dashboard file)
-    function startTransactionTimer() {
-        let seconds = 0;
-        transactionTimerInterval = setInterval(() => {
-            seconds++;
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            transactionTimerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-        }, 1000);
-    }
-
-    function renderWaitingQueueTable() {
-        // This function would be updated to use data from your SignalR hub.
-        // For now, it's a placeholder.
-        console.log("Rendering waiting queue table...");
-    }
-
-    function renderHoldTicketsTable() {
-        // This function would be updated to use data from your SignalR hub.
-        // For now, it's a placeholder.
-        console.log("Rendering hold tickets table...");
-    }
-
-    function updateUI() {
-        // Your logic to update the UI based on the current state.
-        // You would likely call SignalR to get the current serving ticket.
-    }
-
-    // Call your existing functions on button clicks
-    callNextBtn.addEventListener('click', () => {
-        NextCall(); // Your original function
-        startTransactionTimer();
-    });
-    callAgainBtn.addEventListener('click', () => {
-        CallAgain(); // Your original function
-    });
-    parkBtn.addEventListener('click', () => {
-        Park(); // Your original function
-        // Stop timer and update UI
-        clearInterval(transactionTimerInterval);
-        updateUI();
-    });
-    noshowBtn.addEventListener('click', () => {
-        NoShow(); // Your original function
-        // Stop timer and update UI
-        clearInterval(transactionTimerInterval);
-        updateUI();
-    });
-    finishBtn.addEventListener('click', () => {
-        Finish(); // Your original function
-        totalServedCount++;
-        totalServedDisplay.textContent = totalServedCount;
-        // Stop timer and update UI
-        clearInterval(transactionTimerInterval);
-        updateUI();
-    });
-
-    // Tab event listeners
-    queueTabBtn.addEventListener('click', () => showTab('MyQueueContent'));
-    holdTabBtn.addEventListener('click', () => showTab('MyParkedContent'));
-    generateTabBtn.addEventListener('click', () => showTab('GenerateTicketContent'));
-
-    function showTab(tabId) {
-        const tabPanes = document.querySelectorAll('.tab-pane');
-        tabPanes.forEach(pane => {
-            if (pane.id === tabId) {
-                pane.classList.add('show', 'active');
-            } else {
-                pane.classList.remove('show', 'active');
-            }
-        });
-    }
-
-    // Initial rendering on page load
-    window.onload = function() {
-        updateUI();
-        renderWaitingQueueTable();
-        renderHoldTicketsTable();
-    };
-</script>
-
-<!-- Include Bootstrap JS and Popper.js from the dashboard file -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-</body>
-</html>
